@@ -3,25 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Upload Song — AI Visual Guitar</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <title>Upload Song — Ai Visual Guitar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #0a0a0b;
-      --surface: #111114;
-      --border: #1e1e24;
-      --amber: #f5a623;
-      --amber-glow: rgba(245,166,35,0.10);
-      --text: #e8e4d9;
-      --muted: #6b6860;
-      --success: #5ce07a;
-      --error: #e05c5c;
+      --cream:      #F5F0E8;
+      --cream-dark: #EDE6D6;
+      --red:        #D94025;
+      --red-dark:   #B83320;
+      --blue:       #1B4F8A;
+      --gold:       #E8A020;
+      --text:       #2A2018;
+      --text-mid:   #5A4A38;
+      --text-light: #8A7A68;
+      --white:      #FFFFFF;
+      --shadow:     rgba(42,32,24,0.10);
+      --success:    #2E7D32;
+      --success-bg: #E8F5E9;
+      --success-bd: #A5D6A7;
+      --error:      #C62828;
+      --error-bg:   #FFEBEE;
+      --error-bd:   #FFCDD2;
     }
 
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      background: var(--bg);
+      background: var(--cream);
       color: var(--text);
       font-family: 'DM Sans', sans-serif;
       font-weight: 300;
@@ -33,46 +41,48 @@
       padding: 2rem 1.5rem;
     }
 
+    /* subtle fretboard string lines */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
-      background-image:
-        linear-gradient(var(--border) 1px, transparent 1px),
-        linear-gradient(90deg, var(--border) 1px, transparent 1px);
-      background-size: 40px 40px;
-      opacity: 0.4;
-      pointer-events: none;
-      z-index: 0;
-    }
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(ellipse 70% 70% at 50% 40%, rgba(245,166,35,0.05) 0%, transparent 70%);
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 79px,
+        rgba(42,32,24,0.04) 80px,
+        rgba(42,32,24,0.04) 81px
+      );
       pointer-events: none;
       z-index: 0;
     }
 
+    /* ── CARD ── */
     .card {
       position: relative;
       z-index: 1;
       width: 100%;
-      max-width: 480px;
-      background: var(--surface);
-      border: 1px solid var(--border);
+      max-width: 500px;
+      background: var(--white);
+      border: 2px solid var(--cream-dark);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px var(--shadow);
+      animation: fade-up 0.5s ease both;
     }
 
     .card-header {
       padding: 2rem 2rem 1.5rem;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 2px solid var(--cream-dark);
+      background: linear-gradient(135deg, var(--white) 0%, var(--cream) 100%);
+      border-radius: 14px 14px 0 0;
     }
+
     .back-link {
       font-family: 'DM Mono', monospace;
       font-size: 0.65rem;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--text-light);
       text-decoration: none;
       display: inline-flex;
       align-items: center;
@@ -80,107 +90,131 @@
       margin-bottom: 1.25rem;
       transition: color 0.2s;
     }
-    .back-link:hover { color: var(--amber); }
+    .back-link:hover { color: var(--blue); }
+
     .card-logo {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.1rem;
-      letter-spacing: 0.08em;
-      color: var(--amber);
-      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 0.5rem;
     }
+    .logo-mark {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .logo-mark .A { color: var(--red); }
+    .logo-mark .i { color: var(--blue); }
+    .logo-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
     .card-title {
-      font-family: 'Bebas Neue', sans-serif;
+      font-family: 'Playfair Display', serif;
       font-size: 2rem;
-      letter-spacing: 0.04em;
+      font-weight: 900;
+      letter-spacing: -0.02em;
       color: var(--text);
       line-height: 1;
     }
 
     .card-body { padding: 2rem; }
 
-    /* SESSION */
+    /* ── SESSION ── */
     .session-row {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.6rem;
       margin-bottom: 1.75rem;
+      padding: 10px 14px;
+      background: var(--cream);
+      border: 1px solid var(--cream-dark);
+      border-radius: 8px;
     }
     .session-label {
       font-family: 'DM Mono', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.15em;
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--text-light);
       white-space: nowrap;
     }
     .session-val {
       font-family: 'DM Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--amber);
-      background: var(--amber-glow);
-      border: 1px solid rgba(245,166,35,0.2);
-      padding: 0.25rem 0.6rem;
-      letter-spacing: 0.05em;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--blue);
+      background: rgba(27,79,138,0.08);
+      border: 1px solid rgba(27,79,138,0.2);
+      padding: 3px 10px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
     }
     .session-dot {
-      width: 6px; height: 6px;
+      width: 7px; height: 7px;
       border-radius: 50%;
-      background: var(--success);
-      box-shadow: 0 0 6px var(--success);
+      background: #4CAF50;
+      box-shadow: 0 0 6px #4CAF50;
       flex-shrink: 0;
       margin-left: auto;
       animation: blink 2s infinite;
     }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-    /* TABS */
+    /* ── TABS ── */
     .method-tabs {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1px;
-      background: var(--border);
+      gap: 8px;
       margin-bottom: 1.75rem;
     }
     .method-tab {
-      background: var(--bg);
-      border: none;
-      color: var(--muted);
+      background: var(--cream);
+      border: 2px solid var(--cream-dark);
+      border-radius: 8px;
+      color: var(--text-mid);
       font-family: 'DM Mono', monospace;
       font-size: 0.65rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      padding: 0.75rem 0.5rem;
+      padding: 0.85rem 0.5rem;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 0.4rem;
-      transition: background 0.15s, color 0.15s;
+      transition: all 0.15s;
     }
     .method-tab svg { width: 1.1rem; height: 1.1rem; }
-    .method-tab:hover { background: var(--surface); color: var(--text); }
+    .method-tab:hover { border-color: var(--blue); color: var(--blue); background: rgba(27,79,138,0.05); }
     .method-tab.active {
-      background: var(--amber-glow);
-      color: var(--amber);
-      border-bottom: 2px solid var(--amber);
+      background: rgba(27,79,138,0.08);
+      border-color: var(--blue);
+      color: var(--blue);
     }
 
     .panel { display: none; }
     .panel.active { display: block; }
 
-    /* DROP ZONE */
+    /* ── DROP ZONE ── */
     .drop-zone {
-      border: 1px dashed var(--border);
+      border: 2px dashed var(--cream-dark);
+      border-radius: 10px;
       padding: 2.5rem 1.5rem;
       text-align: center;
       cursor: pointer;
       transition: border-color 0.2s, background 0.2s;
       position: relative;
       margin-bottom: 1rem;
+      background: var(--cream);
     }
     .drop-zone:hover, .drop-zone.drag-over {
-      border-color: var(--amber);
-      background: var(--amber-glow);
+      border-color: var(--blue);
+      background: rgba(27,79,138,0.04);
     }
     .drop-zone input[type="file"] {
       position: absolute;
@@ -193,32 +227,33 @@
     .drop-icon {
       width: 2.2rem; height: 2.2rem;
       margin: 0 auto 0.75rem;
-      color: var(--muted);
+      color: var(--text-light);
       transition: color 0.2s;
     }
     .drop-zone:hover .drop-icon,
-    .drop-zone.drag-over .drop-icon { color: var(--amber); }
-    .drop-main { font-size: 0.9rem; color: var(--text); margin-bottom: 0.35rem; }
+    .drop-zone.drag-over .drop-icon { color: var(--blue); }
+    .drop-main { font-size: 0.9rem; color: var(--text); margin-bottom: 0.35rem; font-weight: 400; }
     .drop-sub {
       font-family: 'DM Mono', monospace;
       font-size: 0.62rem;
       letter-spacing: 0.1em;
-      color: var(--muted);
+      color: var(--text-light);
       text-transform: uppercase;
     }
 
-    /* FILE CHOSEN */
+    /* ── FILE CHOSEN ── */
     .file-chosen {
       display: none;
       align-items: center;
       gap: 0.75rem;
-      background: var(--amber-glow);
-      border: 1px solid rgba(245,166,35,0.25);
+      background: rgba(27,79,138,0.06);
+      border: 1px solid rgba(27,79,138,0.2);
+      border-radius: 8px;
       padding: 0.75rem 1rem;
       margin-bottom: 1.25rem;
     }
     .file-chosen.visible { display: flex; }
-    .file-icon { color: var(--amber); flex-shrink: 0; }
+    .file-icon { color: var(--blue); flex-shrink: 0; }
     .file-name {
       font-family: 'DM Mono', monospace;
       font-size: 0.75rem;
@@ -230,27 +265,28 @@
     }
     .file-clear {
       background: none; border: none;
-      color: var(--muted); cursor: pointer;
+      color: var(--text-light); cursor: pointer;
       font-size: 1rem; line-height: 1;
       padding: 0 0.2rem;
       transition: color 0.2s;
     }
-    .file-clear:hover { color: var(--error); }
+    .file-clear:hover { color: var(--red); }
 
-    /* TEXT */
+    /* ── TEXT AREA ── */
     .input-label {
       font-family: 'DM Mono', monospace;
       font-size: 0.65rem;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: var(--text-light);
       display: block;
       margin-bottom: 0.5rem;
     }
     textarea {
       width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
+      background: var(--cream);
+      border: 2px solid var(--cream-dark);
+      border-radius: 8px;
       color: var(--text);
       font-family: 'DM Mono', monospace;
       font-size: 0.75rem;
@@ -261,60 +297,107 @@
       outline: none;
       transition: border-color 0.2s;
     }
-    textarea:focus { border-color: var(--amber); }
-    textarea::placeholder { color: var(--muted); }
+    textarea:focus { border-color: var(--blue); background: white; }
+    textarea::placeholder { color: var(--text-light); }
 
-    /* SUBMIT */
+    /* ── SUBMIT ── */
     .btn-submit {
       width: 100%;
-      background: var(--amber);
-      color: #0a0a0b;
+      background: var(--red);
+      color: white;
       border: none;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.8rem;
-      font-weight: 500;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
       padding: 1rem;
       cursor: pointer;
-      transition: background 0.2s, transform 0.15s;
+      transition: all 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 0.6rem;
       margin-top: 1.5rem;
     }
-    .btn-submit:hover:not(:disabled) { background: #ffc043; transform: translateY(-1px); }
-    .btn-submit:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; transform: none; }
+    .btn-submit:hover:not(:disabled) {
+      background: var(--red-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(217,64,37,0.3);
+    }
+    .btn-submit:disabled {
+      background: var(--cream-dark);
+      color: var(--text-light);
+      cursor: not-allowed;
+    }
 
+    /* ── STATUS ── */
     .status {
       display: none;
       margin-top: 1.25rem;
       padding: 0.875rem 1rem;
+      border-radius: 8px;
       font-family: 'DM Mono', monospace;
       font-size: 0.72rem;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
       border: 1px solid;
     }
     .status.visible { display: block; }
-    .status.success { border-color: rgba(92,224,122,0.3); background: rgba(92,224,122,0.05); color: var(--success); }
-    .status.error { border-color: rgba(224,92,92,0.3); background: rgba(224,92,92,0.05); color: var(--error); }
-    .status.loading { border-color: rgba(245,166,35,0.3); background: var(--amber-glow); color: var(--amber); }
+    .status.success { border-color: var(--success-bd); background: var(--success-bg); color: var(--success); }
+    .status.error   { border-color: var(--error-bd);   background: var(--error-bg);   color: var(--error); }
+    .status.loading {
+      border-color: rgba(27,79,138,0.2);
+      background: rgba(27,79,138,0.06);
+      color: var(--blue);
+    }
 
+    /* spinner */
     @keyframes spin { to { transform: rotate(360deg); } }
     .spinner {
       width: 14px; height: 14px;
-      border: 2px solid rgba(10,10,11,0.3);
-      border-top-color: #0a0a0b;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
+      display: inline-block;
     }
+
+    /* ── SONGS LINK ── */
+    .songs-link-row {
+      text-align: center;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--cream-dark);
+    }
+    .songs-link-row p {
+      font-size: 0.82rem;
+      color: var(--text-light);
+      margin-bottom: 0.5rem;
+    }
+    .songs-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--blue);
+      font-size: 0.88rem;
+      font-weight: 500;
+      text-decoration: none;
+      padding: 8px 16px;
+      border: 2px solid var(--blue);
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .songs-link:hover { background: var(--blue); color: white; }
 
     @keyframes fade-up {
       from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    .card { animation: fade-up 0.5s ease both; }
+
+    @media (max-width: 520px) {
+      .card { border-radius: 12px; }
+      .card-header { padding: 1.5rem 1.5rem 1.25rem; }
+      .card-body { padding: 1.5rem; }
+    }
   </style>
 </head>
 <body>
@@ -322,7 +405,10 @@
   <div class="card">
     <div class="card-header">
       <a href="index.html" class="back-link">← Home</a>
-      <div class="card-logo">AIVisualGuitar</div>
+      <div class="card-logo">
+        <div class="logo-mark"><span class="A">A</span><span class="i">i</span></div>
+        <div class="logo-name">Visual Guitar</div>
+      </div>
       <div class="card-title">Upload Song</div>
     </div>
 
@@ -386,18 +472,24 @@
 
       <div class="status" id="status"></div>
 
+      <!-- Songs link -->
+      <div class="songs-link-row">
+        <p>Looking for song ideas?</p>
+        <a href="songs.html" class="songs-link">🎵 Browse 100 Easy Guitar Songs</a>
+      </div>
+
     </div>
   </div>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
+    const params    = new URLSearchParams(window.location.search);
     const sessionId = params.get('session') || 'LOCAL-' + Math.random().toString(36).slice(2,8).toUpperCase();
     document.getElementById('sessionVal').textContent = sessionId;
 
     const RAILWAY_URL = 'https://vizi-tts-proxy-production.up.railway.app';
 
     let selectedFile = null;
-    let activePanel = 'file';
+    let activePanel  = 'file';
 
     const dropZone   = document.getElementById('dropZone');
     const fileInput  = document.getElementById('fileInput');
@@ -459,7 +551,7 @@
     submitBtn.addEventListener('click', async () => {
       showStatus('loading', 'Sending to Vizi...');
       submitBtn.disabled = true;
-      btnLabel.innerHTML = '<div class="spinner"></div> Sending…';
+      btnLabel.innerHTML = '<span class="spinner"></span> Sending…';
 
       try {
         const fd = new FormData();
@@ -474,7 +566,7 @@
 
         if (res.ok) {
           showStatus('success', '✓ Song received! Vizi is ready — ask about any chord.');
-          btnLabel.textContent = 'Sent!';
+          btnLabel.textContent = '✓ Sent!';
         } else {
           showStatus('error', `Error ${res.status}: ${await res.text()}`);
           resetBtn();

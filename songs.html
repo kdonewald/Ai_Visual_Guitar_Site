@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>100 Easy Guitar Songs — Ai Visual Guitar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream:      #F5F0E8;
+      --cream-dark: #EDE6D6;
+      --red:        #D94025;
+      --red-dark:   #B83320;
+      --blue:       #1B4F8A;
+      --gold:       #E8A020;
+      --teal:       #2AACB8;
+      --green:      #4CAF50;
+      --text:       #2A2018;
+      --text-mid:   #5A4A38;
+      --text-light: #8A7A68;
+      --white:      #FFFFFF;
+      --shadow:     rgba(42,32,24,0.10);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--cream); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(245,240,232,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 2px solid var(--cream-dark);
+      box-shadow: 0 2px 12px var(--shadow);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-mark { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 900; line-height: 1; }
+    .logo-mark .A { color: var(--red); }
+    .logo-mark .i { color: var(--blue); }
+    .logo-name { font-family: 'Playfair Display', serif; font-size: 0.95rem; font-weight: 700; color: var(--text); }
+    .logo-tag { font-family: 'DM Mono', monospace; font-size: 0.58rem; color: var(--text-light); letter-spacing: 0.08em; text-transform: uppercase; display: block; }
+    .nav-links { display: flex; gap: 8px; }
+    .nav-btn { padding: 7px 15px; border-radius: 6px; font-size: 0.83rem; font-weight: 500; text-decoration: none; transition: all 0.2s; border: 2px solid transparent; }
+    .nav-btn.outline { border-color: var(--blue); color: var(--blue); }
+    .nav-btn.outline:hover { background: var(--blue); color: white; }
+    .nav-btn.solid { background: var(--red); color: white; border-color: var(--red); }
+    .nav-btn.solid:hover { background: var(--red-dark); }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, var(--white) 0%, var(--cream) 60%, #E8D8C0 100%);
+      padding: 3.5rem 2rem 2.5rem;
+      border-bottom: 2px solid var(--cream-dark);
+      position: relative; overflow: hidden;
+    }
+    .hero::after {
+      content: '🎸';
+      position: absolute; font-size: 9rem; opacity: 0.05;
+      right: 4%; top: 50%; transform: translateY(-50%) rotate(-12deg);
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 900; letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    .hero h1 span { color: var(--red); }
+    .hero p { color: var(--text-mid); font-size: 0.95rem; max-width: 480px; line-height: 1.6; margin-bottom: 1.5rem; }
+
+    /* LED dots */
+    .led-strip { display: flex; gap: 7px; }
+    .led { width: 9px; height: 9px; border-radius: 50%; animation: pulse 2.5s ease-in-out infinite; }
+    .led.r  { background: var(--red);   animation-delay: 0s; }
+    .led.g  { background: var(--gold);  animation-delay: 0.4s; }
+    .led.gr { background: var(--green); animation-delay: 0.8s; }
+    .led.b  { background: var(--blue);  animation-delay: 1.2s; }
+    .led.t  { background: var(--teal);  animation-delay: 1.6s; }
+    @keyframes pulse { 0%,100%{opacity:0.35;transform:scale(1)} 50%{opacity:1;transform:scale(1.25)} }
+
+    /* CONTROLS */
+    .controls {
+      padding: 1.25rem 2rem;
+      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+      background: var(--white);
+      border-bottom: 1px solid var(--cream-dark);
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 180px; max-width: 380px; }
+    .search-wrap svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-light); }
+    #search {
+      width: 100%; padding: 10px 12px 10px 36px;
+      border: 2px solid var(--cream-dark); border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+      background: var(--cream); color: var(--text);
+      transition: border-color 0.2s;
+    }
+    #search:focus { outline: none; border-color: var(--blue); background: white; }
+    .count-badge { background: var(--cream-dark); color: var(--text-mid); padding: 6px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 500; white-space: nowrap; }
+
+    /* GRID */
+    .song-grid {
+      padding: 1.5rem 2rem 4rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 12px;
+    }
+
+    .song-card {
+      background: var(--white);
+      border: 2px solid var(--cream-dark);
+      border-radius: 10px;
+      padding: 14px 16px;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .song-card::before {
+      content: '';
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: 3px; background: var(--cream-dark);
+      transition: background 0.2s;
+    }
+    .song-card:hover { border-color: var(--blue); box-shadow: 0 4px 16px var(--shadow); transform: translateY(-2px); }
+    .song-card:hover::before { background: var(--blue); }
+
+    .song-number { font-size: 0.68rem; font-weight: 500; color: var(--text-light); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 3px; }
+    .song-title { font-family: 'Playfair Display', serif; font-size: 0.98rem; font-weight: 700; color: var(--text); margin-bottom: 2px; line-height: 1.3; }
+    .song-artist { font-size: 0.8rem; color: var(--text-mid); }
+    .song-meta { display: flex; gap: 5px; margin-top: 9px; flex-wrap: wrap; }
+    .chord-pill { background: var(--cream); border: 1px solid var(--cream-dark); border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; font-weight: 500; color: var(--text-mid); }
+    .chord-pill.more { color: var(--text-light); font-style: italic; }
+
+    /* No results */
+    .no-results { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-light); }
+    .no-results .emoji { font-size: 2.5rem; margin-bottom: 10px; }
+
+    /* UPLOAD BANNER */
+    .upload-banner {
+      margin: 0 2rem 3rem;
+      background: linear-gradient(135deg, var(--blue) 0%, #0F3460 100%);
+      border-radius: 14px; padding: 24px 28px;
+      display: flex; align-items: center; gap: 20px; color: white;
+    }
+    .upload-banner .icon { font-size: 2rem; flex-shrink: 0; }
+    .upload-banner h3 { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 3px; }
+    .upload-banner p { font-size: 0.82rem; opacity: 0.75; line-height: 1.5; }
+    .upload-banner .upload-btn {
+      margin-left: auto; background: white; color: var(--blue);
+      padding: 10px 20px; border-radius: 7px;
+      font-weight: 600; font-size: 0.85rem;
+      text-decoration: none; white-space: nowrap; flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .upload-banner .upload-btn:hover { background: var(--gold); color: var(--text); }
+
+    @media (max-width: 600px) {
+      nav { padding: 0.8rem 1rem; }
+      .hero { padding: 2rem 1rem 1.5rem; }
+      .controls { padding: 1rem; }
+      .song-grid { padding: 1rem 1rem 3rem; gap: 8px; }
+      .upload-banner { margin: 0 1rem 2rem; flex-direction: column; }
+      .upload-banner .upload-btn { margin-left: 0; width: 100%; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <div class="logo-mark"><span class="A">A</span><span class="i">i</span></div>
+    <div>
+      <div class="logo-name">Visual Guitar</div>
+      <span class="logo-tag">AI-Powered Fretboard Learning</span>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="upload.html" class="nav-btn outline">Upload Song</a>
+    <a href="index.html" class="nav-btn solid">Home</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>100 Easy <span>Guitar Songs</span></h1>
+  <p>Choose a song, see the full chord chart, then send it to Vizi for a live LED lesson on your fretboard.</p>
+  <div class="led-strip">
+    <div class="led r"></div><div class="led g"></div><div class="led gr"></div>
+    <div class="led b"></div><div class="led t"></div><div class="led r"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="search-wrap">
+    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input id="search" type="text" placeholder="Search songs or artists...">
+  </div>
+  <div class="count-badge" id="count-badge">100 songs</div>
+</div>
+
+<div class="song-grid" id="song-grid"></div>
+
+<div class="upload-banner">
+  <div class="icon">📄</div>
+  <div>
+    <h3>Have your own sheet music?</h3>
+    <p>Upload a photo or PDF of any song and Vizi will analyse the chords and teach it to you.</p>
+  </div>
+  <a href="upload.html" class="upload-btn">Upload a Song</a>
+</div>
+
+<script>
+const songs = [{"number":1,"key":"all star","title":"All Star","artist":"Smash Mouth","chords":["G","D","Am","C","F"]},{"number":2,"key":"all these things that ive done","title":"All These Things That I've Done","artist":"The Killers","chords":["G","C","F#m","Em","Am"]},{"number":3,"key":"amazing grace","title":"Amazing Grace","artist":"Traditional","chords":["G","C","D"]},{"number":4,"key":"american pie","title":"American Pie","artist":"Don McLean","chords":["G","D","Em7","Am","C","Em","Am7","D7","A7"]},{"number":5,"key":"and so it goes","title":"And So It Goes","artist":"Billy Joel","chords":["G","C","Em","D","Dsus4","A"]},{"number":6,"key":"big yellow taxi","title":"Big Yellow Taxi","artist":"Joni Mitchell","chords":["C","G","D"]},{"number":7,"key":"a better place a better time","title":"A Better Place, A Better Time","artist":"Streetlight Manifesto","chords":["G","Bm","Em","C","D"]},{"number":8,"key":"blackbird","title":"Blackbird","artist":"The Beatles","chords":["G","Am","C","D","Em","A","F","Dm"]},{"number":9,"key":"blowin in the wind","title":"Blowin' In the Wind","artist":"Bob Dylan","chords":["G","C","Dsus4","D","Em"]},{"number":10,"key":"browneyed girl","title":"Brown-Eyed Girl","artist":"Van Morrison","chords":["G","C","D","Em","D7"]},{"number":11,"key":"catch the sun","title":"Catch the Sun","artist":"Jamie Cullum","chords":["Bsus2","Em","B","F#","G","D","A","E"]},{"number":12,"key":"build me up buttercup","title":"Build Me Up Buttercup","artist":"Foundations","chords":["C","E7","G","C7","Fm","F","Bb","Dm","Em"]},{"number":13,"key":"circle game","title":"Circle Game","artist":"Joni Mitchell","chords":["A","D","E","F#m"]},{"number":14,"key":"cats in the cradle","title":"Cat's in the Cradle","artist":"Harry Chapin","chords":["E","G","A","D","G/F#"]},{"number":15,"key":"city of new orleans","title":"City of New Orleans","artist":"Arlo Guthrie","chords":["G","D","Em","C","Bm","A","D7","A7","Bb"]},{"number":16,"key":"dannys song","title":"Danny's Song","artist":"Kenny Loggins","chords":["D","C","Bm","E7","A","G"]},{"number":17,"key":"dear prudence","title":"Dear Prudence","artist":"The Beatles","chords":["D","Dsus4","Dmaj7","D7","G","A","Bm"]},{"number":18,"key":"desperado","title":"Desperado","artist":"The Eagles","chords":["G","G7","C","Cm","D","D7","Em","Am","Bm","B7"]},{"number":19,"key":"dont stop believing","title":"Don't Stop Believing","artist":"Journey","chords":["E","B","C#m","A","G#m"]},{"number":20,"key":"down in the valley","title":"Down in the Valley","artist":"The Head and the Heart","chords":["G","D","C","Em"]},{"number":21,"key":"drops of jupiter","title":"Drops of Jupiter","artist":"Train","chords":["C","G","D","F","Am"]},{"number":22,"key":"eleanor rigby","title":"Eleanor Rigby","artist":"The Beatles","chords":["Em","C","Em7"]},{"number":23,"key":"falling slowly","title":"Falling Slowly","artist":"Marketa Irglova and Glen Hansard","chords":["C","F","Am","G","Fsus2"]},{"number":24,"key":"fast car","title":"Fast Car","artist":"Tracy Chapman","chords":["C","G","Am","F"]},{"number":25,"key":"fire and rain","title":"Fire and Rain","artist":"James Taylor","chords":["G","Gma7","C","Dsus4","D","Am","F","Bb","E7","A7"]},{"number":26,"key":"flake","title":"Flake","artist":"Jack Johnson","chords":["E","B7","A","C#m","F#m","B"]},{"number":27,"key":"follow me","title":"Follow Me","artist":"Uncle Kracker","chords":["A","D","E","F#m","Bm"]},{"number":28,"key":"garden song","title":"Garden Song","artist":"Traditional","chords":["G","C","D","Em"]},{"number":29,"key":"good riddance","title":"Good Riddance","artist":"Green Day","chords":["G","Cadd9","D","Em"]},{"number":30,"key":"gotta have you","title":"Gotta Have You","artist":"The Weepies","chords":["G","Em","C","D","Am"]},{"number":31,"key":"hallelujah","title":"Hallelujah","artist":"Leonard Cohen","chords":["C","Am","F","G","E7"]},{"number":32,"key":"a hard rains agonna fall","title":"A Hard Rain's A-Gonna Fall","artist":"Bob Dylan","chords":["G","C","D","Em"]},{"number":33,"key":"here comes the sun","title":"Here Comes the Sun","artist":"The Beatles","chords":["A","D","G","E7","Asus4","Dmaj7","F","C"]},{"number":34,"key":"hey jude","title":"Hey Jude","artist":"The Beatles","chords":["F","C","C7","Bb","Eb"]},{"number":35,"key":"hey soul sister","title":"Hey Soul Sister","artist":"Train","chords":["E","B","C#m","A"]},{"number":36,"key":"i want to hold your hand","title":"I Want to Hold Your Hand","artist":"The Beatles","chords":["G","D","Em","B7","C","Am"]},{"number":37,"key":"hotel california","title":"Hotel California","artist":"The Eagles","chords":["Bm","F#","A","E","G","D","Em"]},{"number":38,"key":"house at pooh corner","title":"House at Pooh Corner","artist":"Kenny Loggins","chords":["G","C","D","Em","Am","Bm"]},{"number":39,"key":"i am a rock","title":"I Am a Rock","artist":"Simon and Garfunkel","chords":["G","C","D","Am","Em"]},{"number":40,"key":"i will follow you into the dark","title":"I Will Follow You Into the Dark","artist":"Death Cab for Cutie","chords":["F","Dm","Bb","C","Am"]},{"number":41,"key":"i will survive","title":"I Will Survive","artist":"Diana Ross","chords":["Am","Dm","G","Cmaj7","Fmaj7","Bm7b5","E7"]},{"number":42,"key":"if i had a hammer","title":"If I Had a Hammer","artist":"Peter, Paul, and Mary","chords":["G","C","D","Em"]},{"number":43,"key":"im a believer","title":"I'm a Believer","artist":"The Monkees","chords":["D","G","A","E"]},{"number":44,"key":"im yours","title":"I'm Yours","artist":"Jason Mraz","chords":["A","E","F#m","D"]},{"number":45,"key":"imagine","title":"Imagine","artist":"John Lennon","chords":["C","Cmaj7","F","Am","Dm","G","E7"]},{"number":46,"key":"in my life","title":"In My Life","artist":"The Beatles","chords":["A","E","F#m","D","Dm","G","B7"]},{"number":47,"key":"its all been done","title":"It's All Been Done","artist":"Barenaked Ladies","chords":["G","D","C","Em","Am"]},{"number":48,"key":"king of anything","title":"King of Anything","artist":"Sara Bareilles","chords":["C","G","Am","F","Dm"]},{"number":49,"key":"knockin on heavens door","title":"Knockin' on Heaven's Door","artist":"Guns 'n' Roses","chords":["G","D","Am","C"]},{"number":50,"key":"kumbaya","title":"Kumbaya","artist":"Traditional","chords":["G","C","D"]},{"number":51,"key":"lean on me","title":"Lean on Me","artist":"Bill Withers","chords":["C","Dm","Em","F","G","Am"]},{"number":52,"key":"leaving on a jet plane","title":"Leaving on a Jet Plane","artist":"John Denver","chords":["G","C","D","D7"]},{"number":53,"key":"let it be","title":"Let It Be","artist":"The Beatles","chords":["C","G","Am","F","Dm"]},{"number":54,"key":"little boxes","title":"Little Boxes","artist":"Malvina Reynolds","chords":["G","C","D","D7"]},{"number":55,"key":"live high","title":"Live High","artist":"Jason Mraz","chords":["G","C","D","Em","Am"]},{"number":56,"key":"longest time","title":"Longest Time","artist":"Billy Joel","chords":["C","G","F","Am","Dm","E7"]},{"number":57,"key":"lost in my mind","title":"Lost in My Mind","artist":"The Head and the Heart","chords":["D","A","Bm","G","E"]},{"number":58,"key":"me and julio","title":"Me and Julio","artist":"Simon and Garfunkel","chords":["G","C","D","A","E"]},{"number":59,"key":"mrs robinson","title":"Mrs. Robinson","artist":"Simon and Garfunkel","chords":["E","A","D","G","C","Am","Em","B7"]},{"number":60,"key":"my favorite things","title":"My Favorite Things","artist":"Rogers and Hammerstein","chords":["Em","Am","C","G","D","B7"]},{"number":61,"key":"no woman no cry","title":"No Woman No Cry","artist":"Bob Marley","chords":["C","G","Am","F"]},{"number":62,"key":"one day","title":"One Day","artist":"Matisyahu","chords":["G","D","Em","C","Am"]},{"number":63,"key":"one tin soldier","title":"One Tin Soldier","artist":"Peter, Paul, and Mary","chords":["C","G","Am","F","Dm"]},{"number":64,"key":"peaceful easy feeling","title":"Peaceful Easy Feeling","artist":"The Eagles","chords":["E","A","B","F#m","C#m"]},{"number":65,"key":"piano man","title":"Piano Man","artist":"Billy Joel","chords":["C","G","F","Am","D","Dm","E7","G7"]},{"number":66,"key":"puff the magic dragon","title":"Puff the Magic Dragon","artist":"Peter, Paul, and Mary","chords":["G","Bm","C","Em","A7","D7","D"]},{"number":67,"key":"redemption song","title":"Redemption Song","artist":"Bob Marley","chords":["G","Em","C","D","Am","Bm"]},{"number":68,"key":"rocket man","title":"Rocket Man","artist":"Elton John","chords":["Gm7","C7","F","Bb","Am","Dm"]},{"number":69,"key":"rhythm of love","title":"Rhythm of Love","artist":"Plain White Ts","chords":["C","G","Am","F"]},{"number":70,"key":"saturday in the park","title":"Saturday in the Park","artist":"Chicago","chords":["C","F","G","Am","Dm","E7","A7","D7","Em7"]},{"number":71,"key":"save tonight","title":"Save Tonight","artist":"Eagle-Eye Cherry","chords":["Am","F","C","G"]},{"number":72,"key":"scar tissue","title":"Scar Tissue","artist":"Red Hot Chili Peppers","chords":["F","C","Dm","Am","G"]},{"number":73,"key":"semi charmed life","title":"Semi-Charmed Life","artist":"Third Eye Blind","chords":["G","D","C","Em","Am"]},{"number":74,"key":"sitting on the dock of the bay","title":"Sitting on the Dock of the Bay","artist":"Otis Redding","chords":["G","B","C","A","E","D","F"]},{"number":75,"key":"something","title":"Something","artist":"The Beatles","chords":["F","Eb","G","Am","C","Cmaj7","D","A","F#m","D7"]},{"number":76,"key":"song for the divine mother","title":"Song for the Divine Mother of the Universe","artist":"Ben Lee","chords":["D","A","G","Em","Bm"]},{"number":77,"key":"stand by me","title":"Stand by Me","artist":"Bill Withers","chords":["A","F#m","D","E"]},{"number":78,"key":"sound of silence","title":"Sound of Silence","artist":"Simon and Garfunkel","chords":["Am","G","C","F","E"]},{"number":79,"key":"such great heights","title":"Such Great Heights","artist":"Postal Service","chords":["E","A","B","C#m"]},{"number":80,"key":"sweet baby james","title":"Sweet Baby James","artist":"James Taylor","chords":["D","A","Em","G","Bm","F#m","E7"]},{"number":81,"key":"take me home country roads","title":"Take Me Home Country Roads","artist":"John Denver","chords":["G","Em","C","D","D7"]},{"number":82,"key":"teach your children well","title":"Teach Your Children Well","artist":"Crosby, Stills, Nash, and Young","chords":["G","D","C","Em","Am"]},{"number":83,"key":"the 59th street bridge song","title":"The 59th Street Bridge Song","artist":"Simon and Garfunkel","chords":["C","F","G","Am","Dm"]},{"number":84,"key":"the boxer","title":"The Boxer","artist":"Simon and Garfunkel","chords":["C","Am","G","F"]},{"number":85,"key":"the rainbow connection","title":"The Rainbow Connection","artist":"Kermit the Frog","chords":["G","C/G","Em","Am7","C","D","Cmaj7","Dsus4"]},{"number":86,"key":"the star spangled banner","title":"The Star-Spangled Banner","artist":"Francis Scott Key","chords":["C","Am","D7","G","Dm","F","Gsus4"]},{"number":87,"key":"the times they are achangin","title":"The Times They Are A-changin'","artist":"Bob Dylan","chords":["G","Em","C","Am","D","Cadd9"]},{"number":88,"key":"this land is your land","title":"This Land is Your Land","artist":"Woodie Guthrie","chords":["G","C"]},{"number":89,"key":"turn the world around","title":"Turn the World Around","artist":"Harry Belafonte","chords":["G","C","D"]},{"number":90,"key":"under the bridge","title":"Under the Bridge","artist":"Red Hot Chili Peppers","chords":["D/A","A","Bm","G","Em"]},{"number":91,"key":"viva la vida","title":"Viva la Vida","artist":"Coldplay","chords":["C","D","G","Em","Bm"]},{"number":92,"key":"wagon wheel","title":"Wagon Wheel","artist":"Old Crow Medicine Show","chords":["G","D","Em","C"]},{"number":93,"key":"wake me up when september ends","title":"Wake Me Up When September Ends","artist":"Green Day","chords":["G","Bm","Em","D","Cm","C"]},{"number":94,"key":"we are the champions","title":"We Are the Champions","artist":"Queen","chords":["Em","G","C","D","A","Bm","Dm"]},{"number":95,"key":"where have all the flowers gone","title":"Where Have All the Flowers Gone","artist":"Peter Seeger","chords":["G","Em","C","D"]},{"number":96,"key":"world spins madly on","title":"World Spins Madly On","artist":"The Weepies","chords":["G","D","Cadd9","Em7","A"]},{"number":97,"key":"wonderwall","title":"Wonderwall","artist":"Oasis","chords":["Em7","G","Dsus4","Cadd9","C","D","Em"]},{"number":98,"key":"you and i both","title":"You and I Both","artist":"Jason Mraz","chords":["G","Em","Am","C","D","Gmaj7"]},{"number":99,"key":"zero percent","title":"Zero Percent","artist":"Jason Mraz","chords":["F","C","Dm7","Bb","Dm","Dm6"]},{"number":100,"key":"you cant hurry love","title":"You Can't Hurry Love","artist":"The Supremes","chords":["G","C","Bm","Em","Am","D","D7"]}];
+
+const grid = document.getElementById('song-grid');
+const searchInput = document.getElementById('search');
+const countBadge = document.getElementById('count-badge');
+
+function renderSongs(list) {
+  grid.innerHTML = '';
+  if (!list.length) {
+    grid.innerHTML = '<div class="no-results"><div class="emoji">🎸</div><p>No songs found — try a different search.</p></div>';
+    countBadge.textContent = '0 songs';
+    return;
+  }
+  countBadge.textContent = list.length + ' song' + (list.length !== 1 ? 's' : '');
+  list.forEach(song => {
+    const show = song.chords.slice(0, 4);
+    const extra = song.chords.length - 4;
+    const a = document.createElement('a');
+    a.className = 'song-card';
+    a.href = `song.html?key=${encodeURIComponent(song.key)}`;
+    a.innerHTML = `
+      <div class="song-number">Song ${song.number}</div>
+      <div class="song-title">${song.title}</div>
+      <div class="song-artist">${song.artist}</div>
+      <div class="song-meta">
+        ${show.map(c=>`<span class="chord-pill">${c}</span>`).join('')}
+        ${extra>0?`<span class="chord-pill more">+${extra} more</span>`:''}
+      </div>`;
+    grid.appendChild(a);
+  });
+}
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.toLowerCase().trim();
+  renderSongs(q ? songs.filter(s =>
+    s.title.toLowerCase().includes(q) ||
+    s.artist.toLowerCase().includes(q) ||
+    s.chords.some(c => c.toLowerCase().includes(q))
+  ) : songs);
+});
+
+renderSongs(songs);
+</script>
+</body>
+</html>
