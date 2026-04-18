@@ -281,7 +281,7 @@ async function loadPDF(songNumber) {
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   try {
     pdfDoc = await pdfjsLib.getDocument(PDF_URL).promise;
-    currentPage = Math.min(songNumber + 2, pdfDoc.numPages);
+    currentPage = Math.min(songNumber + 3, pdfDoc.numPages);
     renderPage(currentPage);
   } catch(e) {
     document.getElementById('pdf-canvas-wrap').innerHTML =
