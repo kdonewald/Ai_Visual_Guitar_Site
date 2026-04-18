@@ -52,43 +52,30 @@
     }
 
     .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: flex; align-items: center; gap: 12px;
       text-decoration: none;
     }
     .logo-mark {
       font-family: 'Playfair Display', serif;
-      font-size: 1.8rem;
-      font-weight: 900;
-      line-height: 1;
+      font-size: 1.8rem; font-weight: 900; line-height: 1;
     }
     .logo-mark .A { color: var(--red); }
     .logo-mark .i { color: var(--blue); }
     .logo-name {
       font-family: 'Playfair Display', serif;
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--text);
-      line-height: 1.2;
+      font-size: 1rem; font-weight: 700; color: var(--text); line-height: 1.2;
     }
     .logo-tag {
       font-family: 'DM Mono', monospace;
-      font-size: 0.62rem;
-      color: var(--text-light);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      display: block;
+      font-size: 0.62rem; color: var(--text-light);
+      letter-spacing: 0.08em; text-transform: uppercase; display: block;
     }
 
     .nav-links { display: flex; gap: 8px; align-items: center; }
     .nav-link {
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      text-decoration: none;
-      transition: all 0.2s;
+      padding: 8px 16px; border-radius: 6px;
+      font-size: 0.85rem; font-weight: 500;
+      text-decoration: none; transition: all 0.2s;
       border: 2px solid transparent;
     }
     .nav-link.ghost { color: var(--text-mid); }
@@ -101,114 +88,68 @@
     /* ── HERO ── */
     .hero {
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+      display: flex; flex-direction: column; justify-content: center;
       padding: 8rem 2.5rem 5rem;
-      max-width: 1100px;
-      margin: 0 auto;
+      max-width: 1100px; margin: 0 auto;
       position: relative;
     }
 
     .hero-eyebrow {
       font-family: 'DM Mono', monospace;
-      font-size: 0.7rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--red);
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
+      font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--red); margin-bottom: 1.5rem;
+      display: flex; align-items: center; gap: 0.75rem;
       animation: fade-up 0.6s ease both;
     }
     .hero-eyebrow::before {
-      content: '';
-      display: inline-block;
-      width: 2rem;
-      height: 2px;
-      background: var(--red);
+      content: ''; display: inline-block;
+      width: 2rem; height: 2px; background: var(--red);
     }
 
     .hero h1 {
       font-family: 'Playfair Display', serif;
       font-size: clamp(3.2rem, 9vw, 8rem);
-      line-height: 0.95;
-      letter-spacing: -0.03em;
-      font-weight: 900;
-      color: var(--text);
-      margin-bottom: 2rem;
+      line-height: 0.95; letter-spacing: -0.03em; font-weight: 900;
+      color: var(--text); margin-bottom: 2rem;
       animation: fade-up 0.6s 0.1s ease both;
     }
-    .hero h1 em {
-      font-style: italic;
-      color: var(--red);
-      display: block;
-    }
+    .hero h1 em { font-style: italic; color: var(--red); display: block; }
 
     .hero-sub {
-      font-size: 1.1rem;
-      color: var(--text-mid);
-      max-width: 500px;
-      line-height: 1.7;
-      margin-bottom: 3rem;
-      font-weight: 300;
+      font-size: 1.1rem; color: var(--text-mid);
+      max-width: 500px; line-height: 1.7; margin-bottom: 3rem; font-weight: 300;
       animation: fade-up 0.6s 0.2s ease both;
     }
 
     .hero-ctas {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
+      display: flex; gap: 14px; flex-wrap: wrap;
       animation: fade-up 0.6s 0.3s ease both;
     }
 
     .cta-primary {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.6rem;
-      background: var(--red);
-      color: white;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.95rem;
-      font-weight: 600;
-      text-decoration: none;
-      padding: 1rem 2rem;
-      border-radius: 8px;
-      transition: all 0.2s;
-      box-shadow: 0 4px 14px rgba(217,64,37,0.3);
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      background: var(--red); color: white;
+      font-size: 0.95rem; font-weight: 600;
+      text-decoration: none; padding: 1rem 2rem; border-radius: 8px;
+      transition: all 0.2s; box-shadow: 0 4px 14px rgba(217,64,37,0.3);
     }
     .cta-primary:hover { background: var(--red-dark); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(217,64,37,0.4); }
 
     .cta-secondary {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.6rem;
-      background: white;
-      color: var(--blue);
-      font-size: 0.95rem;
-      font-weight: 600;
-      text-decoration: none;
-      padding: 1rem 2rem;
-      border-radius: 8px;
-      border: 2px solid var(--blue);
-      transition: all 0.2s;
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      background: white; color: var(--blue);
+      font-size: 0.95rem; font-weight: 600;
+      text-decoration: none; padding: 1rem 2rem; border-radius: 8px;
+      border: 2px solid var(--blue); transition: all 0.2s;
     }
     .cta-secondary:hover { background: var(--blue); color: white; transform: translateY(-2px); }
 
     /* LED strip */
     .led-strip {
-      display: flex;
-      gap: 0.45rem;
-      margin-top: 4rem;
-      flex-wrap: wrap;
+      display: flex; gap: 0.45rem; margin-top: 4rem; flex-wrap: wrap;
       animation: fade-up 0.6s 0.4s ease both;
     }
-    .led {
-      width: 9px; height: 9px;
-      border-radius: 50%;
-      animation: pulse-led 3s ease-in-out infinite;
-    }
+    .led { width: 9px; height: 9px; border-radius: 50%; animation: pulse-led 3s ease-in-out infinite; }
     .led.amber { background: var(--gold);  box-shadow: 0 0 7px var(--gold); }
     .led.red   { background: var(--red);   box-shadow: 0 0 7px var(--red); }
     .led.blue  { background: var(--blue);  box-shadow: 0 0 7px var(--blue); }
@@ -217,184 +158,95 @@
     .led.dim   { background: var(--cream-mid); }
     @keyframes pulse-led { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
-    /* ── SONG STRIP ── */
+    /* ── FIND SONGS STRIP ── */
     .song-strip {
       background: var(--blue);
       padding: 5rem 2.5rem;
       text-align: center;
-      position: relative;
-      overflow: hidden;
+      position: relative; overflow: hidden;
     }
     .song-strip::before {
       content: '';
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        45deg,
-        transparent,
-        transparent 40px,
-        rgba(255,255,255,0.02) 40px,
-        rgba(255,255,255,0.02) 41px
-      );
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(255,255,255,0.02) 40px, rgba(255,255,255,0.02) 41px);
     }
     .song-strip-inner { position: relative; z-index: 1; }
     .song-strip h2 {
       font-family: 'Playfair Display', serif;
-      font-size: clamp(2rem, 5vw, 3.8rem);
-      font-weight: 900;
-      color: white;
-      letter-spacing: -0.02em;
-      margin-bottom: 1rem;
+      font-size: clamp(2rem, 5vw, 3.8rem); font-weight: 900;
+      color: white; letter-spacing: -0.02em; margin-bottom: 1rem;
     }
     .song-strip h2 span { color: var(--gold); }
-    .song-strip p {
-      color: rgba(255,255,255,0.75);
-      font-size: 1rem;
-      max-width: 480px;
-      margin: 0 auto 2.5rem;
-      line-height: 1.7;
-    }
+    .song-strip p { color: rgba(255,255,255,0.75); font-size: 1rem; max-width: 520px; margin: 0 auto 2.5rem; line-height: 1.7; }
 
     .song-preview-row {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 2.5rem;
+      display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 2.5rem;
     }
     .song-pill {
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.2);
-      color: rgba(255,255,255,0.85);
-      padding: 6px 14px;
-      border-radius: 20px;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.85); padding: 6px 14px; border-radius: 20px;
       font-size: 0.8rem;
-      font-weight: 400;
     }
 
     .song-strip-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.6rem;
-      background: white;
-      color: var(--blue);
-      font-size: 0.95rem;
-      font-weight: 700;
-      text-decoration: none;
-      padding: 1rem 2.2rem;
-      border-radius: 8px;
-      transition: all 0.2s;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      background: white; color: var(--blue);
+      font-size: 0.95rem; font-weight: 700;
+      text-decoration: none; padding: 1rem 2.2rem; border-radius: 8px;
+      transition: all 0.2s; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
     }
     .song-strip-btn:hover { background: var(--gold); color: var(--text); transform: translateY(-2px); }
 
     /* ── HOW IT WORKS ── */
-    .how {
-      padding: 6rem 2.5rem;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
+    .how { padding: 6rem 2.5rem; max-width: 1100px; margin: 0 auto; }
     .section-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.68rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--red);
-      margin-bottom: 3rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
+      font-family: 'DM Mono', monospace; font-size: 0.68rem;
+      letter-spacing: 0.2em; text-transform: uppercase; color: var(--red);
+      margin-bottom: 3rem; display: flex; align-items: center; gap: 0.75rem;
     }
-    .section-label::before {
-      content: '';
-      display: inline-block;
-      width: 1.5rem;
-      height: 2px;
-      background: var(--red);
-    }
+    .section-label::before { content: ''; display: inline-block; width: 1.5rem; height: 2px; background: var(--red); }
 
     .how-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 2px;
-      background: var(--cream-dark);
-      border: 2px solid var(--cream-dark);
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 2px; background: var(--cream-dark); border: 2px solid var(--cream-dark);
     }
     .how-card {
-      background: var(--white);
-      padding: 2.5rem;
-      position: relative;
-      overflow: hidden;
-      transition: background 0.2s;
+      background: var(--white); padding: 2.5rem;
+      position: relative; overflow: hidden; transition: background 0.2s;
     }
     .how-card:hover { background: var(--cream); }
     .how-card::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 3px;
-      background: var(--red);
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform 0.3s;
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+      height: 3px; background: var(--red);
+      transform: scaleX(0); transform-origin: left; transition: transform 0.3s;
     }
     .how-card:hover::after { transform: scaleX(1); }
     .how-num {
-      font-family: 'Playfair Display', serif;
-      font-size: 3.5rem;
-      font-weight: 900;
-      color: var(--cream-dark);
-      line-height: 1;
-      margin-bottom: 1rem;
-      transition: color 0.2s;
+      font-family: 'Playfair Display', serif; font-size: 3.5rem; font-weight: 900;
+      color: var(--cream-dark); line-height: 1; margin-bottom: 1rem; transition: color 0.2s;
     }
     .how-card:hover .how-num { color: var(--red); opacity: 0.3; }
-    .how-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 0.75rem;
-    }
+    .how-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 0.75rem; }
     .how-desc { font-size: 0.875rem; color: var(--text-mid); line-height: 1.7; }
 
     /* ── UPLOAD BAND ── */
     .upload-band {
       background: linear-gradient(135deg, var(--cream) 0%, var(--white) 100%);
-      border-top: 2px solid var(--cream-dark);
-      border-bottom: 2px solid var(--cream-dark);
-      padding: 5rem 2.5rem;
-      text-align: center;
+      border-top: 2px solid var(--cream-dark); border-bottom: 2px solid var(--cream-dark);
+      padding: 5rem 2.5rem; text-align: center;
     }
     .upload-band h2 {
       font-family: 'Playfair Display', serif;
-      font-size: clamp(2rem, 5vw, 3.5rem);
-      font-weight: 900;
-      color: var(--text);
-      letter-spacing: -0.02em;
-      margin-bottom: 1rem;
+      font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900;
+      color: var(--text); letter-spacing: -0.02em; margin-bottom: 1rem;
     }
     .upload-band h2 span { color: var(--red); }
-    .upload-band p {
-      font-size: 0.95rem;
-      color: var(--text-mid);
-      max-width: 420px;
-      margin: 0 auto 2.5rem;
-      line-height: 1.7;
-    }
+    .upload-band p { font-size: 0.95rem; color: var(--text-mid); max-width: 420px; margin: 0 auto 2.5rem; line-height: 1.7; }
     .upload-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.6rem;
-      border: 2px solid var(--red);
-      color: var(--red);
-      background: transparent;
-      font-size: 0.95rem;
-      font-weight: 600;
-      text-decoration: none;
-      padding: 0.9rem 2rem;
-      border-radius: 8px;
-      transition: all 0.2s;
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      border: 2px solid var(--red); color: var(--red); background: transparent;
+      font-size: 0.95rem; font-weight: 600; text-decoration: none;
+      padding: 0.9rem 2rem; border-radius: 8px; transition: all 0.2s;
     }
     .upload-btn:hover { background: var(--red); color: white; transform: translateY(-1px); }
 
@@ -402,27 +254,13 @@
     footer {
       padding: 2rem 2.5rem;
       border-top: 2px solid var(--cream-dark);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-      background: var(--white);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 1rem; background: var(--white);
     }
-    .footer-logo {
-      font-family: 'Playfair Display', serif;
-      font-size: 1rem;
-      font-weight: 700;
-    }
+    .footer-logo { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; }
     .footer-logo .A { color: var(--red); }
     .footer-logo .i { color: var(--blue); }
-    .footer-copy {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.62rem;
-      color: var(--text-light);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
+    .footer-copy { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--text-light); letter-spacing: 0.1em; text-transform: uppercase; }
 
     @keyframes fade-up {
       from { opacity: 0; transform: translateY(24px); }
@@ -452,7 +290,7 @@
     </div>
   </a>
   <div class="nav-links">
-    <a href="songs.html" class="nav-link ghost">100 Songs</a>
+    <a href="songs.html" class="nav-link ghost">Find Songs</a>
     <a href="upload.html" class="nav-link outline">Upload Song</a>
   </div>
 </nav>
@@ -465,12 +303,8 @@
     Ai Visual Guitar lights up your fretboard in real time — guiding you through any song, chord by chord, with 84 LEDs and a voice-guided AI tutor.
   </p>
   <div class="hero-ctas">
-    <a href="songs.html" class="cta-primary">
-      🎵 Browse 100 Songs
-    </a>
-    <a href="upload.html" class="cta-secondary">
-      📄 Upload Your Own
-    </a>
+    <a href="songs.html" class="cta-primary">🎵 Find a Song to Learn</a>
+    <a href="upload.html" class="cta-secondary">📄 Upload Your Own</a>
   </div>
   <div class="led-strip">
     <div class="led amber" style="animation-delay:0s"></div>
@@ -496,11 +330,11 @@
   </div>
 </section>
 
-<!-- 100 SONGS STRIP -->
+<!-- FIND SONGS STRIP -->
 <section class="song-strip">
   <div class="song-strip-inner">
-    <h2>100 Easy <span>Guitar Songs</span></h2>
-    <p>A curated songbook of beginner-friendly classics. Pick a song, see the full chord chart, and send it straight to Vizi for a live LED lesson.</p>
+    <h2>Find Your <span>Next Song</span></h2>
+    <p>Browse thousands of beginner-friendly chord charts on Ultimate Guitar. Pick a song, download the chord chart, and send it to Vizi for a live LED lesson.</p>
     <div class="song-preview-row">
       <span class="song-pill">Wonderwall</span>
       <span class="song-pill">Hallelujah</span>
@@ -510,10 +344,9 @@
       <span class="song-pill">Imagine</span>
       <span class="song-pill">Fast Car</span>
       <span class="song-pill">Let It Be</span>
-      <span class="song-pill">Good Riddance</span>
-      <span class="song-pill">+ 91 more</span>
+      <span class="song-pill">+ thousands more</span>
     </div>
-    <a href="songs.html" class="song-strip-btn">Browse All 100 Songs →</a>
+    <a href="songs.html" class="song-strip-btn">Find a Song to Learn →</a>
   </div>
 </section>
 
@@ -523,13 +356,13 @@
   <div class="how-grid">
     <div class="how-card">
       <div class="how-num">01</div>
-      <div class="how-title">Choose a Song</div>
-      <div class="how-desc">Browse 100 easy guitar songs or upload your own chord sheet, tab, or photo of sheet music.</div>
+      <div class="how-title">Find a Song</div>
+      <div class="how-desc">Browse beginner chord charts on Ultimate Guitar, or upload your own sheet music, photo, or PDF.</div>
     </div>
     <div class="how-card">
       <div class="how-num">02</div>
       <div class="how-title">Send to Vizi</div>
-      <div class="how-desc">One tap sends the song to Vizi. The AI reads the chords and loads your lesson instantly.</div>
+      <div class="how-desc">Download the chord chart and upload it here. Vizi reads the chords and loads your lesson instantly.</div>
     </div>
     <div class="how-card">
       <div class="how-num">03</div>
@@ -548,9 +381,7 @@
 <section class="upload-band">
   <h2>Have Your <span>Own Music?</span></h2>
   <p>Upload a photo or PDF of any chord chart and Vizi will analyse it and teach it to you with live LED guidance.</p>
-  <a href="upload.html" class="upload-btn">
-    📄 Upload a Song
-  </a>
+  <a href="upload.html" class="upload-btn">📄 Upload a Song</a>
 </section>
 
 <!-- FOOTER -->
