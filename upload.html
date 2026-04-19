@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Upload Song — Ai Visual Guitar</title>
+  <title>Upload Music — Ai Visual Guitar</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
@@ -57,7 +57,7 @@
       z-index: 0;
     }
 
-    /* ── CARD ── */
+    /* CARD */
     .card {
       position: relative;
       z-index: 1;
@@ -78,19 +78,22 @@
     }
 
     .back-link {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-light);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-mid);
       text-decoration: none;
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
       margin-bottom: 1.25rem;
-      transition: color 0.2s;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1.5px solid var(--cream-dark);
+      background: var(--white);
+      transition: all 0.2s;
     }
-    .back-link:hover { color: var(--blue); }
+    .back-link:hover { border-color: var(--blue); color: var(--blue); background: rgba(27,79,138,0.05); }
 
     .card-logo {
       display: flex;
@@ -124,7 +127,7 @@
 
     .card-body { padding: 2rem; }
 
-    /* ── SESSION ── */
+    /* SESSION */
     .session-row {
       display: flex;
       align-items: center;
@@ -165,7 +168,7 @@
     }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-    /* ── TABS ── */
+    /* TABS */
     .method-tabs {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -200,7 +203,7 @@
     .panel { display: none; }
     .panel.active { display: block; }
 
-    /* ── DROP ZONE ── */
+    /* DROP ZONE */
     .drop-zone {
       border: 2px dashed var(--cream-dark);
       border-radius: 10px;
@@ -241,7 +244,7 @@
       text-transform: uppercase;
     }
 
-    /* ── FILE CHOSEN ── */
+    /* FILE CHOSEN */
     .file-chosen {
       display: none;
       align-items: center;
@@ -272,7 +275,7 @@
     }
     .file-clear:hover { color: var(--red); }
 
-    /* ── TEXT AREA ── */
+    /* TEXT AREA */
     .input-label {
       font-family: 'DM Mono', monospace;
       font-size: 0.65rem;
@@ -300,7 +303,7 @@
     textarea:focus { border-color: var(--blue); background: white; }
     textarea::placeholder { color: var(--text-light); }
 
-    /* ── SUBMIT ── */
+    /* SUBMIT */
     .btn-submit {
       width: 100%;
       background: var(--red);
@@ -330,7 +333,7 @@
       cursor: not-allowed;
     }
 
-    /* ── STATUS ── */
+    /* STATUS */
     .status {
       display: none;
       margin-top: 1.25rem;
@@ -350,7 +353,6 @@
       color: var(--blue);
     }
 
-    /* spinner */
     @keyframes spin { to { transform: rotate(360deg); } }
     .spinner {
       width: 14px; height: 14px;
@@ -361,7 +363,7 @@
       display: inline-block;
     }
 
-    /* ── SONGS LINK ── */
+    /* SONGS LINK */
     .songs-link-row {
       text-align: center;
       margin-top: 1.5rem;
@@ -409,7 +411,7 @@
         <div class="logo-mark"><span class="A">A</span><span class="i">i</span></div>
         <div class="logo-name">Visual Guitar</div>
       </div>
-      <div class="card-title">Upload Song</div>
+      <div class="card-title">Upload Music</div>
     </div>
 
     <div class="card-body">
@@ -462,8 +464,8 @@
 
       <!-- TEXT PANEL -->
       <div class="panel" id="panel-text">
-        <label class="input-label" for="chordsText">Type or Paste Chord Sheet</label>
-        <textarea id="chordsText" placeholder="e.g. Verse: G  Em  C  D&#10;Chorus: C  G  Am  F&#10;&#10;Or paste any chord chart text here..."></textarea>
+        <label class="input-label" for="chordsText">Type or Paste Song Sheet</label>
+        <textarea id="chordsText" placeholder="e.g. Verse: G  Em  C  D&#10;Chorus: C  G  Am  F&#10;&#10;Or paste any song sheet text here..."></textarea>
       </div>
 
       <button class="btn-submit" id="submitBtn" disabled>
@@ -474,8 +476,8 @@
 
       <!-- Songs link -->
       <div class="songs-link-row">
-        <p>Looking for song ideas?</p>
-        <a href="songs.html" class="songs-link">🎵 Find Songs on Ultimate Guitar</a>
+        <p>Need to find a song sheet first?</p>
+        <a href="songs.html" class="songs-link">🎵 Find Music on Ultimate Guitar</a>
       </div>
 
     </div>
@@ -565,7 +567,7 @@
         const res = await fetch(`${RAILWAY_URL}/song-upload`, { method: 'POST', body: fd });
 
         if (res.ok) {
-          showStatus('success', '✓ Song received! Vizi is ready — ask about any chord.');
+          showStatus('success', '✓ Song sheet received! Vizi is ready — ask about any chord.');
           btnLabel.textContent = '✓ Sent!';
         } else {
           showStatus('error', `Error ${res.status}: ${await res.text()}`);

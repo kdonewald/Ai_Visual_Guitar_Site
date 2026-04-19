@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Find Songs — Ai Visual Guitar</title>
+  <title>Find Music — Ai Visual Guitar</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -27,7 +27,7 @@
     html { scroll-behavior: smooth; }
     body { background: var(--cream); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; }
 
-    /* ── NAV ── */
+    /* NAV */
     nav {
       position: sticky; top: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
@@ -45,12 +45,12 @@
     .logo-tag { font-family: 'DM Mono', monospace; font-size: 0.58rem; color: var(--text-light); letter-spacing: 0.08em; text-transform: uppercase; display: block; }
     .nav-links { display: flex; gap: 8px; }
     .nav-btn { padding: 7px 15px; border-radius: 6px; font-size: 0.83rem; font-weight: 500; text-decoration: none; transition: all 0.2s; border: 2px solid transparent; }
+    .nav-btn.ghost { color: var(--text); background: var(--cream-dark); }
+    .nav-btn.ghost:hover { background: var(--cream-mid); color: var(--text); }
     .nav-btn.outline { border-color: var(--blue); color: var(--blue); }
     .nav-btn.outline:hover { background: var(--blue); color: white; }
-    .nav-btn.solid { background: var(--red); color: white; border-color: var(--red); }
-    .nav-btn.solid:hover { background: var(--red-dark); }
 
-    /* ── HERO ── */
+    /* HERO */
     .hero {
       background: linear-gradient(135deg, var(--white) 0%, var(--cream) 60%, #E8D8C0 100%);
       padding: 4rem 2rem 3rem;
@@ -73,32 +73,13 @@
     .led.t  { background: var(--teal);  animation-delay: 1.6s; }
     @keyframes pulse { 0%,100%{opacity:0.35;transform:scale(1)} 50%{opacity:1;transform:scale(1.25)} }
 
-    /* ── STEPS ── */
-    .steps { max-width: 900px; margin: 0 auto; padding: 3.5rem 2rem 0; }
-    .section-label {
-      font-family: 'DM Mono', monospace; font-size: 0.68rem;
-      letter-spacing: 0.2em; text-transform: uppercase; color: var(--red);
-      display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.75rem;
-    }
-    .section-label::before { content: ''; display: inline-block; width: 1.5rem; height: 2px; background: var(--red); }
-
-    .steps-row {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 2px; background: var(--cream-dark); border: 2px solid var(--cream-dark);
-      margin-bottom: 3.5rem;
-    }
-    .step { background: var(--white); padding: 1.75rem; display: flex; flex-direction: column; gap: 0.6rem; }
-    .step-num { font-family: 'Playfair Display', serif; font-size: 2.5rem; font-weight: 900; color: var(--cream-dark); line-height: 1; }
-    .step-title { font-size: 0.95rem; font-weight: 600; color: var(--text); }
-    .step-desc { font-size: 0.82rem; color: var(--text-mid); line-height: 1.6; }
-
-    /* ── UG COLLECTIONS ── */
-    .ug-section { max-width: 900px; margin: 0 auto; padding: 0 2rem 4rem; }
+    /* UG COLLECTIONS */
+    .ug-section { max-width: 900px; margin: 0 auto; padding: 3.5rem 2rem 5rem; }
 
     .ug-label {
       font-family: 'DM Mono', monospace; font-size: 0.68rem;
       letter-spacing: 0.2em; text-transform: uppercase; color: var(--blue);
-      display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.25rem;
+      display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.5rem;
     }
     .ug-label::before { content: ''; display: inline-block; width: 1.5rem; height: 2px; background: var(--blue); }
 
@@ -144,7 +125,7 @@
     .collection-card.rated .collection-cta    { color: var(--blue); }
     .collection-card.beginner .collection-cta { color: #2E7D32; }
 
-    /* Search any song */
+    /* Search */
     .search-any {
       background: linear-gradient(135deg, var(--blue) 0%, #0F3460 100%);
       border-radius: 12px; padding: 24px 26px;
@@ -159,62 +140,59 @@
     .search-btn { padding: 10px 16px; border-radius: 7px; background: var(--gold); color: var(--text); border: none; font-weight: 600; font-size: 0.88rem; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
     .search-btn:hover { background: #D4900A; }
 
-    /* UG attribution line */
+    /* UG attribution */
     .ug-attr {
-      text-align: center; font-size: 0.78rem; color: var(--text-light);
-      padding-bottom: 0.5rem;
+      font-size: 0.75rem; color: var(--text-light);
+      font-family: 'DM Mono', monospace; letter-spacing: 0.04em;
+      text-align: center;
     }
-    .ug-attr a { color: var(--blue); text-decoration: none; font-weight: 500; }
+    .ug-attr a { color: var(--blue); text-decoration: none; }
     .ug-attr a:hover { text-decoration: underline; }
 
-    /* ── UPLOAD BAND ── */
+    /* upload band */
     .upload-band {
-      background: var(--cream-dark); border-top: 2px solid var(--cream-mid);
-      padding: 4rem 2rem; text-align: center;
+      background: var(--white);
+      border-top: 2px solid var(--cream-dark);
+      padding: 4rem 2rem;
+      text-align: center;
     }
-    .upload-band h2 { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 4vw, 2.5rem); font-weight: 900; letter-spacing: -0.02em; color: var(--text); margin-bottom: 0.75rem; }
+    .upload-band h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.6rem, 4vw, 2.5rem); font-weight: 900;
+      color: var(--text); letter-spacing: -0.02em; margin-bottom: 0.75rem;
+    }
     .upload-band h2 span { color: var(--red); }
-    .upload-band p { font-size: 0.92rem; color: var(--text-mid); max-width: 460px; margin: 0 auto 1.75rem; line-height: 1.7; }
-
-    /* download tip box */
-    .download-tip {
-      display: inline-flex; align-items: flex-start; gap: 12px;
-      background: var(--white); border: 2px solid var(--cream-mid);
-      border-radius: 10px; padding: 14px 18px;
-      max-width: 520px; margin: 0 auto 2rem;
-      text-align: left;
+    .upload-band p { font-size: 0.9rem; color: var(--text-mid); max-width: 420px; margin: 0 auto 2rem; line-height: 1.7; }
+    .upload-cta {
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      background: var(--red); color: white;
+      font-size: 0.95rem; font-weight: 600; text-decoration: none;
+      padding: 0.9rem 2rem; border-radius: 8px; transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(217,64,37,0.3);
     }
-    .download-tip .tip-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
-    .download-tip .tip-text { font-size: 0.82rem; color: var(--text-mid); line-height: 1.6; }
-    .download-tip .tip-text strong { color: var(--text); font-weight: 600; display: block; margin-bottom: 2px; }
+    .upload-cta:hover { background: var(--red-dark); transform: translateY(-1px); }
 
-    .upload-steps { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 2rem; }
-    .upload-step { background: var(--white); border: 1px solid var(--cream-mid); border-radius: 20px; padding: 6px 14px; font-size: 0.78rem; color: var(--text-mid); display: flex; align-items: center; gap: 6px; }
-    .upload-step .num { background: var(--red); color: white; width: 18px; height: 18px; border-radius: 50%; font-size: 0.65rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-
-    .upload-cta { display: inline-flex; align-items: center; gap: 8px; background: var(--red); color: white; font-size: 1rem; font-weight: 600; text-decoration: none; padding: 1rem 2.2rem; border-radius: 8px; transition: all 0.2s; box-shadow: 0 4px 14px rgba(217,64,37,0.3); }
-    .upload-cta:hover { background: var(--red-dark); transform: translateY(-2px); }
-
-    /* ── FOOTER ── */
-    footer { padding: 1.75rem 2rem; border-top: 2px solid var(--cream-dark); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; background: var(--white); }
+    /* FOOTER */
+    footer {
+      padding: 1.75rem 2rem;
+      border-top: 2px solid var(--cream-dark);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 1rem; background: var(--white);
+    }
     .footer-logo { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; }
     .footer-logo .A { color: var(--red); }
     .footer-logo .i { color: var(--blue); }
     .footer-copy { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--text-light); letter-spacing: 0.1em; text-transform: uppercase; }
-    .footer-ug { font-size: 0.75rem; color: var(--text-light); }
-    .footer-ug a { color: var(--blue); text-decoration: none; }
-    .footer-ug a:hover { text-decoration: underline; }
 
-    @media (max-width: 620px) {
+    @media (max-width: 600px) {
       nav { padding: 0.8rem 1rem; }
       .hero { padding: 2.5rem 1rem 2rem; }
-      .steps, .ug-section { padding-left: 1rem; padding-right: 1rem; }
+      .ug-section { padding: 2.5rem 1rem 3.5rem; }
       .upload-band { padding: 3rem 1rem; }
       footer { padding: 1.25rem 1rem; }
       .search-any { flex-direction: column; align-items: flex-start; }
       .search-form { width: 100%; }
       #song-search { flex: 1; }
-      .nav-btn.outline { display: none; }
     }
   </style>
 </head>
@@ -230,46 +208,19 @@
     </div>
   </a>
   <div class="nav-links">
-    <a href="upload.html" class="nav-btn outline">Upload Song</a>
-    <a href="index.html" class="nav-btn solid">Home</a>
+    <a href="index.html" class="nav-btn ghost">← Home</a>
+    <a href="upload.html" class="nav-btn outline">Upload Music</a>
   </div>
 </nav>
 
 <!-- HERO -->
 <div class="hero">
   <div class="hero-inner">
-    <h1>Find Your Next <span>Guitar Song</span></h1>
-    <p>Browse beginner-friendly chord charts on Ultimate Guitar — download the chart, then send it to Vizi for a live LED lesson on your fretboard.</p>
+    <h1>Find Your Next <span>Song to Learn</span></h1>
+    <p>Browse beginner-friendly song sheets on Ultimate Guitar — download the song sheet, then upload it to Vizi for a live LED lesson on your fretboard.</p>
     <div class="led-strip">
       <div class="led r"></div><div class="led g"></div><div class="led gr"></div>
       <div class="led b"></div><div class="led t"></div><div class="led r"></div>
-    </div>
-  </div>
-</div>
-
-<!-- HOW IT WORKS -->
-<div class="steps">
-  <div class="section-label">How It Works</div>
-  <div class="steps-row">
-    <div class="step">
-      <div class="step-num">01</div>
-      <div class="step-title">Browse Songs on Ultimate Guitar</div>
-      <div class="step-desc">Click a collection below to open Ultimate Guitar's curated beginner chord charts.</div>
-    </div>
-    <div class="step">
-      <div class="step-num">02</div>
-      <div class="step-title">Choose Your Version</div>
-      <div class="step-desc">Pick the highest-rated chord chart. Listen via the YouTube link on the Ultimate Guitar page.</div>
-    </div>
-    <div class="step">
-      <div class="step-num">03</div>
-      <div class="step-title">Download the PDF</div>
-      <div class="step-desc">Click "Download as PDF" below the chord chart — free for standard chord charts, no account needed.</div>
-    </div>
-    <div class="step">
-      <div class="step-num">04</div>
-      <div class="step-title">Send to Vizi</div>
-      <div class="step-desc">Upload the PDF here — Vizi reads the chords and starts your live LED lesson instantly.</div>
     </div>
   </div>
 </div>
@@ -284,25 +235,25 @@
     <a href="https://www.ultimate-guitar.com/explore?difficulty[]=2&order=hitstotal_desc&type[]=Chords" target="_blank" class="collection-card popular">
       <span class="collection-icon">🔥</span>
       <span class="collection-badge">Most Popular</span>
-      <div class="collection-title">Beginner Chords &amp; Tabs — Most Popular of All Time</div>
+      <div class="collection-title">Most Popular Beginner Songs of All Time</div>
       <div class="collection-source">Ultimate Guitar</div>
-      <div class="collection-desc">The most-viewed beginner chord charts ever on Ultimate Guitar — proven songs that millions of players have learned.</div>
+      <div class="collection-desc">The most-played beginner song sheets ever on Ultimate Guitar — proven songs that millions of players have learned.</div>
       <div class="collection-cta">Browse on Ultimate Guitar →</div>
     </a>
 
     <a href="https://www.ultimate-guitar.com/explore?difficulty[]=2&order=rating_desc&type[]=Chords" target="_blank" class="collection-card rated">
       <span class="collection-icon">⭐</span>
       <span class="collection-badge">Top Rated</span>
-      <div class="collection-title">Beginner Chords &amp; Tabs — Top Rated</div>
+      <div class="collection-title">Top Rated Beginner Song Sheets</div>
       <div class="collection-source">Ultimate Guitar</div>
-      <div class="collection-desc">The highest-rated beginner chord charts by the Ultimate Guitar community — accurate, well-formatted, and easy to follow.</div>
+      <div class="collection-desc">The highest-rated beginner song sheets by the Ultimate Guitar community — accurate, well-formatted, and easy to follow.</div>
       <div class="collection-cta">Browse on Ultimate Guitar →</div>
     </a>
 
     <a href="https://www.ultimate-guitar.com/explore?difficulty[]=1" target="_blank" class="collection-card beginner">
       <span class="collection-icon">🌱</span>
       <span class="collection-badge">Absolute Beginner</span>
-      <div class="collection-title">Absolute Beginner Chords &amp; Tabs</div>
+      <div class="collection-title">Absolute Beginner Song Sheets</div>
       <div class="collection-source">Ultimate Guitar</div>
       <div class="collection-desc">The simplest songs on Ultimate Guitar — 3 chords or fewer, slow tempos, no barre chords. Perfect for day one.</div>
       <div class="collection-cta">Browse on Ultimate Guitar →</div>
@@ -310,7 +261,7 @@
 
   </div>
 
-  <!-- Search any song -->
+  <!-- Search -->
   <div class="search-any">
     <div class="icon">🔎</div>
     <div>
@@ -323,36 +274,20 @@
     </div>
   </div>
 
-  <div class="ug-attr">Chord charts provided by <a href="https://www.ultimate-guitar.com" target="_blank">Ultimate Guitar</a> — the world's largest guitar community.</div>
+  <div class="ug-attr">Song sheets provided by <a href="https://www.ultimate-guitar.com" target="_blank">Ultimate Guitar</a> — the world's largest guitar community.</div>
 
 </div>
 
 <!-- UPLOAD BAND -->
 <div class="upload-band">
   <h2>Ready to <span>Send to Vizi?</span></h2>
-  <p>Once you've found your song on Ultimate Guitar, download the chord chart as a PDF and upload it here — Vizi reads the chords and starts your LED lesson.</p>
-
-  <div class="download-tip">
-    <div class="tip-icon">💡</div>
-    <div class="tip-text">
-      <strong>Downloading from Ultimate Guitar is free</strong>
-      Standard chord charts have a free "Download as PDF" button right below the chart — no account or subscription needed. If you can't download, a screenshot of the chord chart works just as well.
-    </div>
-  </div>
-
-  <div class="upload-steps">
-    <div class="upload-step"><span class="num">1</span> Find song on Ultimate Guitar</div>
-    <div class="upload-step"><span class="num">2</span> Download chord chart PDF</div>
-    <div class="upload-step"><span class="num">3</span> Upload below</div>
-    <div class="upload-step"><span class="num">4</span> Vizi teaches!</div>
-  </div>
-  <a href="upload.html" class="upload-cta">📄 Upload Chord Chart to Vizi</a>
+  <p>Once you've found your song, download the song sheet as a PDF and upload it to Vizi — your fretboard lesson starts instantly.</p>
+  <a href="upload.html" class="upload-cta">📄 Upload Song Sheet to Vizi</a>
 </div>
 
 <!-- FOOTER -->
 <footer>
   <div class="footer-logo"><span class="A">A</span><span class="i">i</span> Visual Guitar</div>
-  <div class="footer-ug">Chord charts provided by <a href="https://www.ultimate-guitar.com" target="_blank">Ultimate Guitar</a></div>
   <div class="footer-copy">Vizi AI Guitar Tutor — Private Beta</div>
 </footer>
 
