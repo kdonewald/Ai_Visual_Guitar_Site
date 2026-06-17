@@ -36,7 +36,7 @@
   }
   .stage img,.stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .stage img{object-position:center top}
-  .stage video{object-position:center;opacity:0;transition:opacity .3s ease}
+  .stage video{object-position:center 12%;opacity:0;transition:opacity .3s ease}
   .stage.talking video{opacity:1}
   .stage-wrap .ring{position:absolute;inset:-4px;border-radius:50%;border:3px solid var(--blue);
     opacity:0;pointer-events:none}
@@ -84,7 +84,7 @@
   <div class="stage-wrap" id="stageWrap">
     <div class="stage" id="stage">
       <img id="viziStill" src="ViziWhiteBack.png?v=2" alt="Vizi" />
-      <video id="viziVid" src="VIZI_Listening.mp4" muted loop playsinline preload="auto"></video>
+      <video id="viziVid" src="VIZI_MUTETALK.mp4" muted loop playsinline preload="auto"></video>
     </div>
     <div class="ring"></div>
   </div>
