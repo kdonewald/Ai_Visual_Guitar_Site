@@ -31,12 +31,12 @@
   .stage-wrap{position:relative;margin-bottom:1.5rem}
   .stage{
     position:relative;width:230px;height:230px;border-radius:50%;overflow:hidden;
-    border:4px solid var(--cream-dark);background:var(--white);
+    border:4px solid var(--cream-dark);background:#0a0a0a;
     box-shadow:0 10px 30px var(--shadow-lg);
   }
   .stage img,.stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .stage img{object-position:center 20%}
-  .stage video{object-position:center 30%;opacity:0;transition:opacity .3s ease}
+  .stage img{object-position:center top}
+  .stage video{object-position:center;opacity:0;transition:opacity .3s ease}
   .stage.talking video{opacity:1}
   .stage-wrap .ring{position:absolute;inset:-4px;border-radius:50%;border:3px solid var(--blue);
     opacity:0;pointer-events:none}
@@ -143,9 +143,9 @@
 
     processor.onaudioprocess = e => {
       const frame = new Float32Array(e.inputBuffer.getChannelData(0)); // copy
-      preroll.push(frame);                          // always keep recent audio
+      preroll.push(frame);
       if (preroll.length > PREROLL_FRAMES) preroll.shift();
-      if (recording) chunks.push(frame);            // capture only while held
+      if (recording) chunks.push(frame);
     };
     source.connect(processor); processor.connect(sink); sink.connect(audioCtx.destination);
     micReady = true;
@@ -159,7 +159,7 @@
 
   function stopCapture(){
     if (!recording) return null;
-    recording = false;          // mic stays warm; we just stop collecting
+    recording = false;
     const len = chunks.reduce((a,c)=>a+c.length, 0);
     if (len === 0) return null;
     const merged = new Float32Array(len);
