@@ -21,7 +21,6 @@
     min-height:100vh; display:flex; flex-direction:column;
     align-items:center; padding:1.25rem 1.25rem 2.5rem;
   }
-
   .head{display:flex;align-items:center;gap:10px;margin-top:0.5rem}
   .logo-mark{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:900;line-height:1}
   .logo-mark .A{color:var(--red)} .logo-mark .i{color:var(--blue)}
@@ -29,7 +28,6 @@
   .tag{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.16em;
        text-transform:uppercase;color:var(--text-light);text-align:center;margin:0.2rem 0 1.75rem}
 
-  /* ── Vizi avatar stage ── */
   .stage-wrap{position:relative;margin-bottom:1.5rem}
   .stage{
     position:relative;width:230px;height:230px;border-radius:50%;overflow:hidden;
@@ -40,13 +38,11 @@
   .stage img{object-position:center 20%}
   .stage video{object-position:center 30%;opacity:0;transition:opacity .3s ease}
   .stage.talking video{opacity:1}
-  /* listening ring */
   .stage-wrap .ring{position:absolute;inset:-4px;border-radius:50%;border:3px solid var(--blue);
     opacity:0;pointer-events:none}
   .stage-wrap.listening .ring{animation:ring 1.15s ease-out infinite}
   @keyframes ring{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.28);opacity:0}}
 
-  /* talk button */
   .talk{
     width:140px;height:140px;border-radius:50%;
     background:var(--red);color:var(--white);border:none;
@@ -88,7 +84,7 @@
   <div class="stage-wrap" id="stageWrap">
     <div class="stage" id="stage">
       <img id="viziStill" src="ViziWhiteBack.png" alt="Vizi" />
-      <video id="viziVid" src="VIZI%20Listening.mp4" muted loop playsinline preload="auto"></video>
+      <video id="viziVid" src="VIZI_Listening.mp4" muted loop playsinline preload="auto"></video>
     </div>
     <div class="ring"></div>
   </div>
@@ -117,7 +113,10 @@
 
   // ─── Audio state ──────────────────────────────────────────
   let audioCtx, stream, source, processor, sink;
-  let recording = false, chunks = [];
+  let micReady = false, recording = false;
+  let chunks = [];
+  let preroll = [];                 // rolling buffer of recent frames
+  const PREROLL_FRAMES = 6;         // ~0.5s lead-in so the first word is never clipped
 
   function setStatus(t){ statusEl.textContent = t; }
   function setBtn(cls){ btn.className = 'talk' + (cls ? ' ' + cls : ''); }
@@ -129,9 +128,9 @@
     document.getElementById(id).classList.add('show');
   }
 
-  // ─── Recording (Web Audio → LINEAR16) ─────────────────────
-  async function startRec(){
-    if (recording) return;
+  // ─── Mic: acquire ONCE, keep warm, gate capture with a flag ──
+  async function ensureMic(){
+    if (micReady) return;
     stream = await navigator.mediaDevices.getUserMedia({
       audio:{ channelCount:1, echoCancellation:true, noiseSuppression:true, autoGainControl:true }
     });
@@ -142,20 +141,25 @@
     processor = audioCtx.createScriptProcessor(4096, 1, 1);
     sink      = audioCtx.createGain(); sink.gain.value = 0;
 
-    chunks = [];
     processor.onaudioprocess = e => {
-      if (!recording) return;
-      chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+      const frame = new Float32Array(e.inputBuffer.getChannelData(0)); // copy
+      preroll.push(frame);                          // always keep recent audio
+      if (preroll.length > PREROLL_FRAMES) preroll.shift();
+      if (recording) chunks.push(frame);            // capture only while held
     };
     source.connect(processor); processor.connect(sink); sink.connect(audioCtx.destination);
+    micReady = true;
+  }
+
+  async function startCapture(){
+    await ensureMic();
+    chunks = preroll.slice();   // seed with pre-roll → catches the leading words
     recording = true;
   }
 
-  function stopRec(){
+  function stopCapture(){
     if (!recording) return null;
-    recording = false;
-    try { processor.disconnect(); source.disconnect(); sink.disconnect(); } catch(e){}
-    if (stream) stream.getTracks().forEach(t => t.stop());
+    recording = false;          // mic stays warm; we just stop collecting
     const len = chunks.reduce((a,c)=>a+c.length, 0);
     if (len === 0) return null;
     const merged = new Float32Array(len);
@@ -203,14 +207,12 @@
         method:'POST', headers:{ 'Content-Type':'application/json' },
         body: JSON.stringify({ audio:b64, sampleRate:TARGET_RATE, mode:MODE })
       });
-
       const ct = (res.headers.get('content-type') || '');
       if (ct.includes('application/json')){
         const j = await res.json();
         setBtn(''); setStatus(j.empty ? 'Didn’t catch that — try again' : ('Error: ' + (j.error || 'unknown')));
         return;
       }
-
       const transcript = dec(res.headers.get('X-Vizi-Transcript'));
       const text       = dec(res.headers.get('X-Vizi-Text'));
       const commands   = dec(res.headers.get('X-Vizi-Commands'));
@@ -228,7 +230,6 @@
   }
   function dec(v){ try { return v ? decodeURIComponent(v) : ''; } catch(_){ return v || ''; } }
 
-  // Decode + play through AudioContext; drive the talking video for the duration
   async function playBlob(blob){
     try {
       const arr = await blob.arrayBuffer();
@@ -246,15 +247,19 @@
   async function press(e){
     e.preventDefault();
     if (recording) return;
-    setBtn('listening'); setListening(true); setStatus('Listening…');
-    try { await startRec(); }
-    catch(err){ setBtn(''); setListening(false); setStatus('Microphone blocked — allow mic access'); }
+    setBtn('listening'); setStatus('Starting mic…');
+    try {
+      await startCapture();
+      setListening(true); setStatus('Listening…');
+    } catch(err){
+      setBtn(''); setListening(false); setStatus('Microphone blocked — allow mic access');
+    }
   }
   function release(e){
     e.preventDefault();
     if (!recording) return;
     setListening(false);
-    const b64 = stopRec();
+    const b64 = stopCapture();
     if (!b64){ setBtn(''); setStatus('Nothing recorded — hold a moment longer'); return; }
     sendToVizi(b64);
   }
