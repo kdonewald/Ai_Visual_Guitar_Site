@@ -1,593 +1,339 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Upload Music — Ai Visual Guitar</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --cream:      #F5F0E8;
-      --cream-dark: #EDE6D6;
-      --red:        #D94025;
-      --red-dark:   #B83320;
-      --blue:       #1B4F8A;
-      --gold:       #E8A020;
-      --text:       #2A2018;
-      --text-mid:   #5A4A38;
-      --text-light: #8A7A68;
-      --white:      #FFFFFF;
-      --shadow:     rgba(42,32,24,0.10);
-      --success:    #2E7D32;
-      --success-bg: #E8F5E9;
-      --success-bd: #A5D6A7;
-      --error:      #C62828;
-      --error-bg:   #FFEBEE;
-      --error-bd:   #FFCDD2;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Upload Music — Ai Visual Guitar</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --cream:#F5F0E8; --cream-dark:#EDE6D6; --cream-mid:#E0D5C0;
+    --red:#D94025; --red-dark:#B83320; --blue:#1B4F8A;
+    --gold:#E8A020; --text:#2A2018; --text-mid:#5A4A38; --text-light:#8A7A68;
+    --white:#FFFFFF; --shadow:rgba(42,32,24,0.10);
+    --green:#2E7D32; --green-bg:#E8F5E9; --green-bd:#A5D6A7;
+    --err:#C62828; --err-bg:#FFEBEE; --err-bd:#FFCDD2;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--cream); color:var(--text);
+    font-family:'DM Sans',sans-serif; font-weight:300;
+    min-height:100vh; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:2rem 1.25rem;
+  }
+  body::before{
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:repeating-linear-gradient(90deg,transparent 0px,transparent 79px,rgba(42,32,24,0.04) 80px,rgba(42,32,24,0.04) 81px);
+  }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  .card{
+    position:relative; z-index:1;
+    width:100%; max-width:480px;
+    background:var(--white); border:2px solid var(--cream-dark);
+    border-radius:16px; box-shadow:0 8px 32px var(--shadow);
+    animation:fade-up .45s ease both;
+  }
+  @keyframes fade-up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 
-    body {
-      background: var(--cream);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-weight: 300;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem 1.5rem;
-    }
+  /* header */
+  .card-head{
+    padding:1.75rem 2rem 1.5rem;
+    border-bottom:2px solid var(--cream-dark);
+    background:linear-gradient(135deg,var(--white) 0%,var(--cream) 100%);
+    border-radius:14px 14px 0 0;
+  }
+  .back{
+    display:inline-flex; align-items:center; gap:.4rem;
+    font-size:.82rem; font-weight:500; color:var(--text-mid);
+    text-decoration:none; padding:5px 12px; border-radius:6px;
+    border:1.5px solid var(--cream-dark); background:var(--white);
+    transition:all .2s; margin-bottom:1.25rem;
+  }
+  .back:hover{border-color:var(--blue);color:var(--blue)}
+  .logo{display:flex;align-items:center;gap:10px;margin-bottom:.35rem}
+  .logo-mark{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;line-height:1}
+  .logo-mark .A{color:var(--red)} .logo-mark .i{color:var(--blue)}
+  .logo-name{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700}
+  .card-title{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;letter-spacing:-.02em;line-height:1}
 
-    /* subtle fretboard string lines */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: repeating-linear-gradient(
-        90deg,
-        transparent 0px,
-        transparent 79px,
-        rgba(42,32,24,0.04) 80px,
-        rgba(42,32,24,0.04) 81px
-      );
-      pointer-events: none;
-      z-index: 0;
-    }
+  /* body */
+  .card-body{padding:1.75rem 2rem 2rem}
 
-    /* CARD */
-    .card {
-      position: relative;
-      z-index: 1;
-      width: 100%;
-      max-width: 500px;
-      background: var(--white);
-      border: 2px solid var(--cream-dark);
-      border-radius: 16px;
-      box-shadow: 0 8px 32px var(--shadow);
-      animation: fade-up 0.5s ease both;
-    }
+  /* step labels */
+  .step{
+    display:flex; align-items:center; gap:.75rem;
+    margin-bottom:.6rem;
+  }
+  .step-num{
+    width:26px; height:26px; border-radius:50%; flex-shrink:0;
+    background:var(--blue); color:white;
+    font-family:'DM Mono',monospace; font-size:.7rem; font-weight:500;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .step-label{font-size:.9rem; font-weight:500; color:var(--text)}
 
-    .card-header {
-      padding: 2rem 2rem 1.5rem;
-      border-bottom: 2px solid var(--cream-dark);
-      background: linear-gradient(135deg, var(--white) 0%, var(--cream) 100%);
-      border-radius: 14px 14px 0 0;
-    }
+  /* UG button */
+  .ug-btn{
+    display:flex; align-items:center; justify-content:space-between;
+    width:100%; padding:.9rem 1.1rem;
+    background:var(--cream); border:2px solid var(--cream-dark);
+    border-radius:10px; text-decoration:none; color:var(--text);
+    font-size:.88rem; font-weight:500;
+    transition:all .2s; margin-bottom:1.75rem; cursor:pointer;
+  }
+  .ug-btn:hover{border-color:var(--blue);background:rgba(27,79,138,0.04);color:var(--blue)}
+  .ug-btn .ug-left{display:flex;align-items:center;gap:.65rem}
+  .ug-btn .ug-tag{
+    font-family:'DM Mono',monospace; font-size:.58rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--text-light); display:block; margin-top:1px;
+  }
+  .ug-btn .arrow{font-size:1rem;color:var(--text-light)}
 
-    .back-link {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.82rem;
-      font-weight: 500;
-      color: var(--text-mid);
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      margin-bottom: 1.25rem;
-      padding: 5px 12px;
-      border-radius: 6px;
-      border: 1.5px solid var(--cream-dark);
-      background: var(--white);
-      transition: all 0.2s;
-    }
-    .back-link:hover { border-color: var(--blue); color: var(--blue); background: rgba(27,79,138,0.05); }
+  /* divider */
+  .divider{
+    display:flex; align-items:center; gap:.75rem;
+    margin-bottom:1.75rem; color:var(--text-light);
+    font-family:'DM Mono',monospace; font-size:.62rem; letter-spacing:.12em; text-transform:uppercase;
+  }
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--cream-dark)}
 
-    .card-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 0.5rem;
-    }
-    .logo-mark {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.6rem;
-      font-weight: 900;
-      line-height: 1;
-    }
-    .logo-mark .A { color: var(--red); }
-    .logo-mark .i { color: var(--blue); }
-    .logo-name {
-      font-family: 'Playfair Display', serif;
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--text);
-    }
+  /* drop zone */
+  .drop-zone{
+    border:2px dashed var(--cream-dark); border-radius:10px;
+    padding:2rem 1.25rem; text-align:center; cursor:pointer;
+    background:var(--cream); position:relative;
+    transition:border-color .2s, background .2s;
+    margin-bottom:.85rem;
+  }
+  .drop-zone:hover,.drop-zone.over{border-color:var(--blue);background:rgba(27,79,138,0.04)}
+  .drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  .drop-icon{width:2rem;height:2rem;margin:0 auto .6rem;color:var(--text-light)}
+  .drop-zone:hover .drop-icon,.drop-zone.over .drop-icon{color:var(--blue)}
+  .drop-main{font-size:.88rem;color:var(--text);margin-bottom:.25rem}
+  .drop-sub{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-light)}
 
-    .card-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 2rem;
-      font-weight: 900;
-      letter-spacing: -0.02em;
-      color: var(--text);
-      line-height: 1;
-    }
+  /* file chosen */
+  .file-chosen{
+    display:none; align-items:center; gap:.75rem;
+    background:rgba(27,79,138,0.06); border:1px solid rgba(27,79,138,0.2);
+    border-radius:8px; padding:.7rem 1rem; margin-bottom:.85rem;
+  }
+  .file-chosen.show{display:flex}
+  .file-name{font-family:'DM Mono',monospace;font-size:.75rem;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .file-clear{background:none;border:none;color:var(--text-light);cursor:pointer;font-size:1rem;transition:color .2s;padding:0 .2rem}
+  .file-clear:hover{color:var(--red)}
 
-    .card-body { padding: 2rem; }
+  /* also accept text */
+  .text-toggle{
+    font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--blue);cursor:pointer;text-align:center;display:block;
+    margin-bottom:1.25rem; padding:.4rem; border-radius:4px;
+    border:none;background:none; width:100%; transition:background .15s;
+  }
+  .text-toggle:hover{background:rgba(27,79,138,0.06)}
+  .text-area-wrap{display:none;margin-bottom:1.25rem}
+  .text-area-wrap.show{display:block}
+  textarea{
+    width:100%;background:var(--cream);border:2px solid var(--cream-dark);
+    border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;
+    font-size:.75rem;line-height:1.6;padding:.875rem;resize:vertical;
+    min-height:100px;outline:none;transition:border-color .2s;
+  }
+  textarea:focus{border-color:var(--blue);background:white}
+  textarea::placeholder{color:var(--text-light)}
 
-    /* SESSION */
-    .session-row {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      margin-bottom: 1.75rem;
-      padding: 10px 14px;
-      background: var(--cream);
-      border: 1px solid var(--cream-dark);
-      border-radius: 8px;
-    }
-    .session-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.62rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-light);
-      white-space: nowrap;
-    }
-    .session-val {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.75rem;
-      font-weight: 500;
-      color: var(--blue);
-      background: rgba(27,79,138,0.08);
-      border: 1px solid rgba(27,79,138,0.2);
-      padding: 3px 10px;
-      border-radius: 4px;
-      letter-spacing: 0.08em;
-    }
-    .session-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: #4CAF50;
-      box-shadow: 0 0 6px #4CAF50;
-      flex-shrink: 0;
-      margin-left: auto;
-      animation: blink 2s infinite;
-    }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  /* submit */
+  .btn-send{
+    width:100%;background:var(--red);color:white;border:none;
+    border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:600;
+    padding:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.6rem;
+    transition:all .2s;
+  }
+  .btn-send:hover:not(:disabled){background:var(--red-dark);transform:translateY(-1px);box-shadow:0 4px 14px rgba(217,64,37,.3)}
+  .btn-send:disabled{background:var(--cream-dark);color:var(--text-light);cursor:not-allowed}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
 
-    /* TABS */
-    .method-tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 1.75rem;
-    }
-    .method-tab {
-      background: var(--cream);
-      border: 2px solid var(--cream-dark);
-      border-radius: 8px;
-      color: var(--text-mid);
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 0.85rem 0.5rem;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.4rem;
-      transition: all 0.15s;
-    }
-    .method-tab svg { width: 1.1rem; height: 1.1rem; }
-    .method-tab:hover { border-color: var(--blue); color: var(--blue); background: rgba(27,79,138,0.05); }
-    .method-tab.active {
-      background: rgba(27,79,138,0.08);
-      border-color: var(--blue);
-      color: var(--blue);
-    }
+  /* status */
+  .status{display:none;margin-top:1rem;padding:.875rem 1rem;border-radius:8px;font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.04em;border:1px solid}
+  .status.show{display:block}
+  .status.ok{border-color:var(--green-bd);background:var(--green-bg);color:var(--green)}
+  .status.err{border-color:var(--err-bd);background:var(--err-bg);color:var(--err)}
+  .status.loading{border-color:rgba(27,79,138,.2);background:rgba(27,79,138,.06);color:var(--blue)}
 
-    .panel { display: none; }
-    .panel.active { display: block; }
-
-    /* DROP ZONE */
-    .drop-zone {
-      border: 2px dashed var(--cream-dark);
-      border-radius: 10px;
-      padding: 2.5rem 1.5rem;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
-      position: relative;
-      margin-bottom: 1rem;
-      background: var(--cream);
-    }
-    .drop-zone:hover, .drop-zone.drag-over {
-      border-color: var(--blue);
-      background: rgba(27,79,138,0.04);
-    }
-    .drop-zone input[type="file"] {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
-      width: 100%;
-      height: 100%;
-    }
-    .drop-icon {
-      width: 2.2rem; height: 2.2rem;
-      margin: 0 auto 0.75rem;
-      color: var(--text-light);
-      transition: color 0.2s;
-    }
-    .drop-zone:hover .drop-icon,
-    .drop-zone.drag-over .drop-icon { color: var(--blue); }
-    .drop-main { font-size: 0.9rem; color: var(--text); margin-bottom: 0.35rem; font-weight: 400; }
-    .drop-sub {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.62rem;
-      letter-spacing: 0.1em;
-      color: var(--text-light);
-      text-transform: uppercase;
-    }
-
-    /* FILE CHOSEN */
-    .file-chosen {
-      display: none;
-      align-items: center;
-      gap: 0.75rem;
-      background: rgba(27,79,138,0.06);
-      border: 1px solid rgba(27,79,138,0.2);
-      border-radius: 8px;
-      padding: 0.75rem 1rem;
-      margin-bottom: 1.25rem;
-    }
-    .file-chosen.visible { display: flex; }
-    .file-icon { color: var(--blue); flex-shrink: 0; }
-    .file-name {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--text);
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .file-clear {
-      background: none; border: none;
-      color: var(--text-light); cursor: pointer;
-      font-size: 1rem; line-height: 1;
-      padding: 0 0.2rem;
-      transition: color 0.2s;
-    }
-    .file-clear:hover { color: var(--red); }
-
-    /* TEXT AREA */
-    .input-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-light);
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-    textarea {
-      width: 100%;
-      background: var(--cream);
-      border: 2px solid var(--cream-dark);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: 'DM Mono', monospace;
-      font-size: 0.75rem;
-      line-height: 1.6;
-      padding: 0.875rem;
-      resize: vertical;
-      min-height: 120px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    textarea:focus { border-color: var(--blue); background: white; }
-    textarea::placeholder { color: var(--text-light); }
-
-    /* SUBMIT */
-    .btn-submit {
-      width: 100%;
-      background: var(--red);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.95rem;
-      font-weight: 600;
-      padding: 1rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.6rem;
-      margin-top: 1.5rem;
-    }
-    .btn-submit:hover:not(:disabled) {
-      background: var(--red-dark);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 14px rgba(217,64,37,0.3);
-    }
-    .btn-submit:disabled {
-      background: var(--cream-dark);
-      color: var(--text-light);
-      cursor: not-allowed;
-    }
-
-    /* STATUS */
-    .status {
-      display: none;
-      margin-top: 1.25rem;
-      padding: 0.875rem 1rem;
-      border-radius: 8px;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.72rem;
-      letter-spacing: 0.04em;
-      border: 1px solid;
-    }
-    .status.visible { display: block; }
-    .status.success { border-color: var(--success-bd); background: var(--success-bg); color: var(--success); }
-    .status.error   { border-color: var(--error-bd);   background: var(--error-bg);   color: var(--error); }
-    .status.loading {
-      border-color: rgba(27,79,138,0.2);
-      background: rgba(27,79,138,0.06);
-      color: var(--blue);
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spinner {
-      width: 14px; height: 14px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      display: inline-block;
-    }
-
-    /* SONGS LINK */
-    .songs-link-row {
-      text-align: center;
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--cream-dark);
-    }
-    .songs-link-row p {
-      font-size: 0.82rem;
-      color: var(--text-light);
-      margin-bottom: 0.5rem;
-    }
-    .songs-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--blue);
-      font-size: 0.88rem;
-      font-weight: 500;
-      text-decoration: none;
-      padding: 8px 16px;
-      border: 2px solid var(--blue);
-      border-radius: 6px;
-      transition: all 0.2s;
-    }
-    .songs-link:hover { background: var(--blue); color: white; }
-
-    @keyframes fade-up {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @media (max-width: 520px) {
-      .card { border-radius: 12px; }
-      .card-header { padding: 1.5rem 1.5rem 1.25rem; }
-      .card-body { padding: 1.5rem; }
-    }
-  </style>
+  @media(max-width:520px){
+    .card-head,.card-body{padding-left:1.25rem;padding-right:1.25rem}
+  }
+</style>
 </head>
 <body>
+<div class="card">
 
-  <div class="card">
-    <div class="card-header">
-      <a href="index.html" class="back-link">← Home</a>
-      <div class="card-logo">
-        <div class="logo-mark"><span class="A">A</span><span class="i">i</span></div>
-        <div class="logo-name">Visual Guitar</div>
-      </div>
-      <div class="card-title">Upload Music</div>
+  <div class="card-head">
+    <a href="index.html" class="back">← Home</a>
+    <div class="logo">
+      <div class="logo-mark"><span class="A">A</span><span class="i">i</span></div>
+      <div class="logo-name">Visual Guitar</div>
     </div>
-
-    <div class="card-body">
-
-      <div class="session-row">
-        <span class="session-label">Session</span>
-        <span class="session-val" id="sessionVal">—</span>
-        <span class="session-dot"></span>
-      </div>
-
-      <!-- TABS -->
-      <div class="method-tabs">
-        <button class="method-tab active" data-panel="file">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-          </svg>
-          File / Photo
-        </button>
-        <button class="method-tab" data-panel="text">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <line x1="17" y1="10" x2="3" y2="10"/>
-            <line x1="21" y1="6" x2="3" y2="6"/>
-            <line x1="21" y1="14" x2="3" y2="14"/>
-            <line x1="14" y1="18" x2="3" y2="18"/>
-          </svg>
-          Type / Paste
-        </button>
-      </div>
-
-      <!-- FILE PANEL -->
-      <div class="panel active" id="panel-file">
-        <div class="drop-zone" id="dropZone">
-          <input type="file" id="fileInput" accept=".pdf,.txt,.png,.jpg,.jpeg,image/*" />
-          <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M12 3v13M7 8l5-5 5 5M4 17v1a2 2 0 002 2h12a2 2 0 002-2v-1"/>
-          </svg>
-          <div class="drop-main">Tap to choose file or take photo</div>
-          <div class="drop-sub">PDF · Image · Camera</div>
-        </div>
-        <div class="file-chosen" id="fileChosen">
-          <svg class="file-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-          </svg>
-          <span class="file-name" id="fileName">—</span>
-          <button class="file-clear" id="fileClear">✕</button>
-        </div>
-      </div>
-
-      <!-- TEXT PANEL -->
-      <div class="panel" id="panel-text">
-        <label class="input-label" for="chordsText">Type or Paste Song Sheet</label>
-        <textarea id="chordsText" placeholder="e.g. Verse: G  Em  C  D&#10;Chorus: C  G  Am  F&#10;&#10;Or paste any song sheet text here..."></textarea>
-      </div>
-
-      <button class="btn-submit" id="submitBtn" disabled>
-        <span id="btnLabel">Choose a file or enter chords above</span>
-      </button>
-
-      <div class="status" id="status"></div>
-
-      <!-- Songs link -->
-      <div class="songs-link-row">
-        <p>Need to find a song sheet first?</p>
-        <a href="songs.html" class="songs-link">🎵 Find Music on Ultimate Guitar</a>
-      </div>
-
-    </div>
+    <div class="card-title">Upload Music</div>
   </div>
 
-  <script>
-    const params    = new URLSearchParams(window.location.search);
-    const sessionId = params.get('session') || 'LOCAL-' + Math.random().toString(36).slice(2,8).toUpperCase();
-    document.getElementById('sessionVal').textContent = sessionId;
+  <div class="card-body">
 
-    const RAILWAY_URL = 'https://vizi-tts-proxy-production.up.railway.app';
+    <!-- Step 1 -->
+    <div class="step" style="margin-bottom:.75rem">
+      <div class="step-num">1</div>
+      <div class="step-label">Get a song sheet</div>
+    </div>
 
-    let selectedFile = null;
-    let activePanel  = 'file';
+    <a class="ug-btn" href="https://www.ultimate-guitar.com/explore?order=rating_desc&type[]=Chords&level[]=beginner" target="_blank" rel="noopener">
+      <div class="ug-left">
+        <span style="font-size:1.3rem">🎸</span>
+        <div>
+          Find beginner songs on Ultimate Guitar
+          <span class="ug-tag">Free chord sheets · Opens in new tab</span>
+        </div>
+      </div>
+      <span class="arrow">↗</span>
+    </a>
 
-    const dropZone   = document.getElementById('dropZone');
-    const fileInput  = document.getElementById('fileInput');
-    const fileChosen = document.getElementById('fileChosen');
-    const fileName   = document.getElementById('fileName');
-    const fileClear  = document.getElementById('fileClear');
-    const chordsText = document.getElementById('chordsText');
-    const submitBtn  = document.getElementById('submitBtn');
-    const btnLabel   = document.getElementById('btnLabel');
-    const status     = document.getElementById('status');
+    <!-- Step 2 -->
+    <div class="step" style="margin-bottom:.75rem">
+      <div class="step-num">2</div>
+      <div class="step-label">Upload your song sheet</div>
+    </div>
 
-    // TABS
-    document.querySelectorAll('.method-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        tab.classList.add('active');
-        activePanel = tab.dataset.panel;
-        document.getElementById('panel-' + activePanel).classList.add('active');
-        updateSubmitState();
-      });
-    });
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept=".pdf,.txt,.png,.jpg,.jpeg,image/*" />
+      <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 3v13M7 8l5-5 5 5M4 17v1a2 2 0 002 2h12a2 2 0 002-2v-1"/>
+      </svg>
+      <div class="drop-main">Tap to choose file or take photo</div>
+      <div class="drop-sub">PDF · Image · Screenshot</div>
+    </div>
 
-    // FILE
-    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-    dropZone.addEventListener('drop', e => {
-      e.preventDefault();
-      dropZone.classList.remove('drag-over');
-      if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
-    });
-    fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+    <div class="file-chosen" id="fileChosen">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+      </svg>
+      <span class="file-name" id="fileName">—</span>
+      <button class="file-clear" id="fileClear">✕</button>
+    </div>
 
-    function setFile(f) {
-      selectedFile = f;
-      fileName.textContent = f.name;
-      fileChosen.classList.add('visible');
-      updateSubmitState();
-    }
+    <button class="text-toggle" id="textToggle">Or type / paste chords instead ▾</button>
 
-    fileClear.addEventListener('click', () => {
-      selectedFile = null;
-      fileInput.value = '';
-      fileChosen.classList.remove('visible');
-      updateSubmitState();
-    });
+    <div class="text-area-wrap" id="textWrap">
+      <textarea id="chordsText" placeholder="e.g. Verse: G  Em  C  D&#10;Chorus: C  G  Am  F&#10;&#10;Or paste any chord sheet text here..."></textarea>
+    </div>
 
-    // TEXT
-    chordsText.addEventListener('input', updateSubmitState);
+    <!-- Step 3 -->
+    <div class="step" style="margin-bottom:.85rem">
+      <div class="step-num">3</div>
+      <div class="step-label">Send to Vizi</div>
+    </div>
 
-    function updateSubmitState() {
-      const ready = (activePanel === 'file' && selectedFile) ||
-                    (activePanel === 'text' && chordsText.value.trim().length > 0);
-      submitBtn.disabled = !ready;
-      btnLabel.textContent = ready ? 'Send to Vizi' : 'Choose a file or enter chords above';
-    }
+    <button class="btn-send" id="submitBtn" disabled>
+      <span id="btnLabel">Choose a file or paste chords first</span>
+    </button>
 
-    // SUBMIT
-    submitBtn.addEventListener('click', async () => {
-      showStatus('loading', 'Sending to Vizi...');
-      submitBtn.disabled = true;
-      btnLabel.innerHTML = '<span class="spinner"></span> Sending…';
+    <div class="status" id="status"></div>
 
-      try {
-        const fd = new FormData();
-        fd.append('session', sessionId);
-        if (activePanel === 'file' && selectedFile) {
-          fd.append('file', selectedFile);
-        } else {
-          fd.append('text', chordsText.value.trim());
-        }
+  </div>
+</div>
 
-        const res = await fetch(`${RAILWAY_URL}/song-upload`, { method: 'POST', body: fd });
+<script>
+  const RAILWAY = 'https://vizi-tts-proxy-production.up.railway.app';
 
-        if (res.ok) {
-          showStatus('success', '✓ Song sheet received! Vizi is ready — ask about any chord.');
-          btnLabel.textContent = '✓ Sent!';
-        } else {
-          showStatus('error', `Error ${res.status}: ${await res.text()}`);
-          resetBtn();
-        }
-      } catch(e) {
-        showStatus('error', 'Could not reach Vizi server. Check your connection.');
-        resetBtn();
+  // Session ID — from URL param (when Vizi sends the link) or generated locally
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get('session') || 'LOCAL-' + Math.random().toString(36).slice(2,8).toUpperCase();
+
+  let selectedFile = null;
+  let textMode = false;
+
+  const dropZone   = document.getElementById('dropZone');
+  const fileInput  = document.getElementById('fileInput');
+  const fileChosen = document.getElementById('fileChosen');
+  const fileName   = document.getElementById('fileName');
+  const fileClear  = document.getElementById('fileClear');
+  const textToggle = document.getElementById('textToggle');
+  const textWrap   = document.getElementById('textWrap');
+  const chordsText = document.getElementById('chordsText');
+  const submitBtn  = document.getElementById('submitBtn');
+  const btnLabel   = document.getElementById('btnLabel');
+  const statusEl   = document.getElementById('status');
+
+  // drag-over highlight
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('over');
+    if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+
+  function setFile(f) {
+    selectedFile = f;
+    fileName.textContent = f.name;
+    fileChosen.classList.add('show');
+    sync();
+  }
+  fileClear.addEventListener('click', () => {
+    selectedFile = null; fileInput.value = '';
+    fileChosen.classList.remove('show'); sync();
+  });
+
+  // text toggle
+  textToggle.addEventListener('click', () => {
+    textMode = !textMode;
+    textWrap.classList.toggle('show', textMode);
+    textToggle.textContent = textMode ? 'Hide text input ▴' : 'Or type / paste chords instead ▾';
+    sync();
+  });
+  chordsText.addEventListener('input', sync);
+
+  function sync() {
+    const ready = selectedFile || (textMode && chordsText.value.trim().length > 0);
+    submitBtn.disabled = !ready;
+    btnLabel.textContent = ready ? 'Send to Vizi 🎸' : 'Choose a file or paste chords first';
+  }
+
+  function showStatus(type, msg) {
+    statusEl.className = 'status show ' + type;
+    statusEl.textContent = msg;
+  }
+
+  submitBtn.addEventListener('click', async () => {
+    showStatus('loading', 'Sending to Vizi…');
+    submitBtn.disabled = true;
+    btnLabel.innerHTML = '<span class="spinner"></span> Sending…';
+
+    try {
+      const fd = new FormData();
+      fd.append('session', sessionId);
+      if (selectedFile) {
+        fd.append('file', selectedFile);
+      } else {
+        fd.append('text', chordsText.value.trim());
       }
-    });
 
-    function showStatus(type, msg) {
-      status.className = `status visible ${type}`;
-      status.textContent = msg;
-    }
-    function resetBtn() {
-      updateSubmitState();
-      btnLabel.textContent = 'Send to Vizi';
-    }
-  </script>
+      const res = await fetch(`${RAILWAY}/song-upload`, { method: 'POST', body: fd });
 
+      if (res.ok) {
+        showStatus('ok', '✓ Song sheet received! Ask Vizi about any chord.');
+        btnLabel.textContent = '✓ Sent to Vizi!';
+      } else {
+        showStatus('err', `Upload failed (${res.status}) — try again`);
+        submitBtn.disabled = false;
+        btnLabel.textContent = 'Send to Vizi 🎸';
+      }
+    } catch(e) {
+      showStatus('err', 'Could not reach Vizi — check your connection');
+      submitBtn.disabled = false;
+      btnLabel.textContent = 'Send to Vizi 🎸';
+    }
+  });
+</script>
 </body>
 </html>
