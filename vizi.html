@@ -21,6 +21,8 @@
     min-height:100vh; display:flex; flex-direction:column;
     align-items:center; padding:1.25rem 1.25rem 2.5rem;
   }
+
+  /* ── header ── */
   .head{display:flex;align-items:center;gap:10px;margin-top:0.5rem}
   .logo-mark{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:900;line-height:1}
   .logo-mark .A{color:var(--red)} .logo-mark .i{color:var(--blue)}
@@ -28,6 +30,7 @@
   .tag{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.16em;
        text-transform:uppercase;color:var(--text-light);text-align:center;margin:0.2rem 0 1.75rem}
 
+  /* ── avatar ── */
   .stage-wrap{position:relative;margin-bottom:1.5rem}
   .stage{
     position:relative;width:230px;height:230px;border-radius:50%;overflow:hidden;
@@ -43,6 +46,7 @@
   .stage-wrap.listening .ring{animation:ring 1.15s ease-out infinite}
   @keyframes ring{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.28);opacity:0}}
 
+  /* ── talk button ── */
   .talk{
     width:140px;height:140px;border-radius:50%;
     background:var(--red);color:var(--white);border:none;
@@ -58,8 +62,33 @@
   .talk.thinking{background:var(--gold)}
 
   .status{font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.08em;
-          text-transform:uppercase;color:var(--text-light);min-height:1.2em;margin-bottom:1.75rem;text-align:center}
+          text-transform:uppercase;color:var(--text-light);min-height:1.2em;margin-bottom:1rem;text-align:center}
 
+  /* ── upload song button ── */
+  .upload-btn{
+    display:flex;align-items:center;justify-content:center;gap:.5rem;
+    background:var(--white);border:2px solid var(--cream-dark);
+    border-radius:10px;padding:.65rem 1.4rem;
+    font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:500;
+    color:var(--text-mid);cursor:pointer;transition:all .2s;
+    margin-bottom:1.5rem;text-decoration:none;
+    box-shadow:0 2px 8px var(--shadow);
+  }
+  .upload-btn:hover{border-color:var(--blue);color:var(--blue);background:rgba(27,79,138,0.04)}
+  .upload-btn.waiting{border-color:var(--gold);color:var(--gold);animation:pulse-btn 1.4s ease-in-out infinite}
+  @keyframes pulse-btn{0%,100%{opacity:1}50%{opacity:.6}}
+
+  /* song loaded banner */
+  .song-banner{
+    display:none;width:100%;max-width:440px;
+    background:rgba(27,79,138,0.07);border:2px solid rgba(27,79,138,0.2);
+    border-radius:10px;padding:.7rem 1rem;margin-bottom:1.25rem;
+    font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.04em;
+    color:var(--blue);text-align:center;
+  }
+  .song-banner.show{display:block}
+
+  /* ── panels ── */
   .panels{width:100%;max-width:440px;display:flex;flex-direction:column;gap:0.85rem}
   .panel{background:var(--white);border:2px solid var(--cream-dark);border-radius:12px;
          padding:0.9rem 1.1rem;opacity:0;transform:translateY(8px);transition:all .3s}
@@ -92,31 +121,44 @@
   <button class="talk" id="talkBtn">Hold<br>to Talk</button>
   <div class="status" id="status">Ready</div>
 
+  <!-- Song upload button -->
+  <button class="upload-btn" id="uploadBtn">🎵 Upload a Song</button>
+
+  <!-- Song loaded confirmation -->
+  <div class="song-banner" id="songBanner"></div>
+
   <div class="panels">
-    <div class="panel you" id="pYou"><div class="label">You said</div><div class="body" id="bYou"></div></div>
+    <div class="panel you"  id="pYou"><div class="label">You said</div><div class="body" id="bYou"></div></div>
     <div class="panel vizi" id="pVizi"><div class="label">Vizi</div><div class="body" id="bVizi"></div></div>
-    <div class="panel cmd" id="pCmd"><div class="label">Fretboard commands</div><div class="body" id="bCmd"></div></div>
+    <div class="panel cmd"  id="pCmd"><div class="label">Fretboard commands</div><div class="body" id="bCmd"></div></div>
   </div>
 
 <script>
   // ─── Config ───────────────────────────────────────────────
-  const RAILWAY_URL = 'https://vizi-tts-proxy-production.up.railway.app';
-  const TARGET_RATE = 16000;
-  const MODE        = 'talk';   // 'talk' | 'general' | 'song'
+  const RAILWAY_URL  = 'https://vizi-tts-proxy-production.up.railway.app';
+  const TARGET_RATE  = 16000;
+  const POLL_SONG_MS = 2000;   // how often to check if upload is ready
 
   // ─── Elements ─────────────────────────────────────────────
-  const btn       = document.getElementById('talkBtn');
-  const statusEl  = document.getElementById('status');
-  const stageWrap = document.getElementById('stageWrap');
-  const stage     = document.getElementById('stage');
-  const viziVid   = document.getElementById('viziVid');
+  const btn        = document.getElementById('talkBtn');
+  const statusEl   = document.getElementById('status');
+  const stageWrap  = document.getElementById('stageWrap');
+  const stage      = document.getElementById('stage');
+  const viziVid    = document.getElementById('viziVid');
+  const uploadBtn  = document.getElementById('uploadBtn');
+  const songBanner = document.getElementById('songBanner');
+
+  // ─── Conversation mode — switches to 'song' after upload ──
+  let currentMode    = 'talk';
+  let songSessionId  = null;
+  let songPollTimer  = null;
+  let songLoaded     = false;
 
   // ─── Audio state ──────────────────────────────────────────
   let audioCtx, stream, source, processor, sink;
   let micReady = false, recording = false;
-  let chunks = [];
-  let preroll = [];                 // rolling buffer of recent frames
-  const PREROLL_FRAMES = 6;         // ~0.5s lead-in so the first word is never clipped
+  let chunks = [], preroll = [];
+  const PREROLL_FRAMES = 6;
 
   function setStatus(t){ statusEl.textContent = t; }
   function setBtn(cls){ btn.className = 'talk' + (cls ? ' ' + cls : ''); }
@@ -128,7 +170,7 @@
     document.getElementById(id).classList.add('show');
   }
 
-  // ─── Mic: acquire ONCE, keep warm, gate capture with a flag ──
+  // ─── Mic: acquire once, keep warm ─────────────────────────
   async function ensureMic(){
     if (micReady) return;
     stream = await navigator.mediaDevices.getUserMedia({
@@ -136,13 +178,11 @@
     });
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') await audioCtx.resume();
-
     source    = audioCtx.createMediaStreamSource(stream);
     processor = audioCtx.createScriptProcessor(4096, 1, 1);
     sink      = audioCtx.createGain(); sink.gain.value = 0;
-
     processor.onaudioprocess = e => {
-      const frame = new Float32Array(e.inputBuffer.getChannelData(0)); // copy
+      const frame = new Float32Array(e.inputBuffer.getChannelData(0));
       preroll.push(frame);
       if (preroll.length > PREROLL_FRAMES) preroll.shift();
       if (recording) chunks.push(frame);
@@ -153,7 +193,7 @@
 
   async function startCapture(){
     await ensureMic();
-    chunks = preroll.slice();   // seed with pre-roll → catches the leading words
+    chunks = preroll.slice();
     recording = true;
   }
 
@@ -199,18 +239,18 @@
     return btoa(bin);
   }
 
-  // ─── Send to Vizi (STT + Claude + TTS in one call) ────────
+  // ─── Send voice to Vizi ────────────────────────────────────
   async function sendToVizi(b64){
     setBtn('thinking'); setStatus('Vizi is thinking…');
     try {
       const res = await fetch(RAILWAY_URL + '/stt-claude-tts', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ audio:b64, sampleRate:TARGET_RATE, mode:MODE })
+        body: JSON.stringify({ audio:b64, sampleRate:TARGET_RATE, mode:currentMode })
       });
       const ct = (res.headers.get('content-type') || '');
       if (ct.includes('application/json')){
         const j = await res.json();
-        setBtn(''); setStatus(j.empty ? 'Didn’t catch that — try again' : ('Error: ' + (j.error || 'unknown')));
+        setBtn(''); setStatus(j.empty ? 'Didn\'t catch that — try again' : ('Error: ' + (j.error || 'unknown')));
         return;
       }
       const transcript = dec(res.headers.get('X-Vizi-Transcript'));
@@ -219,12 +259,13 @@
       if (transcript) showPanel('pYou','bYou', transcript);
       if (text)       showPanel('pVizi','bVizi', text);
       if (commands)   showPanel('pCmd','bCmd', commands);
-
       const blob = await res.blob();
       setBtn(''); setStatus('');
       await playBlob(blob);
+      // after song intro, switch back to talk mode so follow-up questions work
+      if (currentMode === 'song') currentMode = 'talk';
       setStatus('Ready');
-    } catch (e){
+    } catch(e){
       setBtn(''); setStatus('Could not reach Vizi — check connection');
     }
   }
@@ -236,11 +277,104 @@
       const buf = await audioCtx.decodeAudioData(arr);
       const src = audioCtx.createBufferSource();
       src.buffer = buf; src.connect(audioCtx.destination);
-      showTalking();
-      src.start();
+      showTalking(); src.start();
       await new Promise(r => { src.onended = r; });
-    } catch(e){ /* playback failed */ }
+    } catch(e){}
     finally { showIdle(); }
+  }
+
+  // ─── Song upload flow ─────────────────────────────────────
+  // 1. Create a real session on Railway
+  // 2. Open upload.html?session=ID in a new tab
+  // 3. Poll /session-status/:id until ready
+  // 4. Fetch the prompt from /session-prompt/:id
+  // 5. Send it to /stt-claude-tts in song mode — Vizi introduces the song
+
+  uploadBtn.addEventListener('click', async () => {
+    if (songPollTimer) return;   // already waiting for an upload
+
+    uploadBtn.textContent = '⏳ Creating session…';
+    uploadBtn.disabled = true;
+
+    try {
+      const res  = await fetch(RAILWAY_URL + '/session-create');
+      const data = await res.json();
+      songSessionId = data.sessionId;
+
+      // Open the upload page with the session ID
+      window.open(`upload.html?session=${songSessionId}`, '_blank');
+
+      // Start polling for upload completion
+      uploadBtn.className = 'upload-btn waiting';
+      uploadBtn.textContent = '⏳ Waiting for song upload…';
+      uploadBtn.disabled = false;
+      setStatus('Upload your song sheet in the new tab');
+      startSongPoll();
+    } catch(e){
+      uploadBtn.textContent = '🎵 Upload a Song';
+      uploadBtn.disabled = false;
+      setStatus('Could not create session — check connection');
+    }
+  });
+
+  function startSongPoll(){
+    if (songPollTimer) clearInterval(songPollTimer);
+    songPollTimer = setInterval(checkSongReady, POLL_SONG_MS);
+  }
+
+  async function checkSongReady(){
+    if (!songSessionId) return;
+    try {
+      const res  = await fetch(`${RAILWAY_URL}/session-status/${songSessionId}`);
+      const data = await res.json();
+
+      if (data.status === 'ready' && !songLoaded){
+        // Stop polling
+        clearInterval(songPollTimer); songPollTimer = null; songLoaded = true;
+
+        // Show banner
+        const title = data.songTitle || 'song';
+        songBanner.textContent = `🎵 "${title}" loaded — Vizi is ready`;
+        songBanner.classList.add('show');
+        uploadBtn.className = 'upload-btn';
+        uploadBtn.textContent = '🎵 Upload Another Song';
+        uploadBtn.disabled = false;
+        setStatus('Song loaded — Vizi will introduce it now…');
+
+        // Fetch the ready prompt and send it to Vizi in song mode
+        const promptRes  = await fetch(`${RAILWAY_URL}/session-prompt/${songSessionId}`);
+        const promptData = await promptRes.json();
+
+        if (promptData.ready && promptData.message){
+          currentMode = 'song';
+          // Convert the text prompt to audio via /claude-tts (text→Claude→TTS, no STT needed)
+          const ttsRes = await fetch(RAILWAY_URL + '/claude-tts', {
+            method:'POST', headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({ message: promptData.message, mode: 'song' })
+          });
+          if (ttsRes.ok){
+            const ct = ttsRes.headers.get('content-type') || '';
+            if (!ct.includes('application/json')){
+              const text     = dec(ttsRes.headers.get('X-Vizi-Text'));
+              const commands = dec(ttsRes.headers.get('X-Vizi-Commands'));
+              if (text)     showPanel('pVizi','bVizi', text);
+              if (commands) showPanel('pCmd','bCmd', commands);
+              const blob = await ttsRes.blob();
+              setStatus('');
+              await playBlob(blob);
+              currentMode = 'talk';
+            }
+          }
+          setStatus('Ready');
+        }
+      } else if (data.status === 'error'){
+        clearInterval(songPollTimer); songPollTimer = null;
+        uploadBtn.className = 'upload-btn';
+        uploadBtn.textContent = '🎵 Upload a Song';
+        uploadBtn.disabled = false;
+        setStatus('Upload failed — try again');
+      }
+    } catch(e){ /* poll quietly, retry next interval */ }
   }
 
   // ─── Press-and-hold wiring ────────────────────────────────
