@@ -315,10 +315,27 @@
       if (res.ok) {
         showStatus('ok', '✓ Song received! Taking you back to Vizi…');
         btnLabel.textContent = '✓ Sent to Vizi!';
-        // Give them a moment to see the confirmation, then return to Vizi
-        setTimeout(() => {
-          window.location.href = 'vizi.html';
-        }, 1200);
+        // Store the file so vizi.html can display it on screen
+        const doRedirect = () => setTimeout(() => { window.location.href = 'vizi.html'; }, 1200);
+        if (selectedFile) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              sessionStorage.setItem('viziSongFile', reader.result);
+              sessionStorage.setItem('viziSongName', selectedFile.name);
+              sessionStorage.setItem('viziSongType', selectedFile.type || 'application/octet-stream');
+            } catch(e) {}
+            doRedirect();
+          };
+          reader.readAsDataURL(selectedFile);
+        } else {
+          try {
+            sessionStorage.setItem('viziSongFile', 'text:' + chordsText.value.trim());
+            sessionStorage.setItem('viziSongName', 'Song sheet');
+            sessionStorage.setItem('viziSongType', 'text/plain');
+          } catch(e) {}
+          doRedirect();
+        }
       } else {
         const txt = await res.text();
         showStatus('err', `Upload failed (${res.status}) — ${txt}`);
