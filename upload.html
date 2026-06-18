@@ -313,8 +313,12 @@
       const res = await fetch(`${RAILWAY}/song-upload`, { method: 'POST', body: fd });
 
       if (res.ok) {
-        showStatus('ok', '✓ Song sheet received! Go back to Vizi and ask about any chord.');
+        showStatus('ok', '✓ Song received! Taking you back to Vizi…');
         btnLabel.textContent = '✓ Sent to Vizi!';
+        // Give them a moment to see the confirmation, then return to Vizi
+        setTimeout(() => {
+          window.location.href = 'vizi.html';
+        }, 1200);
       } else {
         const txt = await res.text();
         showStatus('err', `Upload failed (${res.status}) — ${txt}`);

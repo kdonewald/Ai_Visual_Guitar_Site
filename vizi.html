@@ -301,8 +301,8 @@
       const data = await res.json();
       songSessionId = data.sessionId;
 
-      // Open the upload page with the session ID
-      window.open(`upload.html?session=${songSessionId}`, '_blank');
+      // Open the upload page in the same tab — redirect back happens on success
+      window.location.href = `upload.html?session=${songSessionId}`;
 
       // Start polling for upload completion
       uploadBtn.className = 'upload-btn waiting';
