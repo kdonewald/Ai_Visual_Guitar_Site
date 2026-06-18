@@ -101,27 +101,54 @@
   .panel .body{font-size:0.95rem;line-height:1.55;color:var(--text)}
   .panel.cmd .body{font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--text-mid);word-break:break-word}
 
-  /* ── song sheet viewer ── */
-  .sheet-wrap{
-    width:100%;max-width:440px;margin-top:.85rem;
-    border:2px solid var(--cream-dark);border-radius:12px;
-    overflow:hidden;background:var(--white);
-    box-shadow:0 4px 16px var(--shadow);
-    display:none;
+  /* ── song sheet — floating draggable panel ── */
+  .sheet-float{
+    position:fixed; z-index:999;
+    top:60px; right:16px;
+    width:min(420px, calc(100vw - 32px));
+    height:min(560px, calc(100vh - 80px));
+    background:var(--white);
+    border:2px solid var(--cream-dark);
+    border-radius:14px;
+    box-shadow:0 12px 40px rgba(42,32,24,0.22);
+    display:none; flex-direction:column;
+    overflow:hidden; resize:both;
+    min-width:260px; min-height:200px;
   }
-  .sheet-wrap.show{display:block}
+  .sheet-float.show{display:flex}
   .sheet-head{
     display:flex;align-items:center;justify-content:space-between;
-    padding:.6rem 1rem;background:var(--cream);
+    padding:.55rem 1rem;background:var(--cream);
     border-bottom:2px solid var(--cream-dark);
+    cursor:grab; flex-shrink:0; user-select:none;
   }
-  .sheet-title{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80%}
-  .sheet-close{background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-light);padding:0 .25rem;line-height:1;transition:color .2s}
+  .sheet-head:active{cursor:grabbing}
+  .sheet-title{font-family:'DM Mono',monospace;font-size:.63rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--text-mid);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:75%}
+  .sheet-controls{display:flex;align-items:center;gap:.5rem}
+  .sheet-btn{background:none;border:none;cursor:pointer;font-size:.9rem;
+    color:var(--text-light);padding:0 .2rem;line-height:1;transition:color .2s}
+  .sheet-btn:hover{color:var(--blue)}
+  .sheet-close{background:none;border:none;cursor:pointer;font-size:1rem;
+    color:var(--text-light);padding:0 .2rem;line-height:1;transition:color .2s}
   .sheet-close:hover{color:var(--red)}
-  .sheet-body{width:100%}
-  .sheet-body iframe{width:100%;height:500px;border:none;display:block}
+  .sheet-body{flex:1;overflow:auto;display:flex;flex-direction:column}
+  .sheet-body iframe{width:100%;flex:1;border:none;display:block;min-height:0}
   .sheet-body img{width:100%;height:auto;display:block}
-  .sheet-body pre{padding:1rem;font-family:'DM Mono',monospace;font-size:.75rem;line-height:1.6;white-space:pre-wrap;color:var(--text);overflow-y:auto;max-height:400px}
+  .sheet-body pre{padding:1rem;font-family:'DM Mono',monospace;font-size:.75rem;
+    line-height:1.6;white-space:pre-wrap;color:var(--text);flex:1;overflow-y:auto}
+  /* show-sheet toggle button */
+  .sheet-show-btn{
+    display:none;align-items:center;gap:.4rem;
+    background:var(--white);border:2px solid var(--blue);
+    border-radius:8px;padding:.45rem .9rem;
+    font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--blue);cursor:pointer;transition:all .2s;
+    margin-bottom:.75rem;
+  }
+  .sheet-show-btn.show{display:flex}
+  .sheet-show-btn:hover{background:var(--blue);color:white}
 </style>
 </head>
 <body>
@@ -155,11 +182,17 @@
     <div class="panel cmd"  id="pCmd"><div class="label">Fretboard commands</div><div class="body" id="bCmd"></div></div>
   </div>
 
-  <!-- Song sheet viewer — populated from sessionStorage after upload -->
-  <div class="sheet-wrap" id="sheetWrap">
-    <div class="sheet-head">
+  <!-- Re-open sheet button (shown after closing the float) -->
+  <button class="sheet-show-btn" id="sheetShowBtn">📄 Show Song Sheet</button>
+
+  <!-- Floating draggable song sheet panel -->
+  <div class="sheet-float" id="sheetWrap">
+    <div class="sheet-head" id="sheetDragHandle">
       <span class="sheet-title" id="sheetTitle">Song Sheet</span>
-      <button class="sheet-close" id="sheetClose" title="Hide sheet">✕</button>
+      <div class="sheet-controls">
+        <button class="sheet-btn" id="sheetMinBtn" title="Minimize">—</button>
+        <button class="sheet-close" id="sheetClose" title="Close">✕</button>
+      </div>
     </div>
     <div class="sheet-body" id="sheetBody"></div>
   </div>
@@ -332,7 +365,9 @@
       const data = await res.json();
       songSessionId = data.sessionId;
 
-      // Open the upload page in the same tab — redirect back happens on success
+      // Store session ID so we can resume polling when we come back
+      sessionStorage.setItem('viziSongSession', songSessionId);
+      // Navigate to upload page — redirect back happens on success
       window.location.href = `upload.html?session=${songSessionId}`;
 
       // Start polling for upload completion
@@ -362,6 +397,7 @@
       if (data.status === 'ready' && !songLoaded){
         // Stop polling
         clearInterval(songPollTimer); songPollTimer = null; songLoaded = true;
+        sessionStorage.removeItem('viziSongSession');  // done polling
 
         // Show banner
         const title = data.songTitle || 'song';
@@ -429,12 +465,14 @@
     sendToVizi(b64);
   }
 
-  // ─── Song sheet display ───────────────────────────────────
-  // Reads the file stored by upload.html and displays it below the panels
-  const sheetWrap  = document.getElementById('sheetWrap');
-  const sheetTitle = document.getElementById('sheetTitle');
-  const sheetBody  = document.getElementById('sheetBody');
-  const sheetClose = document.getElementById('sheetClose');
+  // ─── Song sheet — floating draggable panel ───────────────
+  const sheetWrap    = document.getElementById('sheetWrap');
+  const sheetTitle   = document.getElementById('sheetTitle');
+  const sheetBody    = document.getElementById('sheetBody');
+  const sheetClose   = document.getElementById('sheetClose');
+  const sheetMinBtn  = document.getElementById('sheetMinBtn');
+  const sheetShowBtn = document.getElementById('sheetShowBtn');
+  const dragHandle   = document.getElementById('sheetDragHandle');
 
   function loadSongSheet(){
     const dataUrl = sessionStorage.getItem('viziSongFile');
@@ -446,7 +484,6 @@
     sheetBody.innerHTML = '';
 
     if (dataUrl.startsWith('text:')) {
-      // Plain text chords
       const pre = document.createElement('pre');
       pre.textContent = dataUrl.slice(5);
       sheetBody.appendChild(pre);
@@ -456,23 +493,63 @@
       sheetBody.appendChild(iframe);
     } else if (type.startsWith('image/')) {
       const img = document.createElement('img');
-      img.src = dataUrl;
-      img.alt = name;
+      img.src = dataUrl; img.alt = name;
       sheetBody.appendChild(img);
     } else {
-      // Unknown type — try iframe
       const iframe = document.createElement('iframe');
       iframe.src = dataUrl;
       sheetBody.appendChild(iframe);
     }
     sheetWrap.classList.add('show');
+    sheetShowBtn.classList.remove('show');
   }
 
   sheetClose.addEventListener('click', () => {
     sheetWrap.classList.remove('show');
+    // Show re-open button if we have a sheet loaded
+    if (sessionStorage.getItem('viziSongFile')) sheetShowBtn.classList.add('show');
   });
 
-  // Load on page arrival (after redirect from upload page)
+  sheetMinBtn.addEventListener('click', () => {
+    sheetBody.style.display = sheetBody.style.display === 'none' ? '' : 'none';
+    sheetMinBtn.textContent = sheetBody.style.display === 'none' ? '□' : '—';
+  });
+
+  sheetShowBtn.addEventListener('click', () => {
+    sheetWrap.classList.add('show');
+    sheetShowBtn.classList.remove('show');
+  });
+
+  // ── Drag to move ──
+  let dragOffX = 0, dragOffY = 0, dragging = false;
+  dragHandle.addEventListener('pointerdown', e => {
+    if (e.target === sheetClose || e.target === sheetMinBtn) return;
+    dragging = true; dragHandle.setPointerCapture(e.pointerId);
+    const r = sheetWrap.getBoundingClientRect();
+    dragOffX = e.clientX - r.left; dragOffY = e.clientY - r.top;
+    e.preventDefault();
+  });
+  dragHandle.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const x = Math.max(0, Math.min(window.innerWidth  - sheetWrap.offsetWidth,  e.clientX - dragOffX));
+    const y = Math.max(0, Math.min(window.innerHeight - sheetWrap.offsetHeight, e.clientY - dragOffY));
+    sheetWrap.style.left = x + 'px'; sheetWrap.style.top = y + 'px';
+    sheetWrap.style.right = 'auto';
+  });
+  dragHandle.addEventListener('pointerup',    () => { dragging = false; });
+  dragHandle.addEventListener('pointercancel',() => { dragging = false; });
+
+  // ── Resume session polling if we came back from upload page ──
+  const storedSession = sessionStorage.getItem('viziSongSession');
+  if (storedSession && !songLoaded) {
+    songSessionId = storedSession;
+    setStatus('Checking for uploaded song…');
+    uploadBtn.className = 'upload-btn waiting';
+    uploadBtn.textContent = '⏳ Waiting for song upload…';
+    startSongPoll();
+  }
+
+  // Load sheet on page arrival
   loadSongSheet();
 
   btn.addEventListener('pointerdown', press);
