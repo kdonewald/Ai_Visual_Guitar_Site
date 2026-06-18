@@ -22,7 +22,6 @@
     align-items:center; padding:1.25rem 1.25rem 2.5rem;
   }
 
-  /* ── header ── */
   .head{display:flex;align-items:center;gap:10px;margin-top:0.5rem}
   .logo-mark{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:900;line-height:1}
   .logo-mark .A{color:var(--red)} .logo-mark .i{color:var(--blue)}
@@ -30,7 +29,6 @@
   .tag{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.16em;
        text-transform:uppercase;color:var(--text-light);text-align:center;margin:0.2rem 0 1.75rem}
 
-  /* ── avatar ── */
   .stage-wrap{position:relative;margin-bottom:1.5rem}
   .stage{
     position:relative;width:230px;height:230px;border-radius:50%;overflow:hidden;
@@ -46,7 +44,6 @@
   .stage-wrap.listening .ring{animation:ring 1.15s ease-out infinite}
   @keyframes ring{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.28);opacity:0}}
 
-  /* ── talk button ── */
   .talk{
     width:140px;height:140px;border-radius:50%;
     background:var(--red);color:var(--white);border:none;
@@ -60,11 +57,13 @@
   .talk:active{background:var(--red-dark)}
   .talk.listening{background:var(--blue);transform:scale(0.96)}
   .talk.thinking{background:var(--gold)}
+  /* intro-pending: pulsing ring to invite the tap */
+  .talk.intro{background:var(--blue);animation:intro-pulse 1.2s ease-in-out infinite}
+  @keyframes intro-pulse{0%,100%{box-shadow:0 0 0 0 rgba(27,79,138,0.5)}60%{box-shadow:0 0 0 18px rgba(27,79,138,0)}}
 
   .status{font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.08em;
           text-transform:uppercase;color:var(--text-light);min-height:1.2em;margin-bottom:1rem;text-align:center}
 
-  /* ── upload song button ── */
   .upload-btn{
     display:flex;align-items:center;justify-content:center;gap:.5rem;
     background:var(--white);border:2px solid var(--cream-dark);
@@ -78,17 +77,16 @@
   .upload-btn.waiting{border-color:var(--gold);color:var(--gold);animation:pulse-btn 1.4s ease-in-out infinite}
   @keyframes pulse-btn{0%,100%{opacity:1}50%{opacity:.6}}
 
-  /* song loaded banner */
   .song-banner{
     display:none;width:100%;max-width:440px;
     background:rgba(27,79,138,0.07);border:2px solid rgba(27,79,138,0.2);
     border-radius:10px;padding:.7rem 1rem;margin-bottom:1.25rem;
     font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.04em;
-    color:var(--blue);text-align:center;
+    color:var(--blue);text-align:center;cursor:pointer;transition:background .2s;
   }
   .song-banner.show{display:block}
+  .song-banner:hover{background:rgba(27,79,138,0.12)}
 
-  /* ── panels ── */
   .panels{width:100%;max-width:440px;display:flex;flex-direction:column;gap:0.85rem}
   .panel{background:var(--white);border:2px solid var(--cream-dark);border-radius:12px;
          padding:0.9rem 1.1rem;opacity:0;transform:translateY(8px);transition:all .3s}
@@ -101,51 +99,66 @@
   .panel .body{font-size:0.95rem;line-height:1.55;color:var(--text)}
   .panel.cmd .body{font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--text-mid);word-break:break-word}
 
-  /* ── song sheet — floating draggable panel ── */
+  /* ── song sheet floating panel ── */
   .sheet-float{
     position:fixed; z-index:999;
     top:60px; right:16px;
-    width:min(420px, calc(100vw - 32px));
-    height:min(560px, calc(100vh - 80px));
+    width:min(440px, calc(100vw - 32px));
+    height:min(580px, calc(100vh - 80px));
     background:var(--white);
     border:2px solid var(--cream-dark);
     border-radius:14px;
     box-shadow:0 12px 40px rgba(42,32,24,0.22);
     display:none; flex-direction:column;
     overflow:hidden; resize:both;
-    min-width:260px; min-height:200px;
+    min-width:280px; min-height:200px;
   }
   .sheet-float.show{display:flex}
   .sheet-head{
     display:flex;align-items:center;justify-content:space-between;
-    padding:.55rem 1rem;background:var(--cream);
+    padding:.55rem .75rem;background:var(--cream);
     border-bottom:2px solid var(--cream-dark);
-    cursor:grab; flex-shrink:0; user-select:none;
+    cursor:grab; flex-shrink:0; user-select:none; gap:.5rem;
   }
   .sheet-head:active{cursor:grabbing}
-  .sheet-title{font-family:'DM Mono',monospace;font-size:.63rem;letter-spacing:.1em;
+  .sheet-title{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;
     text-transform:uppercase;color:var(--text-mid);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:75%}
-  .sheet-controls{display:flex;align-items:center;gap:.5rem}
-  .sheet-btn{background:none;border:none;cursor:pointer;font-size:.9rem;
-    color:var(--text-light);padding:0 .2rem;line-height:1;transition:color .2s}
-  .sheet-btn:hover{color:var(--blue)}
-  .sheet-close{background:none;border:none;cursor:pointer;font-size:1rem;
-    color:var(--text-light);padding:0 .2rem;line-height:1;transition:color .2s}
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+  .sheet-controls{display:flex;align-items:center;gap:.3rem;flex-shrink:0}
+  .sheet-btn{
+    background:var(--cream-dark);border:none;cursor:pointer;
+    font-size:.8rem;font-weight:600;color:var(--text-mid);
+    width:22px;height:22px;border-radius:4px;
+    display:flex;align-items:center;justify-content:center;
+    transition:all .15s;line-height:1;
+  }
+  .sheet-btn:hover{background:var(--blue);color:white}
+  .sheet-close{
+    background:none;border:none;cursor:pointer;font-size:1rem;
+    color:var(--text-light);padding:0 .15rem;line-height:1;transition:color .2s;
+  }
   .sheet-close:hover{color:var(--red)}
-  .sheet-body{flex:1;overflow:auto;display:flex;flex-direction:column}
-  .sheet-body iframe{width:100%;flex:1;border:none;display:block;min-height:0}
+  .sheet-zoom-val{
+    font-family:'DM Mono',monospace;font-size:.6rem;color:var(--text-light);
+    min-width:2.8rem;text-align:center;
+  }
+  .sheet-body{flex:1;overflow:auto;position:relative;}
+  .sheet-content{
+    transform-origin:top left;
+    transition:transform .15s;
+    width:100%; /* scales with zoom */
+  }
+  .sheet-body iframe{width:100%;height:100%;border:none;display:block;min-height:400px}
   .sheet-body img{width:100%;height:auto;display:block}
   .sheet-body pre{padding:1rem;font-family:'DM Mono',monospace;font-size:.75rem;
-    line-height:1.6;white-space:pre-wrap;color:var(--text);flex:1;overflow-y:auto}
-  /* show-sheet toggle button */
+    line-height:1.6;white-space:pre-wrap;color:var(--text);}
+
   .sheet-show-btn{
     display:none;align-items:center;gap:.4rem;
     background:var(--white);border:2px solid var(--blue);
     border-radius:8px;padding:.45rem .9rem;
     font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;
-    color:var(--blue);cursor:pointer;transition:all .2s;
-    margin-bottom:.75rem;
+    color:var(--blue);cursor:pointer;transition:all .2s;margin-bottom:.75rem;
   }
   .sheet-show-btn.show{display:flex}
   .sheet-show-btn:hover{background:var(--blue);color:white}
@@ -170,11 +183,10 @@
   <button class="talk" id="talkBtn">Hold<br>to Talk</button>
   <div class="status" id="status">Ready</div>
 
-  <!-- Song upload button -->
   <button class="upload-btn" id="uploadBtn">🎵 Upload a Song</button>
-
-  <!-- Song loaded confirmation -->
   <div class="song-banner" id="songBanner"></div>
+
+  <button class="sheet-show-btn" id="sheetShowBtn">📄 Show Song Sheet</button>
 
   <div class="panels">
     <div class="panel you"  id="pYou"><div class="label">You said</div><div class="body" id="bYou"></div></div>
@@ -182,28 +194,28 @@
     <div class="panel cmd"  id="pCmd"><div class="label">Fretboard commands</div><div class="body" id="bCmd"></div></div>
   </div>
 
-  <!-- Re-open sheet button (shown after closing the float) -->
-  <button class="sheet-show-btn" id="sheetShowBtn">📄 Show Song Sheet</button>
-
-  <!-- Floating draggable song sheet panel -->
+  <!-- Floating song sheet panel -->
   <div class="sheet-float" id="sheetWrap">
     <div class="sheet-head" id="sheetDragHandle">
       <span class="sheet-title" id="sheetTitle">Song Sheet</span>
       <div class="sheet-controls">
-        <button class="sheet-btn" id="sheetMinBtn" title="Minimize">—</button>
-        <button class="sheet-close" id="sheetClose" title="Close">✕</button>
+        <button class="sheet-btn" id="zoomOut">−</button>
+        <span class="sheet-zoom-val" id="zoomVal">100%</span>
+        <button class="sheet-btn" id="zoomIn">+</button>
+        <button class="sheet-btn" id="zoomReset" title="Reset zoom">⟳</button>
+        <button class="sheet-close" id="sheetClose">✕</button>
       </div>
     </div>
-    <div class="sheet-body" id="sheetBody"></div>
+    <div class="sheet-body" id="sheetBody">
+      <div class="sheet-content" id="sheetContent"></div>
+    </div>
   </div>
 
 <script>
-  // ─── Config ───────────────────────────────────────────────
   const RAILWAY_URL  = 'https://vizi-tts-proxy-production.up.railway.app';
   const TARGET_RATE  = 16000;
-  const POLL_SONG_MS = 2000;   // how often to check if upload is ready
+  const POLL_SONG_MS = 2000;
 
-  // ─── Elements ─────────────────────────────────────────────
   const btn        = document.getElementById('talkBtn');
   const statusEl   = document.getElementById('status');
   const stageWrap  = document.getElementById('stageWrap');
@@ -212,13 +224,16 @@
   const uploadBtn  = document.getElementById('uploadBtn');
   const songBanner = document.getElementById('songBanner');
 
-  // ─── Conversation mode — switches to 'song' after upload ──
-  let currentMode    = 'talk';
-  let songSessionId  = null;
-  let songPollTimer  = null;
-  let songLoaded     = false;
+  let currentMode   = 'talk';
+  let songSessionId = null;
+  let songPollTimer = null;
+  let songLoaded    = false;
 
-  // ─── Audio state ──────────────────────────────────────────
+  // Pending intro: stored when song is ready but audio context not yet unlocked
+  let pendingIntroBlob = null;
+  let pendingIntroText = null;
+  let pendingIntroCmd  = null;
+
   let audioCtx, stream, source, processor, sink;
   let micReady = false, recording = false;
   let chunks = [], preroll = [];
@@ -227,21 +242,25 @@
   function setStatus(t){ statusEl.textContent = t; }
   function setBtn(cls){ btn.className = 'talk' + (cls ? ' ' + cls : ''); }
   function setListening(on){ stageWrap.classList.toggle('listening', on); }
-  function showTalking(){ stage.classList.add('talking'); try{ viziVid.currentTime = 0; viziVid.play(); }catch(e){} }
+  function showTalking(){ stage.classList.add('talking'); try{ viziVid.currentTime=0; viziVid.play(); }catch(e){} }
   function showIdle(){ stage.classList.remove('talking'); try{ viziVid.pause(); }catch(e){} }
   function showPanel(id, bodyId, text){
     document.getElementById(bodyId).textContent = text;
     document.getElementById(id).classList.add('show');
   }
 
-  // ─── Mic: acquire once, keep warm ─────────────────────────
+  // ─── Audio context — only created on first gesture ────────
+  async function ensureAudioCtx(){
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+  }
+
   async function ensureMic(){
     if (micReady) return;
-    stream = await navigator.mediaDevices.getUserMedia({
+    await ensureAudioCtx();
+    stream    = await navigator.mediaDevices.getUserMedia({
       audio:{ channelCount:1, echoCancellation:true, noiseSuppression:true, autoGainControl:true }
     });
-    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') await audioCtx.resume();
     source    = audioCtx.createMediaStreamSource(stream);
     processor = audioCtx.createScriptProcessor(4096, 1, 1);
     sink      = audioCtx.createGain(); sink.gain.value = 0;
@@ -255,11 +274,7 @@
     micReady = true;
   }
 
-  async function startCapture(){
-    await ensureMic();
-    chunks = preroll.slice();
-    recording = true;
-  }
+  async function startCapture(){ await ensureMic(); chunks = preroll.slice(); recording = true; }
 
   function stopCapture(){
     if (!recording) return null;
@@ -268,42 +283,48 @@
     if (len === 0) return null;
     const merged = new Float32Array(len);
     let off = 0; for (const c of chunks){ merged.set(c, off); off += c.length; }
-    const ds = downsample(merged, audioCtx.sampleRate, TARGET_RATE);
-    return bytesToBase64(floatToPCM16(ds));
+    return bytesToBase64(floatToPCM16(downsample(merged, audioCtx.sampleRate, TARGET_RATE)));
   }
 
   function downsample(buf, srcRate, dstRate){
     if (dstRate >= srcRate) return buf;
-    const ratio = srcRate / dstRate;
-    const outLen = Math.round(buf.length / ratio);
-    const out = new Float32Array(outLen);
-    let pos = 0;
-    for (let i = 0; i < outLen; i++){
-      const next = Math.round((i + 1) * ratio);
-      let sum = 0, cnt = 0;
-      for (let j = pos; j < next && j < buf.length; j++){ sum += buf[j]; cnt++; }
-      out[i] = cnt ? sum / cnt : 0;
-      pos = next;
+    const ratio = srcRate / dstRate, outLen = Math.round(buf.length / ratio);
+    const out = new Float32Array(outLen); let pos = 0;
+    for (let i=0; i<outLen; i++){
+      const next = Math.round((i+1)*ratio); let sum=0, cnt=0;
+      for (let j=pos; j<next && j<buf.length; j++){ sum+=buf[j]; cnt++; }
+      out[i] = cnt ? sum/cnt : 0; pos = next;
     }
     return out;
   }
   function floatToPCM16(f32){
-    const dv = new DataView(new ArrayBuffer(f32.length * 2));
-    for (let i = 0; i < f32.length; i++){
-      let s = Math.max(-1, Math.min(1, f32[i]));
-      dv.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    const dv = new DataView(new ArrayBuffer(f32.length*2));
+    for (let i=0; i<f32.length; i++){
+      let s=Math.max(-1,Math.min(1,f32[i]));
+      dv.setInt16(i*2, s<0?s*0x8000:s*0x7FFF, true);
     }
     return new Uint8Array(dv.buffer);
   }
   function bytesToBase64(bytes){
-    let bin = ''; const chunk = 0x8000;
-    for (let i = 0; i < bytes.length; i += chunk){
-      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
-    }
+    let bin=''; const chunk=0x8000;
+    for (let i=0; i<bytes.length; i+=chunk)
+      bin += String.fromCharCode.apply(null, bytes.subarray(i,i+chunk));
     return btoa(bin);
   }
 
-  // ─── Send voice to Vizi ────────────────────────────────────
+  async function playBlob(blob){
+    try {
+      await ensureAudioCtx();
+      const arr = await blob.arrayBuffer();
+      const buf = await audioCtx.decodeAudioData(arr);
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf; src.connect(audioCtx.destination);
+      showTalking(); src.start();
+      await new Promise(r => { src.onended = r; });
+    } catch(e){}
+    finally { showIdle(); }
+  }
+
   async function sendToVizi(b64){
     setBtn('thinking'); setStatus('Vizi is thinking…');
     try {
@@ -314,7 +335,7 @@
       const ct = (res.headers.get('content-type') || '');
       if (ct.includes('application/json')){
         const j = await res.json();
-        setBtn(''); setStatus(j.empty ? 'Didn\'t catch that — try again' : ('Error: ' + (j.error || 'unknown')));
+        setBtn(''); setStatus(j.empty ? 'Didn\'t catch that — try again' : 'Error: ' + (j.error||'unknown'));
         return;
       }
       const transcript = dec(res.headers.get('X-Vizi-Transcript'));
@@ -326,56 +347,41 @@
       const blob = await res.blob();
       setBtn(''); setStatus('');
       await playBlob(blob);
-      // after song intro, switch back to talk mode so follow-up questions work
       if (currentMode === 'song') currentMode = 'talk';
       setStatus('Ready');
-    } catch(e){
-      setBtn(''); setStatus('Could not reach Vizi — check connection');
-    }
+    } catch(e){ setBtn(''); setStatus('Could not reach Vizi — check connection'); }
   }
-  function dec(v){ try { return v ? decodeURIComponent(v) : ''; } catch(_){ return v || ''; } }
+  function dec(v){ try { return v ? decodeURIComponent(v) : ''; } catch(_){ return v||''; } }
 
-  async function playBlob(blob){
-    try {
-      const arr = await blob.arrayBuffer();
-      const buf = await audioCtx.decodeAudioData(arr);
-      const src = audioCtx.createBufferSource();
-      src.buffer = buf; src.connect(audioCtx.destination);
-      showTalking(); src.start();
-      await new Promise(r => { src.onended = r; });
-    } catch(e){}
-    finally { showIdle(); }
+  // ─── Intro playback ───────────────────────────────────────
+  // The intro blob is fetched as soon as the session is ready,
+  // but played on the NEXT user gesture so audioCtx is unlocked.
+  async function playPendingIntro(){
+    if (!pendingIntroBlob) return;
+    const blob = pendingIntroBlob;
+    const text = pendingIntroText;
+    const cmd  = pendingIntroCmd;
+    pendingIntroBlob = null; pendingIntroText = null; pendingIntroCmd = null;
+    setBtn(''); // clear intro state
+    if (text) showPanel('pVizi','bVizi', text);
+    if (cmd)  showPanel('pCmd','bCmd', cmd);
+    setStatus('');
+    await playBlob(blob);
+    currentMode = 'talk';
+    setStatus('Ready');
   }
 
   // ─── Song upload flow ─────────────────────────────────────
-  // 1. Create a real session on Railway
-  // 2. Open upload.html?session=ID in a new tab
-  // 3. Poll /session-status/:id until ready
-  // 4. Fetch the prompt from /session-prompt/:id
-  // 5. Send it to /stt-claude-tts in song mode — Vizi introduces the song
-
   uploadBtn.addEventListener('click', async () => {
-    if (songPollTimer) return;   // already waiting for an upload
-
+    if (songPollTimer) return;
     uploadBtn.textContent = '⏳ Creating session…';
     uploadBtn.disabled = true;
-
     try {
       const res  = await fetch(RAILWAY_URL + '/session-create');
       const data = await res.json();
       songSessionId = data.sessionId;
-
-      // Store session ID so we can resume polling when we come back
       sessionStorage.setItem('viziSongSession', songSessionId);
-      // Navigate to upload page — redirect back happens on success
       window.location.href = `upload.html?session=${songSessionId}`;
-
-      // Start polling for upload completion
-      uploadBtn.className = 'upload-btn waiting';
-      uploadBtn.textContent = '⏳ Waiting for song upload…';
-      uploadBtn.disabled = false;
-      setStatus('Upload your song sheet in the new tab');
-      startSongPoll();
     } catch(e){
       uploadBtn.textContent = '🎵 Upload a Song';
       uploadBtn.disabled = false;
@@ -395,26 +401,22 @@
       const data = await res.json();
 
       if (data.status === 'ready' && !songLoaded){
-        // Stop polling
         clearInterval(songPollTimer); songPollTimer = null; songLoaded = true;
-        sessionStorage.removeItem('viziSongSession');  // done polling
+        sessionStorage.removeItem('viziSongSession');
 
-        // Show banner
         const title = data.songTitle || 'song';
-        songBanner.textContent = `🎵 "${title}" loaded — Vizi is ready`;
+        songBanner.textContent = `🎵 "${title}" loaded`;
         songBanner.classList.add('show');
         uploadBtn.className = 'upload-btn';
         uploadBtn.textContent = '🎵 Upload Another Song';
         uploadBtn.disabled = false;
-        setStatus('Song loaded — Vizi will introduce it now…');
 
-        // Fetch the ready prompt and send it to Vizi in song mode
+        // Fetch the session prompt and get TTS from Claude
         const promptRes  = await fetch(`${RAILWAY_URL}/session-prompt/${songSessionId}`);
         const promptData = await promptRes.json();
 
         if (promptData.ready && promptData.message){
           currentMode = 'song';
-          // Convert the text prompt to audio via /claude-tts (text→Claude→TTS, no STT needed)
           const ttsRes = await fetch(RAILWAY_URL + '/claude-tts', {
             method:'POST', headers:{ 'Content-Type':'application/json' },
             body: JSON.stringify({ message: promptData.message, mode: 'song' })
@@ -422,17 +424,17 @@
           if (ttsRes.ok){
             const ct = ttsRes.headers.get('content-type') || '';
             if (!ct.includes('application/json')){
-              const text     = dec(ttsRes.headers.get('X-Vizi-Text'));
-              const commands = dec(ttsRes.headers.get('X-Vizi-Commands'));
-              if (text)     showPanel('pVizi','bVizi', text);
-              if (commands) showPanel('pCmd','bCmd', commands);
-              const blob = await ttsRes.blob();
-              setStatus('');
-              await playBlob(blob);
-              currentMode = 'talk';
+              // Store the intro for the next user gesture
+              pendingIntroText = dec(ttsRes.headers.get('X-Vizi-Text'));
+              pendingIntroCmd  = dec(ttsRes.headers.get('X-Vizi-Commands'));
+              pendingIntroBlob = await ttsRes.blob();
+              // Signal the user to tap to hear the intro
+              setBtn('intro');
+              btn.innerHTML = 'Tap to hear<br>Vizi intro';
+              setStatus('Song ready — tap the button to hear Vizi');
+              songBanner.textContent += ' — tap button to hear intro';
             }
           }
-          setStatus('Ready');
         }
       } else if (data.status === 'error'){
         clearInterval(songPollTimer); songPollTimer = null;
@@ -441,12 +443,18 @@
         uploadBtn.disabled = false;
         setStatus('Upload failed — try again');
       }
-    } catch(e){ /* poll quietly, retry next interval */ }
+    } catch(e){ /* poll quietly */ }
   }
 
-  // ─── Press-and-hold wiring ────────────────────────────────
+  // ─── Talk button press/release ────────────────────────────
   async function press(e){
     e.preventDefault();
+    // If there's a pending intro, play it on this gesture
+    if (pendingIntroBlob){
+      btn.innerHTML = 'Hold<br>to Talk';
+      await playPendingIntro();
+      return;
+    }
     if (recording) return;
     setBtn('listening'); setStatus('Starting mic…');
     try {
@@ -458,6 +466,7 @@
   }
   function release(e){
     e.preventDefault();
+    if (pendingIntroBlob) return; // handled in press
     if (!recording) return;
     setListening(false);
     const b64 = stopCapture();
@@ -465,14 +474,49 @@
     sendToVizi(b64);
   }
 
-  // ─── Song sheet — floating draggable panel ───────────────
+  btn.addEventListener('pointerdown', press);
+  btn.addEventListener('pointerup',   release);
+  btn.addEventListener('pointercancel', release);
+  btn.addEventListener('pointerleave', e => { if (recording && !pendingIntroBlob) release(e); });
+
+  // ─── Song sheet — floating panel with zoom ────────────────
   const sheetWrap    = document.getElementById('sheetWrap');
   const sheetTitle   = document.getElementById('sheetTitle');
   const sheetBody    = document.getElementById('sheetBody');
+  const sheetContent = document.getElementById('sheetContent');
   const sheetClose   = document.getElementById('sheetClose');
-  const sheetMinBtn  = document.getElementById('sheetMinBtn');
   const sheetShowBtn = document.getElementById('sheetShowBtn');
   const dragHandle   = document.getElementById('sheetDragHandle');
+  const zoomIn       = document.getElementById('zoomIn');
+  const zoomOut      = document.getElementById('zoomOut');
+  const zoomReset    = document.getElementById('zoomReset');
+  const zoomValEl    = document.getElementById('zoomVal');
+
+  let zoomLevel = 1.0;
+  const ZOOM_STEP = 0.15, ZOOM_MIN = 0.4, ZOOM_MAX = 3.0;
+
+  function applyZoom(){
+    // For images and text, scale the content div
+    // For iframes, scale the iframe itself
+    const iframe = sheetContent.querySelector('iframe');
+    const img    = sheetContent.querySelector('img');
+    const pre    = sheetContent.querySelector('pre');
+    if (iframe){
+      iframe.style.transform = `scale(${zoomLevel})`;
+      iframe.style.transformOrigin = 'top left';
+      iframe.style.width  = (100 / zoomLevel) + '%';
+      iframe.style.height = (580 / zoomLevel) + 'px';
+    } else if (img){
+      img.style.width = (zoomLevel * 100) + '%';
+    } else if (pre){
+      pre.style.fontSize = (0.75 * zoomLevel) + 'rem';
+    }
+    zoomValEl.textContent = Math.round(zoomLevel * 100) + '%';
+  }
+
+  zoomIn.addEventListener('click',    e => { e.stopPropagation(); zoomLevel = Math.min(ZOOM_MAX, zoomLevel + ZOOM_STEP); applyZoom(); });
+  zoomOut.addEventListener('click',   e => { e.stopPropagation(); zoomLevel = Math.max(ZOOM_MIN, zoomLevel - ZOOM_STEP); applyZoom(); });
+  zoomReset.addEventListener('click', e => { e.stopPropagation(); zoomLevel = 1.0; applyZoom(); });
 
   function loadSongSheet(){
     const dataUrl = sessionStorage.getItem('viziSongFile');
@@ -481,38 +525,38 @@
     if (!dataUrl) return;
 
     sheetTitle.textContent = name;
-    sheetBody.innerHTML = '';
+    sheetContent.innerHTML = '';
+    zoomLevel = 1.0;
 
-    if (dataUrl.startsWith('text:')) {
+    if (dataUrl.startsWith('text:')){
       const pre = document.createElement('pre');
       pre.textContent = dataUrl.slice(5);
-      sheetBody.appendChild(pre);
-    } else if (type.includes('pdf')) {
+      sheetContent.appendChild(pre);
+    } else if (type.includes('pdf')){
       const iframe = document.createElement('iframe');
       iframe.src = dataUrl;
-      sheetBody.appendChild(iframe);
-    } else if (type.startsWith('image/')) {
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+      iframe.style.minHeight = '500px';
+      sheetContent.appendChild(iframe);
+    } else if (type.startsWith('image/')){
       const img = document.createElement('img');
       img.src = dataUrl; img.alt = name;
-      sheetBody.appendChild(img);
+      sheetContent.appendChild(img);
     } else {
       const iframe = document.createElement('iframe');
       iframe.src = dataUrl;
-      sheetBody.appendChild(iframe);
+      sheetContent.appendChild(iframe);
     }
+
+    applyZoom();
     sheetWrap.classList.add('show');
     sheetShowBtn.classList.remove('show');
   }
 
   sheetClose.addEventListener('click', () => {
     sheetWrap.classList.remove('show');
-    // Show re-open button if we have a sheet loaded
     if (sessionStorage.getItem('viziSongFile')) sheetShowBtn.classList.add('show');
-  });
-
-  sheetMinBtn.addEventListener('click', () => {
-    sheetBody.style.display = sheetBody.style.display === 'none' ? '' : 'none';
-    sheetMinBtn.textContent = sheetBody.style.display === 'none' ? '□' : '—';
   });
 
   sheetShowBtn.addEventListener('click', () => {
@@ -520,42 +564,35 @@
     sheetShowBtn.classList.remove('show');
   });
 
-  // ── Drag to move ──
-  let dragOffX = 0, dragOffY = 0, dragging = false;
+  // drag
+  let dragOffX=0, dragOffY=0, dragging=false;
   dragHandle.addEventListener('pointerdown', e => {
-    if (e.target === sheetClose || e.target === sheetMinBtn) return;
-    dragging = true; dragHandle.setPointerCapture(e.pointerId);
-    const r = sheetWrap.getBoundingClientRect();
-    dragOffX = e.clientX - r.left; dragOffY = e.clientY - r.top;
-    e.preventDefault();
+    const t = e.target;
+    if (t===sheetClose||t===zoomIn||t===zoomOut||t===zoomReset) return;
+    dragging=true; dragHandle.setPointerCapture(e.pointerId);
+    const r=sheetWrap.getBoundingClientRect();
+    dragOffX=e.clientX-r.left; dragOffY=e.clientY-r.top; e.preventDefault();
   });
   dragHandle.addEventListener('pointermove', e => {
     if (!dragging) return;
-    const x = Math.max(0, Math.min(window.innerWidth  - sheetWrap.offsetWidth,  e.clientX - dragOffX));
-    const y = Math.max(0, Math.min(window.innerHeight - sheetWrap.offsetHeight, e.clientY - dragOffY));
-    sheetWrap.style.left = x + 'px'; sheetWrap.style.top = y + 'px';
-    sheetWrap.style.right = 'auto';
+    const x=Math.max(0,Math.min(window.innerWidth-sheetWrap.offsetWidth,  e.clientX-dragOffX));
+    const y=Math.max(0,Math.min(window.innerHeight-sheetWrap.offsetHeight,e.clientY-dragOffY));
+    sheetWrap.style.left=x+'px'; sheetWrap.style.top=y+'px'; sheetWrap.style.right='auto';
   });
-  dragHandle.addEventListener('pointerup',    () => { dragging = false; });
-  dragHandle.addEventListener('pointercancel',() => { dragging = false; });
+  dragHandle.addEventListener('pointerup',    ()=>{ dragging=false; });
+  dragHandle.addEventListener('pointercancel',()=>{ dragging=false; });
 
-  // ── Resume session polling if we came back from upload page ──
+  // Resume session poll after redirect from upload page
   const storedSession = sessionStorage.getItem('viziSongSession');
-  if (storedSession && !songLoaded) {
+  if (storedSession && !songLoaded){
     songSessionId = storedSession;
-    setStatus('Checking for uploaded song…');
     uploadBtn.className = 'upload-btn waiting';
     uploadBtn.textContent = '⏳ Waiting for song upload…';
+    setStatus('Checking for uploaded song…');
     startSongPoll();
   }
 
-  // Load sheet on page arrival
   loadSongSheet();
-
-  btn.addEventListener('pointerdown', press);
-  btn.addEventListener('pointerup',   release);
-  btn.addEventListener('pointercancel', release);
-  btn.addEventListener('pointerleave', e => { if (recording) release(e); });
 </script>
 </body>
 </html>
