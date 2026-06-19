@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lessons — Ai Visual Guitar</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --cream:#F5F0E8; --cream-dark:#EDE6D6; --cream-mid:#E0D5C0;
+    --red:#D94025; --red-dark:#B83320; --blue:#1B4F8A;
+    --gold:#E8A020; --teal:#2AACB8; --green:#4CAF50;
+    --text:#2A2018; --text-mid:#5A4A38; --text-light:#8A7A68;
+    --white:#FFFFFF; --shadow:rgba(42,32,24,0.10); --shadow-lg:rgba(42,32,24,0.18);
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--cream); color:var(--text);
+    font-family:'DM Sans',sans-serif; font-weight:300;
+    min-height:100vh; padding-bottom:3rem;
+  }
+
+  /* ── nav ── */
+  nav{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:1rem 2rem; background:rgba(245,240,232,0.95);
+    backdrop-filter:blur(12px); border-bottom:2px solid var(--cream-dark);
+  }
+  .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+  .logo-mark{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;line-height:1}
+  .logo-mark .A{color:var(--red)} .logo-mark .i{color:var(--blue)}
+  .logo-name{font-family:'Playfair Display',serif;font-size:.92rem;font-weight:700;color:var(--text)}
+  .nav-link{
+    font-size:.82rem;font-weight:500;color:var(--text-mid);text-decoration:none;
+    padding:7px 16px;border-radius:6px;border:2px solid var(--cream-dark);transition:all .2s;
+  }
+  .nav-link:hover{border-color:var(--blue);color:var(--blue)}
+
+  /* ── hero / fretboard nav (the signature element) ── */
+  .hero{ max-width:920px; margin:0 auto; padding:3rem 1.5rem 1rem; }
+  .hero-eyebrow{
+    font-family:'DM Mono',monospace; font-size:.66rem; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--red); margin-bottom:.6rem; display:flex; align-items:center; gap:.6rem;
+  }
+  .hero-eyebrow::before{content:'';width:1.5rem;height:2px;background:var(--red)}
+  .hero h1{
+    font-family:'Playfair Display',serif; font-weight:900; letter-spacing:-.02em;
+    font-size:clamp(2rem,5vw,3rem); line-height:1.05; margin-bottom:.5rem;
+  }
+  .hero p{color:var(--text-mid); max-width:520px; line-height:1.6; font-size:.95rem; margin-bottom:2rem}
+
+  /* fretboard stage strip */
+  .fretboard{
+    position:relative;
+    background:linear-gradient(180deg,#3a2a1c,#2a1d12);
+    border-radius:14px;
+    padding:1.6rem 1.2rem 1.3rem;
+    box-shadow:0 12px 32px var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.06);
+    overflow-x:auto;
+  }
+  .fret-strings{
+    position:absolute; inset:1.6rem 1.2rem auto 1.2rem; height:64px;
+    background:repeating-linear-gradient(180deg,transparent 0,transparent 9px,rgba(255,255,255,0.06) 9px,rgba(255,255,255,0.06) 10px);
+    pointer-events:none;
+  }
+  .frets-row{ display:flex; gap:.55rem; position:relative; min-width:680px; }
+  .fret-stage{
+    flex:1; min-width:84px;
+    background:rgba(255,255,255,0.04);
+    border:1.5px solid rgba(255,255,255,0.1);
+    border-radius:9px; padding:.7rem .5rem .6rem;
+    text-align:center; cursor:pointer; transition:all .18s;
+    position:relative;
+  }
+  .fret-stage:hover{background:rgba(255,255,255,0.09); transform:translateY(-2px)}
+  .fret-stage.active{
+    background:rgba(232,160,32,0.16); border-color:var(--gold);
+    box-shadow:0 0 0 1px var(--gold), 0 0 18px rgba(232,160,32,0.35);
+  }
+  .fret-num{
+    font-family:'DM Mono',monospace; font-size:.62rem; color:rgba(255,255,255,0.35);
+    margin-bottom:.35rem; letter-spacing:.08em;
+  }
+  .fret-led{
+    width:9px;height:9px;border-radius:50%;margin:0 auto .45rem;
+    background:rgba(255,255,255,0.18); transition:all .2s;
+  }
+  .fret-stage.active .fret-led{ background:var(--gold); box-shadow:0 0 8px var(--gold) }
+  .fret-stage.done .fret-led{ background:var(--green); box-shadow:0 0 6px var(--green) }
+  .fret-label{
+    font-family:'DM Sans',sans-serif; font-size:.74rem; font-weight:500;
+    color:rgba(255,255,255,0.85); line-height:1.25;
+  }
+  .fret-stage.active .fret-label{ color:#fff }
+
+  /* play-a-song pill, separate from the sequence */
+  .song-pill{
+    display:flex; align-items:center; gap:.6rem; margin-top:1rem;
+    background:rgba(27,79,138,0.12); border:1.5px solid rgba(80,140,210,0.35);
+    border-radius:10px; padding:.7rem 1rem; cursor:pointer; transition:all .2s;
+  }
+  .song-pill:hover{ background:rgba(27,79,138,0.2) }
+  .song-pill .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal)}
+  .song-pill span{color:#dce8f5;font-size:.85rem;font-weight:500}
+  .song-pill small{color:rgba(220,232,245,0.55);font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;margin-left:auto}
+
+  /* ── category detail panel ── */
+  .panel-wrap{ max-width:920px; margin:2rem auto 0; padding:0 1.5rem; }
+  .cat-panel{
+    display:none; background:var(--white); border:2px solid var(--cream-dark);
+    border-radius:16px; box-shadow:0 8px 28px var(--shadow); overflow:hidden;
+    animation:fade-up .35s ease both;
+  }
+  .cat-panel.show{display:block}
+  @keyframes fade-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  .cat-head{
+    padding:1.6rem 2rem 1.4rem; border-bottom:2px solid var(--cream-dark);
+    background:linear-gradient(135deg,var(--white) 0%, var(--cream) 100%);
+    display:flex; align-items:flex-start; justify-content:space-between; gap:1rem;
+  }
+  .cat-stage-tag{
+    font-family:'DM Mono',monospace; font-size:.62rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--red); margin-bottom:.4rem;
+  }
+  .cat-title{ font-family:'Playfair Display',serif; font-weight:900; font-size:1.7rem; letter-spacing:-.01em; }
+  .cat-desc{ color:var(--text-mid); font-size:.86rem; margin-top:.4rem; max-width:480px; line-height:1.55 }
+  .cat-close{
+    background:var(--white); border:2px solid var(--cream-dark); border-radius:8px;
+    width:34px;height:34px; flex-shrink:0; cursor:pointer; font-size:1rem; color:var(--text-mid);
+    transition:all .2s;
+  }
+  .cat-close:hover{border-color:var(--red);color:var(--red)}
+
+  .cat-body{ padding:1.6rem 2rem 2rem; }
+
+  /* choice row: intro video vs exercises */
+  .choice-row{ display:grid; grid-template-columns:1fr 1fr; gap:.85rem; margin-bottom:1.6rem; }
+  .choice-card{
+    background:var(--cream); border:2px solid var(--cream-dark); border-radius:12px;
+    padding:1.1rem 1.2rem; cursor:pointer; transition:all .2s; text-align:left;
+  }
+  .choice-card:hover{ border-color:var(--blue); background:rgba(27,79,138,0.04) }
+  .choice-card .ci{ font-size:1.4rem; margin-bottom:.4rem; display:block }
+  .choice-card .ct{ font-weight:600; font-size:.92rem; margin-bottom:.2rem }
+  .choice-card .cs{ font-size:.74rem; color:var(--text-light); line-height:1.4 }
+  .choice-card.watched .cs{ color:var(--green) }
+
+  /* video player */
+  .vid-wrap{ display:none; margin-bottom:1.6rem; }
+  .vid-wrap.show{ display:block }
+  .vid-wrap video{
+    width:100%; max-height:420px; border-radius:12px; background:#0a0a0a;
+    display:block; box-shadow:0 6px 20px var(--shadow);
+  }
+  .vid-meta{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:.6rem; font-family:'DM Mono',monospace; font-size:.65rem;
+    letter-spacing:.06em; text-transform:uppercase; color:var(--text-light);
+  }
+  .vid-meta button{
+    background:none;border:none;color:var(--blue);cursor:pointer;
+    font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;
+  }
+
+  /* tip card */
+  .tip-card{
+    display:none; align-items:flex-start; gap:.8rem;
+    background:rgba(232,160,32,0.08); border:2px solid rgba(232,160,32,0.3);
+    border-radius:12px; padding:1rem 1.2rem; margin-bottom:1.6rem;
+  }
+  .tip-card.show{ display:flex }
+  .tip-icon{ font-size:1.2rem; flex-shrink:0; margin-top:.1rem }
+  .tip-text{ font-size:.86rem; line-height:1.55; color:var(--text) }
+  .tip-label{
+    font-family:'DM Mono',monospace; font-size:.58rem; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--gold); display:block; margin-bottom:.25rem;
+  }
+
+  /* exercises list */
+  .ex-list{ display:flex; flex-direction:column; gap:.6rem; }
+  .ex-item{
+    display:flex; align-items:center; gap:.85rem;
+    background:var(--cream); border:2px solid var(--cream-dark); border-radius:10px;
+    padding:.85rem 1.1rem; cursor:pointer; transition:all .18s;
+  }
+  .ex-item:hover{ border-color:var(--blue); background:rgba(27,79,138,0.04) }
+  .ex-num{
+    width:26px;height:26px;border-radius:50%;flex-shrink:0;
+    background:var(--cream-dark); color:var(--text-mid);
+    font-family:'DM Mono',monospace; font-size:.7rem; font-weight:500;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .ex-item.done .ex-num{ background:var(--green); color:white }
+  .ex-name{ font-size:.88rem; font-weight:500; flex:1 }
+  .ex-arrow{ color:var(--text-light); font-size:.9rem }
+
+  /* ── tuner card (conditionally added for tuning stage) ── */
+  .choice-card.tuner-card{ background:rgba(76,175,80,0.06); border-color:rgba(76,175,80,0.3) }
+  .choice-card.tuner-card:hover{ border-color:var(--green); background:rgba(76,175,80,0.1) }
+
+  .tuner-wrap{ display:none; margin-bottom:1.6rem; }
+  .tuner-wrap.show{ display:block }
+  .tuner-box{
+    background:linear-gradient(180deg,#2a1d12,#1c130c);
+    border-radius:14px; padding:1.6rem 1.4rem 1.4rem;
+    box-shadow:0 10px 28px var(--shadow-lg);
+  }
+  .tuner-status{
+    text-align:center; font-family:'DM Mono',monospace; font-size:.65rem;
+    letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,0.4);
+    margin-bottom:1rem;
+  }
+  .tuner-note{
+    text-align:center; font-family:'Playfair Display',serif; font-weight:900;
+    font-size:3.2rem; color:#fff; line-height:1; margin-bottom:.3rem;
+    transition:color .15s;
+  }
+  .tuner-note.in-tune{ color:var(--green) }
+  .tuner-freq{
+    text-align:center; font-family:'DM Mono',monospace; font-size:.7rem;
+    color:rgba(255,255,255,0.4); margin-bottom:1.2rem;
+  }
+  /* needle gauge */
+  .tuner-gauge{ position:relative; height:54px; margin-bottom:1.3rem; }
+  .tuner-track{
+    position:absolute; left:0; right:0; top:24px; height:4px; border-radius:2px;
+    background:linear-gradient(90deg, var(--red) 0%, var(--red) 38%, var(--green) 46%, var(--green) 54%, var(--red) 62%, var(--red) 100%);
+    opacity:.85;
+  }
+  .tuner-center-mark{
+    position:absolute; left:50%; top:14px; width:2px; height:24px;
+    background:rgba(255,255,255,0.5); transform:translateX(-50%);
+  }
+  .tuner-needle{
+    position:absolute; top:0; width:3px; height:54px; background:#fff;
+    left:50%; transform:translateX(-50%); border-radius:2px;
+    box-shadow:0 0 8px rgba(255,255,255,0.6); transition:left .08s linear;
+  }
+  .tuner-needle.in-tune{ background:var(--green); box-shadow:0 0 10px var(--green) }
+  /* string buttons */
+  .tuner-strings{ display:flex; gap:.4rem; justify-content:center; }
+  .tuner-string-btn{
+    flex:1; max-width:64px;
+    background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.12);
+    border-radius:8px; padding:.5rem .3rem; cursor:default;
+    text-align:center; transition:all .15s;
+  }
+  .tuner-string-btn .sname{ font-family:'DM Mono',monospace; font-size:.7rem; color:rgba(255,255,255,0.55); display:block }
+  .tuner-string-btn .sled{ width:6px;height:6px;border-radius:50%; background:rgba(255,255,255,0.15); margin:.3rem auto 0; }
+  .tuner-string-btn.target{ border-color:var(--gold); background:rgba(232,160,32,0.12) }
+  .tuner-string-btn.target .sname{ color:var(--gold) }
+  .tuner-string-btn.in-tune .sled{ background:var(--green); box-shadow:0 0 6px var(--green) }
+  .tuner-mic-btn{
+    display:block; margin:1.2rem auto 0; background:var(--white); border:none;
+    border-radius:8px; padding:.6rem 1.4rem; font-family:'DM Sans',sans-serif;
+    font-size:.85rem; font-weight:600; color:var(--text); cursor:pointer; transition:all .2s;
+  }
+  .tuner-mic-btn:hover{ background:var(--cream) }
+  .tuner-mic-btn.listening{ background:var(--red); color:white }
+
+  @media(max-width:640px){
+    nav{padding:.85rem 1.2rem}
+    .hero{padding:2rem 1.2rem 1rem}
+    .choice-row{grid-template-columns:1fr}
+    .cat-head,.cat-body{padding-left:1.3rem;padding-right:1.3rem}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <div class="logo-mark"><span class="A">A</span><span class="i">i</span></div>
+    <div class="logo-name">Visual Guitar</div>
+  </a>
+  <a href="vizi.html" class="nav-link">← Back to Vizi</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Your Path</div>
+  <h1>Pick a stage on the fretboard</h1>
+  <p>Each stage builds on the last, but you choose the order. Watch the short intro if you'd like a refresher, or jump straight into exercises.</p>
+
+  <div class="fretboard">
+    <div class="fret-strings"></div>
+    <div class="frets-row" id="fretsRow"></div>
+  </div>
+
+  <div class="song-pill" id="songPill">
+    <span class="dot"></span>
+    <span>Play a Song</span>
+    <small>Use what you've learned</small>
+  </div>
+</div>
+
+<div class="panel-wrap">
+  <div class="cat-panel" id="catPanel">
+    <div class="cat-head">
+      <div>
+        <div class="cat-stage-tag" id="catStageTag">Stage 1</div>
+        <div class="cat-title" id="catTitle">Tuning &amp; Setup</div>
+        <div class="cat-desc" id="catDesc"></div>
+      </div>
+      <button class="cat-close" id="catClose">✕</button>
+    </div>
+    <div class="cat-body">
+
+      <div class="choice-row" id="choiceRow">
+        <button class="choice-card" id="introChoice">
+          <span class="ci">🎬</span>
+          <div class="ct">Watch Intro Video</div>
+          <div class="cs" id="introWatchedNote">Short overview of this stage</div>
+        </button>
+        <button class="choice-card" id="exerciseChoice">
+          <span class="ci">🎸</span>
+          <div class="ct">Jump to Exercises</div>
+          <div class="cs">Skip the video, start practicing</div>
+        </button>
+        <button class="choice-card tuner-card" id="tunerChoice" style="display:none">
+          <span class="ci">🎵</span>
+          <div class="ct">Open Tuner</div>
+          <div class="cs">Tune up before you start</div>
+        </button>
+      </div>
+
+      <!-- Live tuner — only shown on the tuning stage -->
+      <div class="tuner-wrap" id="tunerWrap">
+        <div class="tuner-box">
+          <div class="tuner-status" id="tunerStatus">Tap "Start Listening" and play a string</div>
+          <div class="tuner-note" id="tunerNote">—</div>
+          <div class="tuner-freq" id="tunerFreq">&nbsp;</div>
+          <div class="tuner-gauge">
+            <div class="tuner-track"></div>
+            <div class="tuner-center-mark"></div>
+            <div class="tuner-needle" id="tunerNeedle" style="left:50%"></div>
+          </div>
+          <div class="tuner-strings" id="tunerStrings"></div>
+          <button class="tuner-mic-btn" id="tunerMicBtn">🎤 Start Listening</button>
+        </div>
+      </div>
+
+      <div class="vid-wrap" id="vidWrap">
+        <video id="introVideo" controls playsinline></video>
+        <div class="vid-meta">
+          <span id="vidLabel">Intro video</span>
+          <button id="vidToExercises">Go to exercises →</button>
+        </div>
+      </div>
+
+      <div class="tip-card" id="tipCard">
+        <span class="tip-icon">💡</span>
+        <div>
+          <span class="tip-label">Tip</span>
+          <span class="tip-text" id="tipText"></span>
+        </div>
+      </div>
+
+      <div class="ex-list" id="exList"></div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // ════════════════════════════════════════════════════════
+  // STAGE DATA — pedagogy structure. Video filenames are
+  // placeholders; drop matching .mp4 files alongside this page.
+  // ════════════════════════════════════════════════════════
+  const STAGES = [
+    {
+      id:'tuning', num:1, label:'Tuning & Setup',
+      desc:'Get your guitar in tune and learn how to hold it comfortably before anything else.',
+      video:'lesson_tuning_intro.mp4',
+      tips:[
+        "Tune from below the note up to it — it holds pitch better than tuning down.",
+        "A guitar that drifts out of tune during a session is normal; recheck every 10–15 minutes.",
+        "Hold the neck with your thumb low and behind it, not wrapped over the top.",
+        "New strings stretch — expect to retune a few extra times the first day.",
+        "Sit with the guitar's waist resting on your right leg (or left, if left-handed) for a stable base.",
+        "Electronic tuners read the string's actual pitch — trust the tuner over your ear at first.",
+        "Press strings just behind the fret wire, not on top of it, for a cleaner sound.",
+        "Relax your shoulders — tension in your strumming arm is the #1 cause of early fatigue.",
+        "Check tuning standing up too — your ear can shift slightly between sitting and standing.",
+        "A buzzing string almost always means a finger is too close to the fret, not too far."
+      ],
+      exercises:['Tune all six strings','Check open string sound one by one','Practice sitting position for 2 minutes']
+    },
+    {
+      id:'rhythm', num:2, label:'Rhythm Foundations',
+      desc:'Internalize steady timing with the metronome before adding chords or strumming.',
+      video:'lesson_rhythm_intro.mp4',
+      tips:[
+        "Clap on beats 2 and 4 first — it's how most pop and rock songs feel their groove.",
+        "Start the metronome at 60 BPM. Slower than you think you need is usually right.",
+        "Counting out loud (1-2-3-4) keeps your internal clock honest.",
+        "If you rush during fast parts, you're not alone — it's the most common timing mistake.",
+        "Tap your foot on every beat, even once you're comfortable — it never stops helping.",
+        "A metronome is a mirror, not a competitor. Slow down rather than fight it.",
+        "Try clapping a steady quarter-note pulse for a full minute without losing the beat.",
+        "Subdividing (counting 1-and-2-and) makes faster strumming patterns click into place.",
+        "Recording yourself reveals timing issues your ear misses in the moment.",
+        "Good timing matters more than speed — a slow, steady player always sounds better than a fast, sloppy one."
+      ],
+      exercises:['Clap quarter notes at 60 BPM','Clap on beats 2 & 4','Tap foot + count out loud for 1 minute']
+    },
+    {
+      id:'open-chords', num:3, label:'Open Chords',
+      desc:'Learn the core open chord shapes — G, C, D, A, E and their minors.',
+      video:'lesson_open_chords_intro.mp4',
+      tips:[
+        "Press only as hard as needed to stop the buzz — squeezing harder just tires your hand.",
+        "Curl your fretting fingers like you're holding a small ball, not flat across the strings.",
+        "Practice forming one chord, releasing fully, and reforming it — that's the real skill.",
+        "It's normal for fingertips to hurt the first 1–2 weeks. Calluses build fast after that.",
+        "Strum slowly and listen for any muted or buzzing string — that tells you which finger to fix.",
+        "Your thumb belongs behind the neck, roughly behind your middle finger.",
+        "Learn one chord deeply before adding a second — depth beats breadth early on.",
+        "If a chord sounds muddy, check that no finger is accidentally touching a neighboring string.",
+        "G and C share a finger position — learning them together speeds up both.",
+        "A chord chart's dots show finger position, not pressure — pressure comes from practice."
+      ],
+      exercises:['Form G major, check each string','Form C major, check each string','Form D major, check each string','Form E minor, check each string']
+    },
+    {
+      id:'chord-theory', num:4, label:'How Chords Are Built',
+      desc:'Learn what root, third, and fifth mean — the three notes behind every chord you play.',
+      video:'lesson_chord_theory_intro.mp4',
+      theoryMode:true,
+      tips:[
+        "The root note is what gives a chord its name — a C chord starts on the note C.",
+        "Major and minor are decided entirely by the third — everything else can stay the same.",
+        "The fifth is the most stable note in a chord — it rarely sounds 'wrong.'",
+        "Moving a third down just one fret turns a major chord minor.",
+        "Once you can hear a third, you can often tell major from minor with your eyes closed.",
+        "A power chord (root + fifth, no third) is neither major nor minor — that's why it works in both.",
+        "Every major scale note can serve as a root, third, or fifth depending on the chord built from it.",
+        "Try humming just the root, then the third, then the fifth of a chord you know — that's ear training for free.",
+        "The same three-note idea — root, third, fifth — applies whether you're playing an open chord or a barre chord.",
+        "Understanding root/third/fifth means you can often figure out a new chord without ever looking it up."
+      ],
+      exercises:['Find the root of G, C, and D','Switch G major to G minor by moving the third','Identify the fifth in an E major chord']
+    },
+    {
+      id:'transitions', num:5, label:'Chord Transitions',
+      desc:"Move smoothly between chords — this is where most beginners get stuck, and where consistent practice pays off fastest.",
+      video:'lesson_transitions_intro.mp4',
+      tips:[
+        "Practice just two chords at a time — G to C, then C to G — before adding a third.",
+        "Look for a 'pivot finger' that stays on the same string between two chords.",
+        "It's fine to stop strumming during a slow change at first — timing comes after accuracy.",
+        "Move your fingers as a shape, together, rather than one at a time.",
+        "Practice the change in silence first — just the hand motion, no strumming.",
+        "Speed comes from smaller finger movements, not faster effort.",
+        "A common beginner habit is lifting fingers too high between chords — keep them close to the strings.",
+        "Loop a single hard transition 10 times slowly rather than playing the whole song fast.",
+        "G→D→Em→C is one of the most common progressions in popular music — worth mastering early.",
+        "If a transition feels impossible, it usually just needs more reps, not a different technique."
+      ],
+      exercises:['G to C, 10 slow reps','C to D, 10 slow reps','G–D–Em–C loop at 60 BPM']
+    },
+    {
+      id:'strumming', num:6, label:'Strumming Patterns',
+      desc:"Combine the timing and chords you've built into real strumming patterns.",
+      video:'lesson_strumming_intro.mp4',
+      tips:[
+        "Keep your strumming arm moving down-up-down-up constantly, even over silent beats.",
+        "A relaxed wrist makes a better strum than a tense, forced one.",
+        "Down-down-up-up-down-up is one of the most useful patterns to learn first.",
+        "Muting strings with your fretting hand briefly creates the 'chunk' sound in many patterns.",
+        "Strum near the sound hole for warmth, near the bridge for a brighter, twangier tone.",
+        "Your pick (or thumb) should brush the strings, not dig into them.",
+        "Practice strumming patterns on muted strings first to isolate the rhythm.",
+        "Accent the downbeat slightly louder — it gives the pattern a sense of pulse.",
+        "Most strumming problems are really chord-transition problems in disguise.",
+        "Once a pattern feels automatic, try it at a slightly faster tempo to build flexibility."
+      ],
+      exercises:['Down-strums only at 70 BPM','Down-down-up-up-down-up pattern','Apply pattern to G–C–D progression']
+    },
+    {
+      id:'barre-triads', num:7, label:'Barre Chords & Triads',
+      desc:'Move beyond open position with moveable shapes that work anywhere on the neck.',
+      video:'lesson_barre_intro.mp4',
+      tips:[
+        "Roll your barre finger slightly onto its side — flat-on-the-fret rarely works well.",
+        "Barre chords take real hand strength — short daily practice beats one long session.",
+        "Position your barre finger right against the fret wire, not in the middle of the fret.",
+        "If a barre buzzes, check your thumb position behind the neck first.",
+        "E-shape and A-shape barre chords cover most of the neck once learned.",
+        "Triads (3-note chord shapes) are lighter on the hand than full barre chords — good for fast songs.",
+        "Practice barre chords for short bursts; hand fatigue affects technique fast.",
+        "A slight wrist rotation toward the headstock can add barre pressure without more grip force.",
+        "Moveable shapes mean once you learn one, you've learned it in all 12 keys.",
+        "It's normal for barre chords to take weeks longer than open chords to feel solid."
+      ],
+      exercises:['F major barre chord, hold 10 sec','E-shape barre up 3 frets','High string triad shapes']
+    },
+    {
+      id:'soloing', num:8, label:'Soloing & Scales',
+      desc:'Warm up with scales and start playing single-note lines and simple solos.',
+      video:'lesson_soloing_intro.mp4',
+      tips:[
+        "Practice scales slowly with a metronome before chasing speed.",
+        "Alternate picking (down-up-down-up) builds speed more reliably than all downstrokes.",
+        "The pentatonic scale is the fastest path to sounding musical while improvising.",
+        "Bend strings gradually and check pitch against a fretted note for accuracy.",
+        "Vibrato is a small, controlled wobble — not a fast shake.",
+        "Improvising over just one or two chords is the easiest way to start soloing.",
+        "Your fretting hand should stay relaxed even during fast scale runs.",
+        "Listening to solos you admire and humming them first builds your musical ear.",
+        "Mistakes during improvisation are normal — recovering smoothly matters more than avoiding them.",
+        "Short daily scale practice beats occasional long sessions for finger speed."
+      ],
+      exercises:['A minor pentatonic, ascending','A minor pentatonic, descending','Improvise 4 bars over Em']
+    }
+  ];
+
+  // ── Build the fretboard nav ──
+  const fretsRow = document.getElementById('fretsRow');
+  STAGES.forEach(stage => {
+    const el = document.createElement('div');
+    el.className = 'fret-stage';
+    el.dataset.id = stage.id;
+    el.innerHTML = `
+      <div class="fret-num">${String(stage.num).padStart(2,'0')}</div>
+      <div class="fret-led"></div>
+      <div class="fret-label">${stage.label}</div>
+    `;
+    el.addEventListener('click', () => openStage(stage.id));
+    fretsRow.appendChild(el);
+  });
+
+  document.getElementById('songPill').addEventListener('click', () => {
+    window.location.href = 'vizi.html#upload';
+  });
+
+  // ── Progress (localStorage placeholder — Railway sync comes next) ──
+  function getProgress(){
+    try { return JSON.parse(localStorage.getItem('viziProgress') || '{}'); }
+    catch(e){ return {}; }
+  }
+  function setProgress(p){
+    try { localStorage.setItem('viziProgress', JSON.stringify(p)); } catch(e){}
+  }
+  function markIntroWatched(stageId){
+    const p = getProgress();
+    p[stageId] = p[stageId] || {};
+    p[stageId].introWatched = (p[stageId].introWatched || 0) + 1;
+    p[stageId].lastSeen = Date.now();
+    setProgress(p);
+    refreshFretboardDots();
+  }
+  function markExerciseDone(stageId, exName){
+    const p = getProgress();
+    p[stageId] = p[stageId] || {};
+    p[stageId].exercisesDone = p[stageId].exercisesDone || [];
+    if (!p[stageId].exercisesDone.includes(exName)) p[stageId].exercisesDone.push(exName);
+    setProgress(p);
+    refreshFretboardDots();
+  }
+  function refreshFretboardDots(){
+    const p = getProgress();
+    document.querySelectorAll('.fret-stage').forEach(el => {
+      const id = el.dataset.id;
+      const stage = STAGES.find(s => s.id === id);
+      const done = p[id] && stage && p[id].exercisesDone && p[id].exercisesDone.length >= stage.exercises.length;
+      el.classList.toggle('done', !!done);
+    });
+  }
+  refreshFretboardDots();
+
+  // ── Panel state ──
+  let activeStage = null;
+  const catPanel        = document.getElementById('catPanel');
+  const catStageTag     = document.getElementById('catStageTag');
+  const catTitle        = document.getElementById('catTitle');
+  const catDesc         = document.getElementById('catDesc');
+  const introChoice     = document.getElementById('introChoice');
+  const exerciseChoice  = document.getElementById('exerciseChoice');
+  const introWatchedNote= document.getElementById('introWatchedNote');
+  const vidWrap          = document.getElementById('vidWrap');
+  const introVideo       = document.getElementById('introVideo');
+  const vidToExercises  = document.getElementById('vidToExercises');
+  const tipCard          = document.getElementById('tipCard');
+  const tipText          = document.getElementById('tipText');
+  const exList           = document.getElementById('exList');
+  const tunerChoice      = document.getElementById('tunerChoice');
+  const tunerWrap        = document.getElementById('tunerWrap');
+
+  function openStage(id){
+    const stage = STAGES.find(s => s.id === id);
+    if (!stage) return;
+    activeStage = stage;
+
+    document.querySelectorAll('.fret-stage').forEach(el =>
+      el.classList.toggle('active', el.dataset.id === id));
+
+    catStageTag.textContent = `Stage ${stage.num}`
+      + (stage.theoryMode ? '  ·  Fretboard shows root / third / fifth' : '');
+    catTitle.textContent = stage.label;
+    catDesc.textContent = stage.desc;
+
+    const p = getProgress();
+    const watched = (p[id] && p[id].introWatched) || 0;
+    introWatchedNote.textContent = watched > 0
+      ? `Watched ${watched}× — short overview`
+      : 'Short overview of this stage';
+    introChoice.classList.toggle('watched', watched > 0);
+
+    vidWrap.classList.remove('show');
+    tipCard.classList.remove('show');
+    tunerWrap.classList.remove('show');
+    introVideo.pause();
+    stopTuner();
+
+    tunerChoice.style.display = (stage.id === 'tuning') ? '' : 'none';
+
+    renderExercises(stage);
+
+    catPanel.classList.add('show');
+    catPanel.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  introChoice.addEventListener('click', () => {
+    if (!activeStage) return;
+    introVideo.src = activeStage.video;
+    vidWrap.classList.add('show');
+    tipCard.classList.remove('show');
+    tunerWrap.classList.remove('show'); stopTuner();
+    introVideo.play().catch(()=>{});
+    markIntroWatched(activeStage.id);
+  });
+
+  exerciseChoice.addEventListener('click', () => {
+    vidWrap.classList.remove('show');
+    tunerWrap.classList.remove('show'); stopTuner();
+    introVideo.pause();
+    showRandomTip();
+  });
+
+  tunerChoice.addEventListener('click', () => {
+    vidWrap.classList.remove('show');
+    tipCard.classList.remove('show');
+    introVideo.pause();
+    tunerWrap.classList.add('show');
+    tunerWrap.scrollIntoView({behavior:'smooth', block:'nearest'});
+  });
+  vidToExercises.addEventListener('click', () => {
+    vidWrap.classList.remove('show');
+    introVideo.pause();
+    showRandomTip();
+    document.getElementById('exList').scrollIntoView({behavior:'smooth', block:'nearest'});
+  });
+
+  function showRandomTip(){
+    if (!activeStage || !activeStage.tips || activeStage.tips.length === 0) return;
+    const tip = activeStage.tips[Math.floor(Math.random() * activeStage.tips.length)];
+    tipText.textContent = tip;
+    tipCard.classList.add('show');
+  }
+
+  function renderExercises(stage){
+    const p = getProgress();
+    const done = (p[stage.id] && p[stage.id].exercisesDone) || [];
+    exList.innerHTML = '';
+    stage.exercises.forEach((ex, i) => {
+      const item = document.createElement('div');
+      item.className = 'ex-item' + (done.includes(ex) ? ' done' : '');
+      item.innerHTML = `
+        <div class="ex-num">${done.includes(ex) ? '✓' : i+1}</div>
+        <div class="ex-name">${ex}</div>
+        <div class="ex-arrow">→</div>
+      `;
+      item.addEventListener('click', () => {
+        const params = new URLSearchParams({ stage: stage.id, exercise: ex });
+        window.location.href = `vizi.html?${params.toString()}`;
+      });
+      exList.appendChild(item);
+    });
+  }
+
+  document.getElementById('catClose').addEventListener('click', () => {
+    catPanel.classList.remove('show');
+    document.querySelectorAll('.fret-stage').forEach(el => el.classList.remove('active'));
+    stopTuner();
+  });
+
+  // ════════════════════════════════════════════════════════
+  // TUNER — live pitch detection via autocorrelation
+  // ════════════════════════════════════════════════════════
+  const STRINGS = [
+    { name:'E', label:'Lo E', freq:82.41  },
+    { name:'A', label:'A',    freq:110.00 },
+    { name:'D', label:'D',    freq:146.83 },
+    { name:'G', label:'G',    freq:196.00 },
+    { name:'B', label:'B',    freq:246.94 },
+    { name:'E', label:'Hi E', freq:329.63 }
+  ];
+  const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+  const tunerStatus = document.getElementById('tunerStatus');
+  const tunerNote   = document.getElementById('tunerNote');
+  const tunerFreq   = document.getElementById('tunerFreq');
+  const tunerNeedle = document.getElementById('tunerNeedle');
+  const tunerStringsEl = document.getElementById('tunerStrings');
+  const tunerMicBtn = document.getElementById('tunerMicBtn');
+
+  // Build string indicator row
+  STRINGS.forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = 'tuner-string-btn';
+    el.dataset.idx = i;
+    el.innerHTML = `<span class="sname">${s.label}</span><div class="sled"></div>`;
+    tunerStringsEl.appendChild(el);
+  });
+
+  let tunerCtx = null, tunerStream = null, tunerAnalyser = null, tunerRAF = null;
+  let tunerRunning = false;
+
+  tunerMicBtn.addEventListener('click', () => {
+    if (tunerRunning) stopTuner();
+    else startTuner();
+  });
+
+  async function startTuner(){
+    try {
+      tunerCtx = new (window.AudioContext || window.webkitAudioContext)();
+      tunerStream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false } });
+      const source = tunerCtx.createMediaStreamSource(tunerStream);
+      tunerAnalyser = tunerCtx.createAnalyser();
+      tunerAnalyser.fftSize = 2048;
+      source.connect(tunerAnalyser);
+      tunerRunning = true;
+      tunerMicBtn.textContent = '⏹ Stop Listening';
+      tunerMicBtn.classList.add('listening');
+      tunerStatus.textContent = 'Listening… play one string at a time';
+      tunerLoop();
+    } catch(e){
+      tunerStatus.textContent = 'Microphone blocked — allow mic access';
+    }
+  }
+
+  function stopTuner(){
+    tunerRunning = false;
+    if (tunerRAF) cancelAnimationFrame(tunerRAF);
+    if (tunerStream) tunerStream.getTracks().forEach(t => t.stop());
+    if (tunerCtx) tunerCtx.close().catch(()=>{});
+    tunerCtx = null; tunerStream = null; tunerAnalyser = null;
+    tunerMicBtn.textContent = '🎤 Start Listening';
+    tunerMicBtn.classList.remove('listening');
+    tunerStatus.textContent = 'Tap "Start Listening" and play a string';
+    tunerNote.textContent = '—'; tunerNote.classList.remove('in-tune');
+    tunerFreq.innerHTML = '&nbsp;';
+    tunerNeedle.style.left = '50%'; tunerNeedle.classList.remove('in-tune');
+    document.querySelectorAll('.tuner-string-btn').forEach(el => {
+      el.classList.remove('target','in-tune');
+    });
+  }
+
+  function tunerLoop(){
+    if (!tunerRunning) return;
+    const buf = new Float32Array(tunerAnalyser.fftSize);
+    tunerAnalyser.getFloatTimeDomainData(buf);
+    const freq = autoCorrelate(buf, tunerCtx.sampleRate);
+    if (freq > 0) updateTunerDisplay(freq);
+    tunerRAF = requestAnimationFrame(tunerLoop);
+  }
+
+  // Standard autocorrelation pitch detector (good enough for a guitar tuner)
+  function autoCorrelate(buf, sampleRate){
+    const SIZE = buf.length;
+    let rms = 0;
+    for (let i=0; i<SIZE; i++) rms += buf[i]*buf[i];
+    rms = Math.sqrt(rms / SIZE);
+    if (rms < 0.01) return -1; // too quiet
+
+    let r1 = 0, r2 = SIZE-1, thresh = 0.2;
+    for (let i=0; i<SIZE/2; i++){ if (Math.abs(buf[i]) < thresh){ r1=i; break; } }
+    for (let i=1; i<SIZE/2; i++){ if (Math.abs(buf[SIZE-i]) < thresh){ r2=SIZE-i; break; } }
+    const trimmed = buf.slice(r1, r2);
+    const n = trimmed.length;
+    if (n < 2) return -1;
+
+    const c = new Array(n).fill(0);
+    for (let lag=0; lag<n; lag++){
+      for (let i=0; i<n-lag; i++) c[lag] += trimmed[i] * trimmed[i+lag];
+    }
+    let d = 0; while (d < n-1 && c[d] > c[d+1]) d++;
+    let maxVal = -1, maxPos = -1;
+    for (let i=d; i<n; i++){
+      if (c[i] > maxVal){ maxVal = c[i]; maxPos = i; }
+    }
+    let T0 = maxPos;
+    if (T0 <= 0) return -1;
+
+    // Parabolic interpolation for sub-sample accuracy
+    if (T0 > 0 && T0 < n-1){
+      const x1=c[T0-1], x2=c[T0], x3=c[T0+1];
+      const a=(x1+x3-2*x2)/2, b=(x3-x1)/2;
+      if (a !== 0) T0 = T0 - b/(2*a);
+    }
+    return sampleRate / T0;
+  }
+
+  function freqToNote(freq){
+    const noteNum = 12 * (Math.log(freq/440) / Math.log(2));
+    const rounded = Math.round(noteNum) + 69; // MIDI number
+    const name = NOTE_NAMES[((rounded % 12) + 12) % 12];
+    const octave = Math.floor(rounded/12) - 1;
+    const exactFreq = 440 * Math.pow(2, (rounded-69)/12);
+    const cents = 1200 * Math.log(freq/exactFreq) / Math.log(2);
+    return { name, octave, cents, exactFreq };
+  }
+
+  function nearestString(freq){
+    let best = STRINGS[0], bestDiff = Infinity;
+    STRINGS.forEach(s => {
+      const diff = Math.abs(Math.log2(freq/s.freq));
+      if (diff < bestDiff){ bestDiff = diff; best = s; }
+    });
+    return best;
+  }
+
+  function updateTunerDisplay(freq){
+    if (freq < 60 || freq > 500) return; // outside guitar range, ignore
+    const target = nearestString(freq);
+    const cents = 1200 * Math.log2(freq / target.freq);
+    const clamped = Math.max(-50, Math.min(50, cents));
+    const pct = 50 + (clamped / 50) * 50; // map -50..50 cents to 0..100%
+
+    const inTune = Math.abs(cents) < 5;
+
+    tunerNote.textContent = target.label;
+    tunerNote.classList.toggle('in-tune', inTune);
+    tunerFreq.textContent = `${freq.toFixed(1)} Hz  ·  target ${target.freq.toFixed(2)} Hz  ·  ${cents>0?'+':''}${cents.toFixed(0)}¢`;
+    tunerNeedle.style.left = pct + '%';
+    tunerNeedle.classList.toggle('in-tune', inTune);
+    tunerStatus.textContent = inTune ? '✓ In tune!' : (cents < 0 ? 'Tune up ↑' : 'Tune down ↓');
+
+    document.querySelectorAll('.tuner-string-btn').forEach(el => {
+      const idx = parseInt(el.dataset.idx, 10);
+      const isTarget = STRINGS[idx] === target;
+      el.classList.toggle('target', isTarget);
+      el.classList.toggle('in-tune', isTarget && inTune);
+    });
+  }
+</script>
+</body>
+</html>
