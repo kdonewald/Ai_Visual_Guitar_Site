@@ -166,10 +166,8 @@
     <div class="logo-name">Visual Guitar</div>
   </a>
   <div class="nav-links">
-    <a href="index.html"   class="nav-link active">Home</a>
-    <a href="lessons.html" class="nav-link">Lessons</a>
-    <a href="songs.html"   class="nav-link">Songs</a>
-    <a href="vizi.html"    class="nav-link">Vizi</a>
+    <a href="index.html" class="nav-link active">Home</a>
+    <a href="songs.html" class="nav-link">Songs</a>
   </div>
 </nav>
 
@@ -238,7 +236,7 @@
     el.innerHTML = `<div class="fret-num">${s.num}</div><div class="fret-led"></div><div class="fret-label">${s.label}</div>`;
     el.addEventListener('click', () => {
       if (s.song) { window.location.href = 'songs.html'; return; }
-      window.location.href = `lessons.html#${s.id}`;
+      window.location.href = `vizi.html?stage=${s.id}`;
     });
     fretsRow.appendChild(el);
   });
