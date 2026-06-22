@@ -64,16 +64,23 @@
   }
   .step-label{font-size:.9rem;font-weight:500;color:var(--text)}
 
-  .ug-btn{
-    display:flex;align-items:center;justify-content:space-between;
-    width:100%;padding:.9rem 1.1rem;
-    background:var(--cream);border:2px solid var(--cream-dark);
-    border-radius:10px;text-decoration:none;color:var(--text);
-    font-size:.88rem;font-weight:500;transition:all .2s;margin-bottom:1.75rem;
+  /* ── UG song collections ── */
+  .ug-section-label{
+    font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--text-light);margin-bottom:.6rem;display:block;
   }
-  .ug-btn:hover{border-color:var(--blue);background:rgba(27,79,138,0.04);color:var(--blue)}
-  .ug-left{display:flex;align-items:center;gap:.65rem}
-  .ug-tag{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-light);display:block;margin-top:2px}
+  .ug-collection-grid{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.75rem}
+  .ug-collection{
+    display:flex;align-items:center;gap:.75rem;
+    background:var(--cream);border:2px solid var(--cream-dark);border-radius:10px;
+    padding:.7rem .9rem;text-decoration:none;color:var(--text);transition:all .2s;
+  }
+  .ug-collection:hover{border-color:var(--blue);background:rgba(27,79,138,0.04)}
+  .ug-coll-icon{font-size:1.2rem;flex-shrink:0}
+  .ug-coll-body{flex:1;min-width:0}
+  .ug-coll-name{font-size:.88rem;font-weight:500;display:block}
+  .ug-coll-tag{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-light);margin-top:1px;display:block}
+  .ug-coll-arrow{font-size:.85rem;color:var(--text-light);flex-shrink:0}
 
   .drop-zone{
     border:2px dashed var(--cream-dark);border-radius:10px;
@@ -140,6 +147,12 @@
 
   <div class="card-head">
     <a href="index.html" class="back">← Home</a>
+    <div style="display:flex;gap:.4rem;margin-bottom:1.25rem;flex-wrap:wrap">
+      <a href="index.html"   style="font-size:.75rem;font-weight:500;color:var(--text-mid);text-decoration:none;padding:4px 10px;border-radius:6px;border:1.5px solid var(--cream-dark);transition:all .2s">Home</a>
+      <a href="lessons.html" style="font-size:.75rem;font-weight:500;color:var(--text-mid);text-decoration:none;padding:4px 10px;border-radius:6px;border:1.5px solid var(--cream-dark);transition:all .2s">Lessons</a>
+      <a href="vizi.html"    style="font-size:.75rem;font-weight:500;color:var(--text-mid);text-decoration:none;padding:4px 10px;border-radius:6px;border:1.5px solid var(--cream-dark);transition:all .2s">Vizi</a>
+      <a href="upload.html"  style="font-size:.75rem;font-weight:500;color:var(--red);text-decoration:none;padding:4px 10px;border-radius:6px;border:1.5px solid var(--red);background:rgba(217,64,37,0.06)">Upload Song</a>
+    </div>
     <div class="logo">
       <div class="logo-mark"><span class="A">A</span><span class="i">i</span></div>
       <div class="logo-name">Visual Guitar</div>
@@ -150,21 +163,39 @@
   <div class="card-body">
 
     <!-- Step 1 -->
-    <div class="step" style="margin-bottom:.75rem">
+    <div class="step" style="margin-bottom:.5rem">
       <div class="step-num">1</div>
-      <div class="step-label">Don't have a song sheet? Get one free</div>
+      <div class="step-label">Don't have a song sheet? Find one free</div>
     </div>
+    <p style="font-size:.8rem;color:var(--text-light);margin-bottom:.75rem;line-height:1.5">Browse beginner chord sheets on Ultimate Guitar — download the PDF, then upload it below for a live LED lesson on your fretboard.</p>
 
-    <a class="ug-btn" href="https://www.ultimate-guitar.com/explore?order=rating_desc&type[]=Chords&level[]=beginner" target="_blank" rel="noopener">
-      <div class="ug-left">
-        <span style="font-size:1.3rem">🎸</span>
-        <div>
-          Find beginner songs on Ultimate Guitar
-          <span class="ug-tag">Free chord sheets · Opens in new tab</span>
-        </div>
-      </div>
-      <span style="font-size:1rem;color:var(--text-light)">↗</span>
-    </a>
+    <span class="ug-section-label">Beginner collections on Ultimate Guitar</span>
+    <div class="ug-collection-grid">
+      <a class="ug-collection" href="https://www.ultimate-guitar.com/explore?order=hitviews&type[]=Chords&level[]=beginner" target="_blank" rel="noopener">
+        <span class="ug-coll-icon">🔥</span>
+        <span class="ug-coll-body">
+          <span class="ug-coll-name">Most Popular</span>
+          <span class="ug-coll-tag">Most-played beginner songs of all time</span>
+        </span>
+        <span class="ug-coll-arrow">↗</span>
+      </a>
+      <a class="ug-collection" href="https://www.ultimate-guitar.com/explore?order=rating_desc&type[]=Chords&level[]=beginner" target="_blank" rel="noopener">
+        <span class="ug-coll-icon">⭐</span>
+        <span class="ug-coll-body">
+          <span class="ug-coll-name">Top Rated</span>
+          <span class="ug-coll-tag">Highest-rated by the UG community · accurate & well-formatted</span>
+        </span>
+        <span class="ug-coll-arrow">↗</span>
+      </a>
+      <a class="ug-collection" href="https://www.ultimate-guitar.com/explore?order=rating_desc&type[]=Chords&level[]=absolute_beginner" target="_blank" rel="noopener">
+        <span class="ug-coll-icon">🌱</span>
+        <span class="ug-coll-body">
+          <span class="ug-coll-name">Absolute Beginner</span>
+          <span class="ug-coll-tag">3 chords or fewer · slow tempos · no barre chords</span>
+        </span>
+        <span class="ug-coll-arrow">↗</span>
+      </a>
+    </div>
 
     <!-- Step 2 -->
     <div class="step" style="margin-bottom:.75rem">

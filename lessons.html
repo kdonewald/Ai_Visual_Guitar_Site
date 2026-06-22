@@ -276,7 +276,12 @@
     <div class="logo-mark"><span class="A">A</span><span class="i">i</span></div>
     <div class="logo-name">Visual Guitar</div>
   </a>
-  <a href="vizi.html" class="nav-link">← Back to Vizi</a>
+  <div class="nav-links">
+      <a href="index.html"   class="nav-link">Home</a>
+      <a href="lessons.html" class="nav-link active">Lessons</a>
+      <a href="upload.html"  class="nav-link">Upload Song</a>
+      <a href="vizi.html"    class="nav-link">Vizi</a>
+    </div>
 </nav>
 
 <div class="hero">
@@ -710,19 +715,15 @@
     stopTuner();
   });
 
-  // Auto-open stage if URL hash matches a stage id (e.g. after returning from an exercise)
-  if (window.location.hash){
-    const hashId = window.location.hash.slice(1);
-    if (STAGES.find(s => s.id === hashId)){
-      // Defer until after page is fully painted so fret button
-      // click handlers are all attached before any scrolling happens
-      setTimeout(() => {
-        openStage(hashId);
-        // Clear the hash so the back button and further clicks work cleanly
-        history.replaceState(null, '', window.location.pathname);
-      }, 120);
+  // Auto-open stage from sessionStorage if returning from Vizi exercise
+  // (kept as fallback; primary nav is now the site nav bar)
+  try {
+    const returnStage = sessionStorage.getItem('viziReturnStage');
+    if (returnStage && STAGES.find(s => s.id === returnStage)){
+      sessionStorage.removeItem('viziReturnStage');
+      setTimeout(() => openStage(returnStage), 120);
     }
-  }
+  } catch(e){}
 
   // ════════════════════════════════════════════════════════
   // TUNER — live pitch detection via autocorrelation

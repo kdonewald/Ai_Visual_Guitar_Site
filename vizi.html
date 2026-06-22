@@ -200,14 +200,43 @@
   }
   .sheet-show-btn.show{display:flex}
   .sheet-show-btn:hover{background:var(--blue);color:white}
+
+  /* ── site nav bar ── */
+  .site-nav{
+    width:100%; position:sticky; top:0; z-index:60;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:.7rem 1.25rem; background:rgba(245,240,232,0.96);
+    backdrop-filter:blur(12px); border-bottom:2px solid var(--cream-dark);
+    margin-bottom:.75rem;
+  }
+  .site-nav .nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+  .site-nav .logo-mark{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;line-height:1}
+  .site-nav .logo-mark .A{color:var(--red)} .site-nav .logo-mark .i{color:var(--blue)}
+  .site-nav .logo-name{font-family:'Playfair Display',serif;font-size:.85rem;font-weight:700;color:var(--text)}
+  .nav-links{display:flex;gap:.4rem;align-items:center}
+  .nav-link{
+    font-size:.75rem;font-weight:500;color:var(--text-mid);text-decoration:none;
+    padding:5px 11px;border-radius:6px;border:1.5px solid var(--cream-dark);
+    transition:all .2s;white-space:nowrap;
+  }
+  .nav-link:hover{border-color:var(--blue);color:var(--blue)}
+  .nav-link.active{border-color:var(--red);color:var(--red);background:rgba(217,64,37,0.06)}
 </style>
 </head>
 <body>
 
-  <div class="head">
-    <div class="logo-mark"><span class="A">A</span><span class="i">i</span></div>
-    <div class="logo-name">Vizi</div>
-  </div>
+  <nav class="site-nav">
+    <a href="index.html" class="nav-logo">
+      <div class="logo-mark"><span class="A">A</span><span class="i">i</span></div>
+      <div class="logo-name">Visual Guitar</div>
+    </a>
+    <div class="nav-links">
+      <a href="index.html"   class="nav-link">Home</a>
+      <a href="lessons.html" class="nav-link">Lessons</a>
+      <a href="upload.html"  class="nav-link">Upload Song</a>
+      <a href="vizi.html"    class="nav-link active">Vizi</a>
+    </div>
+  </nav>
   <div class="tag">Hold to talk · Release to send</div>
 
   <div class="stage-wrap" id="stageWrap">
@@ -672,20 +701,12 @@
     const stageLabel = STAGE_LABELS[stageId] || stageId;
 
     // Show a banner so the student knows Vizi knows the context
-    songBanner.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem">
-        <span>📚 ${stageLabel} — ${exerciseName}</span>
-        <button id="exDoneBtn" style="
-          background:var(--green);color:white;border:none;border-radius:6px;
-          padding:4px 10px;font-family:'DM Mono',monospace;font-size:.62rem;
-          letter-spacing:.06em;text-transform:uppercase;cursor:pointer;flex-shrink:0
-        ">✓ Done</button>
-      </div>`;
+    // Show exercise context banner — no Done button needed, student uses nav
+    songBanner.textContent = `📚 ${stageLabel} — ${exerciseName}`;
     songBanner.classList.add('show');
 
-    // Mark done and return to lessons
-    document.getElementById('exDoneBtn').addEventListener('click', () => {
-      // Store completion in localStorage (same schema as lessons.html)
+    // Auto-save progress when student navigates away (back to lessons via nav)
+    window.addEventListener('beforeunload', () => {
       try {
         const p = JSON.parse(localStorage.getItem('viziProgress') || '{}');
         p[stageId] = p[stageId] || {};
@@ -694,8 +715,7 @@
           p[stageId].exercisesDone.push(exerciseName);
         localStorage.setItem('viziProgress', JSON.stringify(p));
       } catch(e){}
-      window.location.href = `lessons.html#${stageId}`;
-    });
+    }, { once: true });
 
     // Build the context message for Claude
     // Tone: Vizi greets them at this specific exercise, explains
