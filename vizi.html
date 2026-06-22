@@ -231,9 +231,9 @@
       <div class="logo-name">Visual Guitar</div>
     </a>
     <div class="nav-links">
-      <a href="index.html"   class="nav-link">Home</a>
+<a href="index.html"   class="nav-link">Home</a>
       <a href="lessons.html" class="nav-link">Lessons</a>
-      <a href="upload.html"  class="nav-link">Upload Song</a>
+      <a href="songs.html"   class="nav-link">Songs</a>
       <a href="vizi.html"    class="nav-link active">Vizi</a>
     </div>
   </nav>
@@ -465,7 +465,7 @@
       const data = await res.json();
       songSessionId = data.sessionId;
       sessionStorage.setItem('viziSongSession', songSessionId);
-      window.location.href = `upload.html?session=${songSessionId}`;
+      window.location.href = `songs.html?session=${songSessionId}`;
     } catch(e){
       uploadBtn.textContent = '🎵 Upload a Song';
       uploadBtn.disabled = false;
