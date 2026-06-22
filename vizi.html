@@ -79,12 +79,18 @@
 
   /* ── metronome strip ── */
   .metro-strip{
-    display:flex; align-items:center; gap:.6rem;
+    display:flex; flex-direction:column; align-items:stretch;
     background:var(--white); border:2px solid var(--cream-dark);
-    border-radius:12px; padding:.5rem .7rem;
+    border-radius:12px; padding:.5rem .7rem .5rem;
     margin-bottom:1rem; width:100%; max-width:340px;
     box-shadow:0 2px 8px var(--shadow);
   }
+  .metro-label{
+    font-family:'DM Mono',monospace; font-size:.58rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--text-light); text-align:center;
+    margin-bottom:.35rem;
+  }
+  .metro-controls{ display:flex; align-items:center; gap:.6rem; }
   .metro-tap{
     width:38px; height:38px; border-radius:50%; flex-shrink:0;
     background:var(--cream); border:2px solid var(--cream-dark);
@@ -217,16 +223,19 @@
 
   <!-- Metronome — always visible, small strip -->
   <div class="metro-strip">
-    <div class="metro-tap" id="metroTap" title="Tap tempo">👆</div>
-    <div class="metro-mid">
-      <div class="metro-bpm-row">
-        <span class="metro-bpm-val" id="metroBpmVal">80</span>
-        <span class="metro-bpm-label">BPM</span>
-        <span class="metro-ts" id="metroTs">4/4</span>
+    <div class="metro-label">Metronome</div>
+    <div class="metro-controls">
+      <div class="metro-tap" id="metroTap" title="Tap tempo">👆</div>
+      <div class="metro-mid">
+        <div class="metro-bpm-row">
+          <span class="metro-bpm-val" id="metroBpmVal">80</span>
+          <span class="metro-bpm-label">BPM</span>
+          <span class="metro-ts" id="metroTs">4/4</span>
+        </div>
+        <input class="metro-slider" id="metroSlider" type="range" min="40" max="200" value="80">
       </div>
-      <input class="metro-slider" id="metroSlider" type="range" min="40" max="200" value="80">
+      <button class="metro-btn" id="metroBtn" title="Start/stop">▶</button>
     </div>
-    <button class="metro-btn" id="metroBtn" title="Start/stop">▶</button>
   </div>
 
   <button class="upload-btn" id="uploadBtn">🎵 Upload a Song</button>
@@ -637,6 +646,108 @@
     setStatus('Checking for uploaded song…');
     startSongPoll();
   }
+
+  // ─── Exercise hand-off from lessons.html ──────────────────
+  // lessons.html links here as vizi.html?stage=X&exercise=Y
+  // On arrival we build a context message and have Vizi open
+  // the session verbally — student doesn't have to say anything.
+  ;(async function checkExerciseParams(){
+    const urlParams  = new URLSearchParams(window.location.search);
+    const stageId    = urlParams.get('stage');
+    const exerciseName = urlParams.get('exercise');
+    if (!stageId || !exerciseName) return;
+
+    // Stage metadata map — mirrors lessons.html STAGES array
+    const STAGE_LABELS = {
+      'tuning':       'Tuning & Setup',
+      'rhythm':       'Rhythm Foundations',
+      'open-chords':  'Open Chords',
+      'chord-theory': 'How Chords Are Built',
+      'transitions':  'Chord Transitions',
+      'arpeggios':    'Arpeggios',
+      'strumming':    'Strumming Patterns',
+      'barre-triads': 'Barre Chords & Triads',
+      'soloing':      'Soloing & Scales'
+    };
+    const stageLabel = STAGE_LABELS[stageId] || stageId;
+
+    // Show a banner so the student knows Vizi knows the context
+    songBanner.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem">
+        <span>📚 ${stageLabel} — ${exerciseName}</span>
+        <button id="exDoneBtn" style="
+          background:var(--green);color:white;border:none;border-radius:6px;
+          padding:4px 10px;font-family:'DM Mono',monospace;font-size:.62rem;
+          letter-spacing:.06em;text-transform:uppercase;cursor:pointer;flex-shrink:0
+        ">✓ Done</button>
+      </div>`;
+    songBanner.classList.add('show');
+
+    // Mark done and return to lessons
+    document.getElementById('exDoneBtn').addEventListener('click', () => {
+      // Store completion in localStorage (same schema as lessons.html)
+      try {
+        const p = JSON.parse(localStorage.getItem('viziProgress') || '{}');
+        p[stageId] = p[stageId] || {};
+        p[stageId].exercisesDone = p[stageId].exercisesDone || [];
+        if (!p[stageId].exercisesDone.includes(exerciseName))
+          p[stageId].exercisesDone.push(exerciseName);
+        localStorage.setItem('viziProgress', JSON.stringify(p));
+      } catch(e){}
+      window.location.href = `lessons.html#${stageId}`;
+    });
+
+    // Build the context message for Claude
+    // Tone: Vizi greets them at this specific exercise, explains
+    // what to do, and invites them to start. It also issues any
+    // relevant fretboard command for this exercise type.
+    const message = [
+      `LESSON EXERCISE START.`,
+      `Stage: "${stageLabel}".`,
+      `Exercise: "${exerciseName}".`,
+      `Greet the student warmly, tell them exactly what to do for this specific exercise,`,
+      `and give them one clear starting instruction.`,
+      `If this exercise involves a chord or scale, include the appropriate fretboard command`,
+      `(e.g. CHORD G, SCALE C major shape 1, CHORDS [G,C,D]) as a pipe command at the end`,
+      `of your response in the standard format.`,
+      `Keep your spoken response to 2–3 sentences — just enough to get them started.`,
+      `End by inviting them to hold the talk button when they have a question or are ready for the next step.`
+    ].join(' ');
+
+    // Wait for the page to finish rendering before speaking
+    // (ensures audioCtx is ready for the first gesture unlock pattern)
+    // We store the context and play it on first button press —
+    // same pattern as the song intro, avoids autoplay block.
+    pendingIntroBlob = null; // clear any existing
+    pendingIntroText = null;
+    pendingIntroCmd  = null;
+
+    try {
+      setStatus('Loading your exercise…');
+      const res = await fetch(RAILWAY_URL + '/claude-tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, mode: 'talk' })
+      });
+      if (res.ok && !(res.headers.get('content-type')||'').includes('application/json')){
+        pendingIntroText = dec(res.headers.get('X-Vizi-Text'));
+        pendingIntroCmd  = dec(res.headers.get('X-Vizi-Commands'));
+        pendingIntroBlob = await res.blob();
+        setBtn('intro');
+        btn.innerHTML = 'Tap to start<br>exercise';
+        setStatus('Exercise ready — tap to hear Vizi');
+        applyMetronomeCommand(pendingIntroCmd || '');
+      } else {
+        setStatus('Ready — ask Vizi about this exercise');
+      }
+    } catch(e){
+      setStatus('Ready — ask Vizi about this exercise');
+    }
+
+    // Clean the URL so reloading doesn't re-trigger the exercise
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, '', cleanUrl);
+  })();
 
   // ════════════════════════════════════════════════════════
   // METRONOME — compact strip, driven by UI or by Vizi's

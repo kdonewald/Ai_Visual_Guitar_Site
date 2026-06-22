@@ -462,7 +462,30 @@
       exercises:['G to C, 10 slow reps','C to D, 10 slow reps','G–D–Em–C loop at 60 BPM']
     },
     {
-      id:'strumming', num:6, label:'Strumming Patterns',
+      id:'arpeggios', num:6, label:'Arpeggios',
+      desc:'Play the notes of a chord one at a time — root, third, fifth — to build finger independence and understand chord structure through sound.',
+      video:'lesson_arpeggios_intro.mp4',
+      tips:[
+        "An arpeggio is just the notes of a chord played one at a time — nothing more mysterious than that.",
+        "Start with a C major arpeggio: C, E, G. Find those three notes and pick them slowly in order.",
+        "Arpeggios are one of the best ways to check your chord finger placement — a buzzing note is easy to hear when you're picking one at a time.",
+        "Use a pick for a cleaner, more distinct sound, or fingerpick for a softer, more connected feel.",
+        "Practice ascending and descending — up through the notes, then back down.",
+        "Once you can play an arpeggio cleanly, try the same shape up the neck as a barre — it's the same three notes, just moved.",
+        "The root note in the arpeggio is the one that names the chord — make it the strongest, most deliberate note.",
+        "Classical guitar and fingerstyle are built almost entirely on arpeggios — you're learning a foundational technique.",
+        "Slow arpeggios reveal everything your chord hand is doing wrong that strumming hides.",
+        "Try alternating bass-style: pick the root with your thumb, then the third and fifth with your fingers — you'll hear folk and country instantly."
+      ],
+      exercises:[
+        'C major arpeggio: C E G, ascending and descending',
+        'G major arpeggio: G B D, three strings',
+        'A minor arpeggio: A C E',
+        'Play G–C–D progression as arpeggios at 60 BPM'
+      ]
+    },
+    {
+      id:'strumming', num:7, label:'Strumming Patterns',
       desc:"Combine the timing and chords you've built into real strumming patterns.",
       video:'lesson_strumming_intro.mp4',
       tips:[
@@ -480,7 +503,7 @@
       exercises:['Down-strums only at 70 BPM','Down-down-up-up-down-up pattern','Apply pattern to G–C–D progression']
     },
     {
-      id:'barre-triads', num:7, label:'Barre Chords & Triads',
+      id:'barre-triads', num:8, label:'Barre Chords & Triads',
       desc:'Move beyond open position with moveable shapes that work anywhere on the neck.',
       video:'lesson_barre_intro.mp4',
       tips:[
@@ -498,7 +521,7 @@
       exercises:['F major barre chord, hold 10 sec','E-shape barre up 3 frets','High string triad shapes']
     },
     {
-      id:'soloing', num:8, label:'Soloing & Scales',
+      id:'soloing', num:9, label:'Soloing & Scales',
       desc:'Warm up with scales and start playing single-note lines and simple solos.',
       video:'lesson_soloing_intro.mp4',
       tips:[
@@ -686,6 +709,14 @@
     document.querySelectorAll('.fret-stage').forEach(el => el.classList.remove('active'));
     stopTuner();
   });
+
+  // Auto-open stage if URL hash matches a stage id (e.g. after returning from an exercise)
+  if (window.location.hash){
+    const hashId = window.location.hash.slice(1);
+    if (STAGES.find(s => s.id === hashId)){
+      openStage(hashId);
+    }
+  }
 
   // ════════════════════════════════════════════════════════
   // TUNER — live pitch detection via autocorrelation
