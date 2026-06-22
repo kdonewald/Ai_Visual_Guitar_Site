@@ -714,7 +714,13 @@
   if (window.location.hash){
     const hashId = window.location.hash.slice(1);
     if (STAGES.find(s => s.id === hashId)){
-      openStage(hashId);
+      // Defer until after page is fully painted so fret button
+      // click handlers are all attached before any scrolling happens
+      setTimeout(() => {
+        openStage(hashId);
+        // Clear the hash so the back button and further clicks work cleanly
+        history.replaceState(null, '', window.location.pathname);
+      }, 120);
     }
   }
 
