@@ -38,71 +38,14 @@
   }
   .nav-link:hover{border-color:var(--blue);color:var(--blue)}
 
-  /* ── hero / fretboard nav (the signature element) ── */
-  .hero{ max-width:920px; margin:0 auto; padding:3rem 1.5rem 1rem; }
-  .hero-eyebrow{
-    font-family:'DM Mono',monospace; font-size:.66rem; letter-spacing:.2em; text-transform:uppercase;
-    color:var(--red); margin-bottom:.6rem; display:flex; align-items:center; gap:.6rem;
-  }
-  .hero-eyebrow::before{content:'';width:1.5rem;height:2px;background:var(--red)}
-  .hero h1{
-    font-family:'Playfair Display',serif; font-weight:900; letter-spacing:-.02em;
-    font-size:clamp(2rem,5vw,3rem); line-height:1.05; margin-bottom:.5rem;
-  }
-  .hero p{color:var(--text-mid); max-width:520px; line-height:1.6; font-size:.95rem; margin-bottom:2rem}
 
-  /* fretboard stage strip */
-  .fretboard{
-    position:relative;
-    background:linear-gradient(180deg,#3a2a1c,#2a1d12);
-    border-radius:14px;
-    padding:1.6rem 1.2rem 1.3rem;
-    box-shadow:0 12px 32px var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.06);
-    overflow-x:auto;
-  }
-  .fret-strings{
-    position:absolute; inset:1.6rem 1.2rem auto 1.2rem; height:64px;
-    background:repeating-linear-gradient(180deg,transparent 0,transparent 9px,rgba(255,255,255,0.06) 9px,rgba(255,255,255,0.06) 10px);
-    pointer-events:none;
-  }
-  .frets-row{ display:flex; gap:.55rem; position:relative; min-width:680px; }
-  .fret-stage{
-    flex:1; min-width:84px;
-    background:rgba(255,255,255,0.04);
-    border:1.5px solid rgba(255,255,255,0.1);
-    border-radius:9px; padding:.7rem .5rem .6rem;
-    text-align:center; cursor:pointer; transition:all .18s;
-    position:relative;
-  }
-  .fret-stage:hover{background:rgba(255,255,255,0.09); transform:translateY(-2px)}
-  .fret-stage.active{
-    background:rgba(232,160,32,0.16); border-color:var(--gold);
-    box-shadow:0 0 0 1px var(--gold), 0 0 18px rgba(232,160,32,0.35);
-  }
-  .fret-num{
-    font-family:'DM Mono',monospace; font-size:.62rem; color:rgba(255,255,255,0.35);
-    margin-bottom:.35rem; letter-spacing:.08em;
-  }
-  .fret-led{
-    width:9px;height:9px;border-radius:50%;margin:0 auto .45rem;
-    background:rgba(255,255,255,0.18); transition:all .2s;
-  }
-  .fret-stage.active .fret-led{ background:var(--gold); box-shadow:0 0 8px var(--gold) }
-  .fret-stage.done .fret-led{ background:var(--green); box-shadow:0 0 6px var(--green) }
-  .fret-stage.song-stage .fret-led{ background:var(--teal); box-shadow:0 0 8px var(--teal) }
-  .fret-stage.song-stage .fret-label{ color:var(--teal) }
-  .fret-stage.song-stage{ border-color:rgba(42,172,184,0.4); background:rgba(42,172,184,0.06) }
-  .fret-stage.song-stage:hover{ border-color:var(--teal); background:rgba(42,172,184,0.12) }
-  .fret-label{
-    font-family:'DM Sans',sans-serif; font-size:.74rem; font-weight:500;
-    color:rgba(255,255,255,0.85); line-height:1.25;
-  }
-  .fret-stage.active .fret-label{ color:#fff }
+
+
 
 
 
   /* ── category detail panel ── */
-  .panel-wrap{ max-width:920px; margin:2rem auto 0; padding:0 1.5rem; }
+  .panel-wrap{ max-width:920px; margin:1rem auto 0; padding:0 1.5rem; }
   .cat-panel{
     display:none; background:var(--white); border:2px solid var(--cream-dark);
     border-radius:16px; box-shadow:0 8px 28px var(--shadow); overflow:hidden;
@@ -302,18 +245,7 @@
     </div>
 </nav>
 
-<div class="hero">
-  <div class="hero-eyebrow">Your Path</div>
-  <h1>Pick a stage on the fretboard</h1>
-  <p>Each stage builds on the last, but you choose the order. Watch the short intro if you'd like a refresher, or jump straight into exercises.</p>
 
-  <div class="fretboard">
-    <div class="fret-strings"></div>
-    <div class="frets-row" id="fretsRow"></div>
-  </div>
-
-
-</div>
 
 <div class="panel-wrap">
   <div class="cat-panel" id="catPanel">
@@ -583,21 +515,7 @@
     }
   ];
 
-  // ── Build the fretboard nav ──
-  const fretsRow = document.getElementById('fretsRow');
-  STAGES.forEach(stage => {
-    const el = document.createElement('div');
-    el.className = 'fret-stage';
-    el.dataset.id = stage.id;
-    el.innerHTML = `
-      <div class="fret-num">${String(stage.num).padStart(2,'0')}</div>
-      <div class="fret-led"></div>
-      <div class="fret-label">${stage.label}</div>
-    `;
-    if (stage.isSong) el.classList.add('song-stage');
-    el.addEventListener('click', () => openStage(stage.id));
-    fretsRow.appendChild(el);
-  });
+
 
 
 
@@ -615,7 +533,6 @@
     p[stageId].introWatched = (p[stageId].introWatched || 0) + 1;
     p[stageId].lastSeen = Date.now();
     setProgress(p);
-    refreshFretboardDots();
   }
   function markExerciseDone(stageId, exName){
     const p = getProgress();
@@ -623,18 +540,8 @@
     p[stageId].exercisesDone = p[stageId].exercisesDone || [];
     if (!p[stageId].exercisesDone.includes(exName)) p[stageId].exercisesDone.push(exName);
     setProgress(p);
-    refreshFretboardDots();
   }
-  function refreshFretboardDots(){
-    const p = getProgress();
-    document.querySelectorAll('.fret-stage').forEach(el => {
-      const id = el.dataset.id;
-      const stage = STAGES.find(s => s.id === id);
-      const done = p[id] && stage && p[id].exercisesDone && p[id].exercisesDone.length >= stage.exercises.length;
-      el.classList.toggle('done', !!done);
-    });
-  }
-  refreshFretboardDots();
+
 
   // ── Panel state ──
   let activeStage = null;
@@ -660,9 +567,6 @@
     // Song stage goes straight to songs.html
     if (stage.isSong){ window.location.href = 'songs.html'; return; }
     activeStage = stage;
-
-    document.querySelectorAll('.fret-stage').forEach(el =>
-      el.classList.toggle('active', el.dataset.id === id));
 
     catStageTag.textContent = `Stage ${stage.num}`
       + (stage.theoryMode ? '  ·  Fretboard shows root / third / fifth' : '');
@@ -851,17 +755,26 @@
 
   document.getElementById('catClose').addEventListener('click', () => {
     catPanel.classList.remove('show');
-    document.querySelectorAll('.fret-stage').forEach(el => el.classList.remove('active'));
     stopTuner();
   });
 
   // Auto-open stage from sessionStorage if returning from Vizi exercise
-  // (kept as fallback; primary nav is now the site nav bar)
+  // OR from URL hash when arriving from home page fretboard
+  function arriveAtStage(stageId){
+    setTimeout(() => openStage(stageId), 80);
+  }
+
   try {
     const returnStage = sessionStorage.getItem('viziReturnStage');
     if (returnStage && STAGES.find(s => s.id === returnStage)){
       sessionStorage.removeItem('viziReturnStage');
-      setTimeout(() => openStage(returnStage), 120);
+      arriveAtStage(returnStage);
+    } else if (window.location.hash){
+      const hashId = window.location.hash.slice(1);
+      if (STAGES.find(s => s.id === hashId)){
+        history.replaceState(null, '', window.location.pathname);
+        arriveAtStage(hashId);
+      }
     }
   } catch(e){}
 
