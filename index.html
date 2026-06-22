@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Ai Visual Guitar — Learn Guitar With LED Guidance</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Ai Visual Guitar — Learn Guitar With Vizi</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
   :root{
@@ -18,307 +18,383 @@
   body{
     background:var(--cream); color:var(--text);
     font-family:'DM Sans',sans-serif; font-weight:300;
-    min-height:100vh;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    padding-bottom:3rem;
   }
 
   /* ── nav ── */
   nav{
-    position:sticky; top:0; z-index:50;
+    width:100%; position:sticky; top:0; z-index:50;
     display:flex; align-items:center; justify-content:space-between;
-    padding:.85rem 2rem; background:rgba(245,240,232,0.96);
+    padding:.75rem 1.5rem; background:rgba(245,240,232,0.96);
     backdrop-filter:blur(12px); border-bottom:2px solid var(--cream-dark);
   }
-  .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-  .logo-mark{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;line-height:1}
+  .nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+  .logo-mark{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;line-height:1}
   .logo-mark .A{color:var(--red)} .logo-mark .i{color:var(--blue)}
-  .logo-name{font-family:'Playfair Display',serif;font-size:.92rem;font-weight:700;color:var(--text)}
-  .nav-tag{font-family:'DM Mono',monospace;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-light);display:block;margin-top:1px}
+  .logo-name{font-family:'Playfair Display',serif;font-size:.88rem;font-weight:700;color:var(--text)}
   .nav-links{display:flex;gap:.4rem;align-items:center}
   .nav-link{
-    font-size:.78rem;font-weight:500;color:var(--text-mid);text-decoration:none;
-    padding:5px 12px;border-radius:6px;border:1.5px solid var(--cream-dark);transition:all .2s;
+    font-size:.75rem;font-weight:500;color:var(--text-mid);text-decoration:none;
+    padding:5px 11px;border-radius:6px;border:1.5px solid var(--cream-dark);transition:all .2s;
   }
   .nav-link:hover{border-color:var(--blue);color:var(--blue)}
   .nav-link.active{border-color:var(--red);color:var(--red);background:rgba(217,64,37,0.06)}
-  .nav-link.cta{background:var(--red);color:white;border-color:var(--red)}
-  .nav-link.cta:hover{background:var(--red-dark);border-color:var(--red-dark)}
 
-  /* ── hero ── */
-  .hero{
-    max-width:960px; margin:0 auto;
-    padding:4rem 2rem 2.5rem;
+  /* ── vizi avatar ── */
+  .stage-wrap{position:relative;margin-top:1.5rem;margin-bottom:1rem}
+  .stage{
+    position:relative;width:200px;height:200px;border-radius:50%;overflow:hidden;
+    border:4px solid var(--cream-dark);background:#0a0a0a;
+    box-shadow:0 10px 30px var(--shadow-lg);
   }
-  .hero-eyebrow{
-    font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;
-    color:var(--red);margin-bottom:.75rem;display:flex;align-items:center;gap:.6rem;
-    animation:fade-up .5s ease both;
-  }
-  .hero-eyebrow::before{content:'';width:1.5rem;height:2px;background:var(--red)}
-  .hero h1{
-    font-family:'Playfair Display',serif;font-weight:900;letter-spacing:-.03em;
-    font-size:clamp(2.8rem,7vw,5.5rem);line-height:.95;
-    margin-bottom:1.25rem;
-    animation:fade-up .5s .08s ease both;
-  }
-  .hero h1 em{font-style:italic;color:var(--red);display:block}
-  .hero-sub{
-    font-size:1rem;color:var(--text-mid);max-width:480px;line-height:1.7;
-    margin-bottom:2rem;
-    animation:fade-up .5s .16s ease both;
-  }
-  .hero-ctas{
-    display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:3rem;
-    animation:fade-up .5s .22s ease both;
-  }
-  .cta-primary{
-    display:inline-flex;align-items:center;gap:.5rem;
-    background:var(--red);color:white;text-decoration:none;
-    font-size:.9rem;font-weight:600;padding:.85rem 1.75rem;border-radius:8px;
-    transition:all .2s;box-shadow:0 4px 14px rgba(217,64,37,0.28);
-  }
-  .cta-primary:hover{background:var(--red-dark);transform:translateY(-2px)}
-  .cta-secondary{
-    display:inline-flex;align-items:center;gap:.5rem;
-    background:var(--white);color:var(--blue);text-decoration:none;
-    font-size:.9rem;font-weight:600;padding:.85rem 1.75rem;border-radius:8px;
-    border:2px solid var(--blue);transition:all .2s;
-  }
-  .cta-secondary:hover{background:var(--blue);color:white;transform:translateY(-2px)}
+  .stage img,.stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .stage img{object-position:center top}
+  .stage video{object-position:center 12%;opacity:0;transition:opacity .3s ease}
+  .stage.talking video{opacity:1}
+  .stage-wrap .ring{position:absolute;inset:-4px;border-radius:50%;border:3px solid var(--blue);
+    opacity:0;pointer-events:none}
+  .stage-wrap.listening .ring{animation:ring 1.15s ease-out infinite}
+  @keyframes ring{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.28);opacity:0}}
 
-  /* ── fretboard hero (decorative, non-interactive) ── */
-  .fretboard-hero{
+  /* ── talk button ── */
+  .talk{
+    width:130px;height:130px;border-radius:50%;
+    background:var(--red);color:var(--white);border:none;
+    font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:600;
+    cursor:pointer;box-shadow:0 8px 24px rgba(217,64,37,0.32);
+    transition:transform .12s,background .2s;
+    display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.3;
+    touch-action:none;user-select:none;-webkit-user-select:none;
+    margin-bottom:.75rem;
+  }
+  .talk:active{background:var(--red-dark)}
+  .talk.listening{background:var(--blue);transform:scale(0.96)}
+  .talk.thinking{background:var(--gold)}
+  .talk.intro{background:var(--blue);animation:intro-pulse 1.2s ease-in-out infinite}
+  @keyframes intro-pulse{0%,100%{box-shadow:0 0 0 0 rgba(27,79,138,0.5)}60%{box-shadow:0 0 0 18px rgba(27,79,138,0)}}
+
+  .status{
+    font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--text-light);min-height:1.1em;
+    margin-bottom:1rem;text-align:center;
+  }
+
+  /* ── welcome video ── */
+  .welcome-wrap{
+    width:100%;max-width:500px;padding:0 1.25rem;margin-bottom:1.5rem;
+  }
+  .welcome-label{
+    font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--text-light);text-align:center;margin-bottom:.5rem;
+  }
+  .welcome-video-box{
+    position:relative;border-radius:14px;overflow:hidden;
+    background:#0a0a0a;box-shadow:0 8px 24px var(--shadow-lg);cursor:pointer;
+  }
+  .welcome-video-box video{width:100%;display:block;border-radius:14px}
+  .welcome-play-btn{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.35);transition:background .2s;border-radius:14px;
+  }
+  .welcome-video-box:hover .welcome-play-btn{background:rgba(0,0,0,0.2)}
+  .welcome-play-btn.hidden{display:none}
+  .play-circle{
+    width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.92);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 16px rgba(0,0,0,0.3);
+  }
+  .play-circle svg{width:20px;height:20px;fill:var(--red);margin-left:3px}
+
+  /* ── interactive fretboard ── */
+  .fretboard-section{
+    width:100%;max-width:960px;padding:0 1.25rem 1rem;
+  }
+  .fretboard-label{
+    font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--text-light);text-align:center;margin-bottom:.6rem;
+  }
+  .fretboard{
     background:linear-gradient(180deg,#3a2a1c,#231810);
-    border-radius:16px;padding:2rem 1.5rem 1.75rem;
-    box-shadow:0 16px 48px var(--shadow-lg),inset 0 1px 0 rgba(255,255,255,0.07);
+    border-radius:14px;padding:1.4rem 1rem 1.2rem;
+    box-shadow:0 12px 36px var(--shadow-lg),inset 0 1px 0 rgba(255,255,255,0.06);
     overflow-x:auto;
-    animation:fade-up .5s .3s ease both;
-    margin-bottom:1rem;
   }
-  .fret-strings-hero{
-    position:relative;height:80px;margin-bottom:1.25rem;
-    background:repeating-linear-gradient(180deg,transparent 0,transparent 11px,rgba(255,255,255,0.07) 11px,rgba(255,255,255,0.07) 12px);
-    border-radius:4px;
+  .fret-strings{
+    position:absolute;inset:1.4rem 1rem auto 1rem;height:60px;
+    background:repeating-linear-gradient(180deg,transparent 0,transparent 9px,rgba(255,255,255,0.06) 9px,rgba(255,255,255,0.06) 10px);
+    pointer-events:none;
   }
-  /* animated LED dots on the strings */
-  .fret-dot{
-    position:absolute;width:10px;height:10px;border-radius:50%;
-    transform:translate(-50%,-50%);
-    animation:led-breathe 3s ease-in-out infinite;
+  .frets-row{display:flex;gap:.45rem;position:relative;min-width:680px}
+  .fret-stage{
+    flex:1;min-width:72px;
+    background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);
+    border-radius:8px;padding:.6rem .4rem .55rem;text-align:center;
+    cursor:pointer;transition:all .18s;
   }
-  @keyframes led-breathe{0%,100%{opacity:1;filter:brightness(1)}50%{opacity:.45;filter:brightness(.7)}}
+  .fret-stage:hover{background:rgba(255,255,255,0.09);transform:translateY(-2px)}
+  .fret-stage.active{
+    background:rgba(232,160,32,0.16);border-color:var(--gold);
+    box-shadow:0 0 0 1px var(--gold),0 0 18px rgba(232,160,32,0.35);
+  }
+  .fret-num{font-family:'DM Mono',monospace;font-size:.56rem;color:rgba(255,255,255,0.3);margin-bottom:.3rem;letter-spacing:.06em}
+  .fret-led{width:8px;height:8px;border-radius:50%;margin:0 auto .35rem;background:rgba(255,255,255,0.15);transition:all .2s}
+  .fret-stage.active .fret-led{background:var(--gold);box-shadow:0 0 8px var(--gold)}
+  .fret-stage.song-stage .fret-led{background:var(--teal);box-shadow:0 0 6px var(--teal)}
+  .fret-stage.song-stage{border-color:rgba(42,172,184,0.35)}
+  .fret-stage.song-stage .fret-label{color:var(--teal)}
+  .fret-label{font-family:'DM Sans',sans-serif;font-size:.68rem;font-weight:500;color:rgba(255,255,255,0.8);line-height:1.2}
+  .fret-stage.active .fret-label{color:#fff}
 
-  .frets-hero-row{display:flex;gap:.6rem;min-width:720px}
-  .fret-hero{
-    flex:1;min-width:78px;
-    background:rgba(255,255,255,0.04);
-    border:1.5px solid rgba(255,255,255,0.09);
-    border-radius:9px;padding:.65rem .5rem .6rem;text-align:center;
-  }
-  .fret-hero-num{font-family:'DM Mono',monospace;font-size:.58rem;color:rgba(255,255,255,0.3);margin-bottom:.3rem;letter-spacing:.06em}
-  .fret-hero-led{width:8px;height:8px;border-radius:50%;margin:0 auto .4rem;background:rgba(255,255,255,0.15)}
-  .fret-hero-label{font-family:'DM Sans',sans-serif;font-size:.7rem;font-weight:500;color:rgba(255,255,255,0.75);line-height:1.2}
-  /* special coloring per stage type */
-  .fret-hero.lit-gold .fret-hero-led{background:var(--gold);box-shadow:0 0 8px var(--gold);animation:led-breathe 2.5s ease-in-out infinite}
-  .fret-hero.lit-teal .fret-hero-led{background:var(--teal);box-shadow:0 0 8px var(--teal);animation:led-breathe 2.8s .4s ease-in-out infinite}
-  .fret-hero.lit-teal .fret-hero-label{color:var(--teal)}
-
-  .fret-legend{
-    display:flex;align-items:center;gap:1.2rem;justify-content:flex-end;
-    margin-top:.85rem;
-  }
-  .fret-legend-item{display:flex;align-items:center;gap:.4rem;font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.4)}
-  .fret-legend-dot{width:7px;height:7px;border-radius:50%}
-
-  /* ── destination cards ── */
-  .cards-section{max-width:960px;margin:0 auto;padding:2.5rem 2rem 4rem}
-  .cards-label{
-    font-family:'DM Mono',monospace;font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;
-    color:var(--text-light);margin-bottom:1.25rem;display:flex;align-items:center;gap:.6rem;
-  }
-  .cards-label::before{content:'';width:1.5rem;height:2px;background:var(--cream-mid)}
-  .cards-grid{
-    display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-    gap:1rem;
-  }
-  .dest-card{
-    background:var(--white);border:2px solid var(--cream-dark);border-radius:14px;
-    padding:1.4rem 1.3rem 1.25rem;text-decoration:none;color:var(--text);
-    display:flex;flex-direction:column;gap:.5rem;
-    transition:all .2s;position:relative;overflow:hidden;
-  }
-  .dest-card::after{
-    content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
-    transform:scaleX(0);transform-origin:left;transition:transform .25s;
-  }
-  .dest-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px var(--shadow-lg)}
-  .dest-card:hover::after{transform:scaleX(1)}
-  .dest-card.vizi::after{background:var(--red)}
-  .dest-card.lessons::after{background:var(--blue)}
-  .dest-card.songs::after{background:var(--green)}
-  .dest-card.about::after{background:var(--gold)}
-  .dest-icon{font-size:1.6rem;margin-bottom:.1rem}
-  .dest-name{font-family:'Playfair Display',serif;font-weight:700;font-size:1.1rem}
-  .dest-desc{font-size:.8rem;color:var(--text-mid);line-height:1.55;flex:1}
-  .dest-arrow{
-    font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.08em;
-    text-transform:uppercase;color:var(--text-light);margin-top:.25rem;
-    display:flex;align-items:center;gap:.3rem;
-  }
-  .dest-card.vizi .dest-arrow{color:var(--red)}
-  .dest-card.lessons .dest-arrow{color:var(--blue)}
-  .dest-card.songs .dest-arrow{color:var(--green)}
-
-  /* ── placeholder copy block (to be filled later) ── */
-  .copy-placeholder{
-    max-width:960px;margin:0 auto;padding:0 2rem 3rem;
-    border-top:2px solid var(--cream-dark);padding-top:2.5rem;
-  }
-  .copy-row{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
-  .copy-block{
-    background:var(--white);border:2px dashed var(--cream-dark);border-radius:12px;
-    padding:1.5rem;min-height:120px;display:flex;flex-direction:column;justify-content:center;
-  }
-  .copy-block-label{
-    font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;
-    color:var(--cream-mid);margin-bottom:.5rem;
-  }
-  .copy-block-hint{font-size:.82rem;color:var(--cream-dark);font-style:italic}
-
-  @keyframes fade-up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
-
-  @media(max-width:640px){
-    nav{padding:.75rem 1.1rem}
-    .hero{padding:2.5rem 1.2rem 2rem}
-    .fretboard-hero{padding:1.5rem 1rem 1.25rem}
-    .cards-section{padding:2rem 1.2rem 3rem}
-    .copy-placeholder{padding:2rem 1.2rem 3rem}
-    .copy-row{grid-template-columns:1fr}
-  }
+  /* response panels */
+  .panels{width:100%;max-width:500px;padding:0 1.25rem;display:flex;flex-direction:column;gap:.7rem;margin-top:.5rem}
+  .panel{background:var(--white);border:2px solid var(--cream-dark);border-radius:12px;
+         padding:.8rem 1rem;opacity:0;transform:translateY(8px);transition:all .3s}
+  .panel.show{opacity:1;transform:none}
+  .panel .label{font-family:'DM Mono',monospace;font-size:.56rem;letter-spacing:.14em;
+                text-transform:uppercase;color:var(--text-light);margin-bottom:.25rem}
+  .panel.you{border-left:4px solid var(--blue)}
+  .panel.vizi-p{border-left:4px solid var(--red)}
+  .panel .body{font-size:.9rem;line-height:1.5;color:var(--text)}
 </style>
 </head>
 <body>
 
-<!-- ── Nav ── -->
 <nav>
   <a href="index.html" class="nav-logo">
     <div class="logo-mark"><span class="A">A</span><span class="i">i</span></div>
-    <div>
-      <div class="logo-name">Visual Guitar</div>
-      <span class="nav-tag">AI-Powered Fretboard Learning</span>
-    </div>
+    <div class="logo-name">Visual Guitar</div>
   </a>
   <div class="nav-links">
     <a href="index.html"   class="nav-link active">Home</a>
     <a href="lessons.html" class="nav-link">Lessons</a>
     <a href="songs.html"   class="nav-link">Songs</a>
-    <a href="vizi.html"    class="nav-link cta">Talk to Vizi</a>
+    <a href="vizi.html"    class="nav-link">Vizi</a>
   </div>
 </nav>
 
-<!-- ── Hero ── -->
-<section class="hero">
-  <div class="hero-eyebrow">Powered by Vizi AI</div>
-  <h1>See Every<em>Chord.</em></h1>
-  <p class="hero-sub">
-    <!-- COPY PLACEHOLDER — replace with your hero tagline -->
-    Ai Visual Guitar lights up your fretboard in real time — guiding you through any song, chord by chord, with your AI tutor Vizi.
-  </p>
-  <div class="hero-ctas">
-    <a href="vizi.html"    class="cta-primary">Talk to Vizi →</a>
-    <a href="lessons.html" class="cta-secondary">Start a Lesson</a>
+<!-- Vizi avatar -->
+<div class="stage-wrap" id="stageWrap">
+  <div class="stage" id="stage">
+    <img id="viziStill" src="ViziWhiteBack.png?v=2" alt="Vizi" />
+    <video id="viziVid" src="VIZI%20MUTETALK.mp4" muted loop playsinline preload="auto"></video>
   </div>
+  <div class="ring"></div>
+</div>
 
-  <!-- Decorative fretboard showing all 10 stages -->
-  <div class="fretboard-hero">
-    <div class="frets-hero-row" id="heroFrets"></div>
-    <div class="fret-legend">
-      <div class="fret-legend-item"><div class="fret-legend-dot" style="background:var(--gold)"></div>Technique stages</div>
-      <div class="fret-legend-item"><div class="fret-legend-dot" style="background:var(--teal)"></div>Play a song</div>
-    </div>
-  </div>
-  <p style="font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-light);text-align:center;margin-top:.5rem">10 stages · tap any stage in Lessons to start</p>
-</section>
+<!-- Talk button -->
+<button class="talk" id="talkBtn">Hold<br>to Talk</button>
+<div class="status" id="status">Ready</div>
 
-<!-- ── Destination cards ── -->
-<section class="cards-section">
-  <div class="cards-label">Where would you like to go?</div>
-  <div class="cards-grid">
-
-    <a href="vizi.html" class="dest-card vizi">
-      <div class="dest-icon">🎙️</div>
-      <div class="dest-name">Talk to Vizi</div>
-      <div class="dest-desc">Hold the button, ask anything. Vizi lights up your fretboard and walks you through chords, scales, and songs in real time.</div>
-      <div class="dest-arrow">Open Vizi →</div>
-    </a>
-
-    <a href="lessons.html" class="dest-card lessons">
-      <div class="dest-icon">🎸</div>
-      <div class="dest-name">Lessons</div>
-      <div class="dest-desc">10 stages from tuning to soloing. Watch the intro video or jump straight to exercises — your choice, every time.</div>
-      <div class="dest-arrow">Browse stages →</div>
-    </a>
-
-    <a href="songs.html" class="dest-card songs">
-      <div class="dest-icon">🎵</div>
-      <div class="dest-name">Songs</div>
-      <div class="dest-desc">Find a beginner chord sheet on Ultimate Guitar, upload it, and Vizi will break down every chord on your fretboard.</div>
-      <div class="dest-arrow">Find a song →</div>
-    </a>
-
-    <div class="dest-card about">
-      <div class="dest-icon">💡</div>
-      <div class="dest-name">How It Works</div>
-      <div class="dest-desc">
-        <!-- COPY PLACEHOLDER — fill in your how-it-works summary -->
-        Your guitar has a smart LED fretboard that lights up in real time. Vizi knows exactly where every finger goes.
+<!-- Welcome video -->
+<div class="welcome-wrap">
+  <div class="welcome-label">Welcome — watch first</div>
+  <div class="welcome-video-box" id="welcomeBox">
+    <video id="welcomeVid" src="lesson_welcome_intro.mp4" playsinline preload="metadata"></video>
+    <div class="welcome-play-btn" id="welcomePlay">
+      <div class="play-circle">
+        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
       </div>
-      <div class="dest-arrow" style="color:var(--gold)">Learn more ↓</div>
-    </div>
-
-  </div>
-</section>
-
-<!-- ── Placeholder copy blocks (fill in later) ── -->
-<section class="copy-placeholder">
-  <div class="copy-row">
-    <div class="copy-block">
-      <div class="copy-block-label">Copy block 1 — e.g. "What makes Vizi different"</div>
-      <div class="copy-block-hint">Add your text here later</div>
-    </div>
-    <div class="copy-block">
-      <div class="copy-block-label">Copy block 2 — e.g. "Who it's for"</div>
-      <div class="copy-block-hint">Add your text here later</div>
     </div>
   </div>
-</section>
+</div>
+
+<!-- Interactive fretboard -->
+<div class="fretboard-section">
+  <div class="fretboard-label">Tap a stage to start</div>
+  <div class="fretboard">
+    <div class="frets-row" id="fretsRow"></div>
+  </div>
+</div>
+
+<!-- Response panels -->
+<div class="panels">
+  <div class="panel you"   id="pYou"><div class="label">You said</div><div class="body" id="bYou"></div></div>
+  <div class="panel vizi-p" id="pVizi"><div class="label">Vizi</div><div class="body" id="bVizi"></div></div>
+</div>
 
 <script>
-  // Build the decorative 10-stage fretboard in the hero
-  const HERO_STAGES = [
-    { num:'01', label:'Tuning & Setup',       lit:'lit-gold' },
-    { num:'02', label:'Rhythm Foundations',   lit:'lit-gold' },
-    { num:'03', label:'Open Chords',          lit:'lit-gold' },
-    { num:'04', label:'How Chords Are Built', lit:'lit-gold' },
-    { num:'05', label:'Chord Transitions',    lit:'lit-gold' },
-    { num:'06', label:'Arpeggios',            lit:'lit-gold' },
-    { num:'07', label:'Strumming Patterns',   lit:'lit-gold' },
-    { num:'08', label:'Barre Chords & Triads',lit:'lit-gold' },
-    { num:'09', label:'Soloing & Scales',     lit:'lit-gold' },
-    { num:'10', label:'Play a Song',          lit:'lit-teal' },
+  const RAILWAY_URL = 'https://vizi-tts-proxy-production.up.railway.app';
+  const TARGET_RATE = 16000;
+
+  // ── Fretboard stages ──
+  const STAGES = [
+    { id:'tuning',       num:'01', label:'Tuning & Setup',        song:false },
+    { id:'rhythm',       num:'02', label:'Rhythm Foundations',    song:false },
+    { id:'open-chords',  num:'03', label:'Open Chords',           song:false },
+    { id:'chord-theory', num:'04', label:'How Chords Are Built',  song:false },
+    { id:'transitions',  num:'05', label:'Chord Transitions',     song:false },
+    { id:'arpeggios',    num:'06', label:'Arpeggios',             song:false },
+    { id:'strumming',    num:'07', label:'Strumming Patterns',    song:false },
+    { id:'barre-triads', num:'08', label:'Barre Chords & Triads', song:false },
+    { id:'soloing',      num:'09', label:'Soloing & Scales',      song:false },
+    { id:'song',         num:'10', label:'Play a Song',           song:true  },
   ];
 
-  const row = document.getElementById('heroFrets');
-  HERO_STAGES.forEach((s, i) => {
+  const fretsRow = document.getElementById('fretsRow');
+  STAGES.forEach(s => {
     const el = document.createElement('div');
-    el.className = `fret-hero ${s.lit}`;
-    el.style.animationDelay = (i * 0.06) + 's';
-    el.innerHTML = `
-      <div class="fret-hero-num">${s.num}</div>
-      <div class="fret-hero-led"></div>
-      <div class="fret-hero-label">${s.label}</div>
-    `;
-    row.appendChild(el);
+    el.className = 'fret-stage' + (s.song ? ' song-stage' : '');
+    el.innerHTML = `<div class="fret-num">${s.num}</div><div class="fret-led"></div><div class="fret-label">${s.label}</div>`;
+    el.addEventListener('click', () => {
+      if (s.song) { window.location.href = 'songs.html'; return; }
+      window.location.href = `lessons.html#${s.id}`;
+    });
+    fretsRow.appendChild(el);
   });
+
+  // ── Welcome video ──
+  const welcomeBox  = document.getElementById('welcomeBox');
+  const welcomeVid  = document.getElementById('welcomeVid');
+  const welcomePlay = document.getElementById('welcomePlay');
+  welcomeBox.addEventListener('click', () => {
+    if (welcomeVid.paused){
+      welcomeVid.play().catch(()=>{});
+      welcomePlay.classList.add('hidden');
+    } else {
+      welcomeVid.pause();
+      welcomePlay.classList.remove('hidden');
+    }
+  });
+  welcomeVid.addEventListener('ended', () => welcomePlay.classList.remove('hidden'));
+
+  // ── Vizi voice loop (same as vizi.html) ──
+  const btn       = document.getElementById('talkBtn');
+  const statusEl  = document.getElementById('status');
+  const stageWrap = document.getElementById('stageWrap');
+  const stage     = document.getElementById('stage');
+  const viziVid   = document.getElementById('viziVid');
+
+  let pendingIntroBlob = null, pendingIntroText = null;
+  let audioCtx, stream, source, processor, sink;
+  let micReady = false, recording = false;
+  let chunks = [], preroll = [];
+  const PREROLL_FRAMES = 6;
+
+  function setStatus(t){ statusEl.textContent = t; }
+  function setBtn(cls){ btn.className = 'talk' + (cls ? ' '+cls : ''); }
+  function setListening(on){ stageWrap.classList.toggle('listening', on); }
+  function showTalking(){ stage.classList.add('talking'); try{ viziVid.currentTime=0; viziVid.play(); }catch(e){} }
+  function showIdle(){ stage.classList.remove('talking'); try{ viziVid.pause(); }catch(e){} }
+  function showPanel(id, bodyId, text){
+    document.getElementById(bodyId).textContent = text;
+    document.getElementById(id).classList.add('show');
+  }
+  function dec(v){ try{ return v ? decodeURIComponent(v) : ''; }catch(_){ return v||''; } }
+
+  async function ensureAudioCtx(){
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+  }
+  async function ensureMic(){
+    if (micReady) return;
+    await ensureAudioCtx();
+    stream = await navigator.mediaDevices.getUserMedia({ audio:{ channelCount:1, echoCancellation:true, noiseSuppression:true, autoGainControl:true } });
+    source = audioCtx.createMediaStreamSource(stream);
+    processor = audioCtx.createScriptProcessor(4096,1,1);
+    sink = audioCtx.createGain(); sink.gain.value=0;
+    processor.onaudioprocess = e => {
+      const frame = new Float32Array(e.inputBuffer.getChannelData(0));
+      preroll.push(frame); if(preroll.length>PREROLL_FRAMES) preroll.shift();
+      if(recording) chunks.push(frame);
+    };
+    source.connect(processor); processor.connect(sink); sink.connect(audioCtx.destination);
+    micReady = true;
+  }
+  async function startCapture(){ await ensureMic(); chunks=preroll.slice(); recording=true; }
+  function stopCapture(){
+    if(!recording) return null; recording=false;
+    const len=chunks.reduce((a,c)=>a+c.length,0); if(!len) return null;
+    const merged=new Float32Array(len); let off=0;
+    for(const c of chunks){ merged.set(c,off); off+=c.length; }
+    return bytesToBase64(floatToPCM16(downsample(merged, audioCtx.sampleRate, TARGET_RATE)));
+  }
+  function downsample(buf,srcRate,dstRate){
+    if(dstRate>=srcRate) return buf;
+    const ratio=srcRate/dstRate, outLen=Math.round(buf.length/ratio);
+    const out=new Float32Array(outLen); let pos=0;
+    for(let i=0;i<outLen;i++){
+      const next=Math.round((i+1)*ratio); let sum=0,cnt=0;
+      for(let j=pos;j<next&&j<buf.length;j++){sum+=buf[j];cnt++;}
+      out[i]=cnt?sum/cnt:0; pos=next;
+    }
+    return out;
+  }
+  function floatToPCM16(f32){
+    const dv=new DataView(new ArrayBuffer(f32.length*2));
+    for(let i=0;i<f32.length;i++){
+      let s=Math.max(-1,Math.min(1,f32[i]));
+      dv.setInt16(i*2,s<0?s*0x8000:s*0x7FFF,true);
+    }
+    return new Uint8Array(dv.buffer);
+  }
+  function bytesToBase64(bytes){
+    let bin=''; const chunk=0x8000;
+    for(let i=0;i<bytes.length;i+=chunk)
+      bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+chunk));
+    return btoa(bin);
+  }
+  async function playBlob(blob){
+    try{
+      await ensureAudioCtx();
+      const arr=await blob.arrayBuffer();
+      const buf=await audioCtx.decodeAudioData(arr);
+      const src=audioCtx.createBufferSource();
+      src.buffer=buf; src.connect(audioCtx.destination);
+      showTalking(); src.start();
+      await new Promise(r=>{src.onended=r;});
+    }catch(e){}
+    finally{ showIdle(); }
+  }
+  async function sendToVizi(b64){
+    setBtn('thinking'); setStatus('Vizi is thinking…');
+    try{
+      const res=await fetch(RAILWAY_URL+'/stt-claude-tts',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({audio:b64,sampleRate:TARGET_RATE,mode:'talk'})
+      });
+      const ct=(res.headers.get('content-type')||'');
+      if(ct.includes('application/json')){
+        const j=await res.json();
+        setBtn(''); setStatus(j.empty?"Didn't catch that — try again":'Error: '+(j.error||'unknown'));
+        return;
+      }
+      const transcript=dec(res.headers.get('X-Vizi-Transcript'));
+      const text=dec(res.headers.get('X-Vizi-Text'));
+      if(transcript) showPanel('pYou','bYou',transcript);
+      if(text)       showPanel('pVizi','bVizi',text);
+      const blob=await res.blob();
+      setBtn(''); setStatus('');
+      await playBlob(blob);
+      setStatus('Ready');
+    }catch(e){ setBtn(''); setStatus('Could not reach Vizi — check connection'); }
+  }
+
+  async function press(e){
+    e.preventDefault();
+    if(pendingIntroBlob){
+      const blob=pendingIntroBlob; pendingIntroBlob=null;
+      btn.innerHTML='Hold<br>to Talk'; setBtn('');
+      await playBlob(blob); setStatus('Ready'); return;
+    }
+    if(recording) return;
+    setBtn('listening'); setStatus('Starting mic…');
+    try{ await startCapture(); setListening(true); setStatus('Listening…'); }
+    catch(err){ setBtn(''); setListening(false); setStatus('Microphone blocked — allow mic access'); }
+  }
+  function release(e){
+    e.preventDefault();
+    if(pendingIntroBlob) return;
+    if(!recording) return;
+    setListening(false);
+    const b64=stopCapture();
+    if(!b64){ setBtn(''); setStatus('Nothing recorded — hold a moment longer'); return; }
+    sendToVizi(b64);
+  }
+  btn.addEventListener('pointerdown',press);
+  btn.addEventListener('pointerup',release);
+  btn.addEventListener('pointercancel',release);
+  btn.addEventListener('pointerleave',e=>{ if(recording&&!pendingIntroBlob) release(e); });
 </script>
 </body>
 </html>
