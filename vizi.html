@@ -232,8 +232,6 @@
     </a>
     <div class="nav-links">
       <a href="index.html" class="nav-link">Home</a>
-      <a href="songs.html" class="nav-link">Songs</a>
-      <a href="vizi.html"  class="nav-link active">Vizi</a>
     </div>
   </nav>
   <div class="tag">Hold to talk · Release to send</div>
@@ -717,20 +715,29 @@
       } catch(e){}
     }, { once: true });
 
-    // Build the context message for Claude
-    // Tone: Vizi greets them at this specific exercise, explains
-    // what to do, and invites them to start. It also issues any
-    // relevant fretboard command for this exercise type.
+    // Build stage-specific context so Vizi knows exactly what the student chose
+    const choicePanelStages = ['open-chords','strumming','barre-triads','arpeggios'];
+    const isChoicePanel = choicePanelStages.includes(stageId);
+
+    // Stage-specific instructions for Vizi
+    const stageInstructions = {
+      'open-chords':  `The student chose "${exerciseName}". Show them 2–3 open chord examples of this type, light each one on the fretboard using CHORD commands, and suggest a simple exercise to practice forming and switching between them.`,
+      'strumming':    `The student chose "${exerciseName}". ${exerciseName.includes('Mixed') ? 'Give them a chord progression that deliberately moves between different string groups — for example a G chord (6 strings) to a D chord (4 strings) to a C chord (5 strings). Show the string range for each chord using STRING commands, explain why the aim changes, and give a strumming exercise that practices the switch.' : 'Explain which chords typically use this string range, show one example chord with a STRING command, then give them a specific strumming pattern exercise at a suggested BPM using a METRONOME command.'}
+      'barre-triads': `The student chose "${exerciseName}". Light up an example of this shape or triad on the fretboard, explain the finger placement, and suggest a practice exercise moving it to 2–3 different positions.`,
+      'arpeggios':    `The student chose "${exerciseName}". Light up the notes of a C ${exerciseName.toLowerCase()} on the fretboard using individual NOTE commands if possible, then guide them through playing it ascending and descending.`,
+    };
+
+    const specificInstruction = stageInstructions[stageId] ||
+      `The student selected "${exerciseName}". Tell them exactly what to do and give one clear starting instruction.`;
+
     const message = [
       `LESSON EXERCISE START.`,
       `Stage: "${stageLabel}".`,
-      `Exercise: "${exerciseName}".`,
-      `Greet the student warmly, tell them exactly what to do for this specific exercise,`,
-      `and give them one clear starting instruction.`,
-      `If this exercise involves a chord or scale, include the appropriate fretboard command`,
-      `(e.g. CHORD G, SCALE C major shape 1, CHORDS [G,C,D]) as a pipe command at the end`,
-      `of your response in the standard format.`,
-      `Keep your spoken response to 2–3 sentences — just enough to get them started.`,
+      `Student's choice: "${exerciseName}".`,
+      specificInstruction,
+      `Greet the student warmly and keep your spoken response to 2–3 sentences.`,
+      `Always include the relevant fretboard command (CHORD, CHORDS, SCALE, METRONOME, etc.)`,
+      `as a pipe command at the end of your response in the standard format.`,
       `End by inviting them to hold the talk button when they have a question or are ready for the next step.`
     ].join(' ');
 

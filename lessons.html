@@ -192,6 +192,32 @@
   .ex-name{ font-size:.88rem; font-weight:500; flex:1 }
   .ex-arrow{ color:var(--text-light); font-size:.9rem }
 
+  /* ── choice panel (open chords, strumming, barre, triads) ── */
+  .choice-panel-label{
+    font-family:'DM Mono',monospace; font-size:.62rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--text-light); margin-bottom:.75rem; display:block;
+  }
+  .choice-grid{
+    display:grid; gap:.55rem; margin-bottom:1rem;
+  }
+  .choice-grid.cols-2{ grid-template-columns:1fr 1fr }
+  .choice-grid.cols-3{ grid-template-columns:1fr 1fr 1fr }
+  .choice-btn{
+    background:var(--cream); border:2px solid var(--cream-dark); border-radius:10px;
+    padding:.75rem .85rem; cursor:pointer; transition:all .18s; text-align:left;
+    display:flex; align-items:center; gap:.6rem;
+  }
+  .choice-btn:hover{ border-color:var(--blue); background:rgba(27,79,138,0.04); transform:translateY(-1px) }
+  .choice-btn .cb-icon{ font-size:1.1rem; flex-shrink:0 }
+  .choice-btn .cb-name{ font-size:.88rem; font-weight:600; color:var(--text); display:block }
+  .choice-btn .cb-desc{ font-size:.72rem; color:var(--text-light); line-height:1.35; margin-top:.1rem }
+  .choice-btn .cb-arrow{ margin-left:auto; color:var(--text-light); font-size:.8rem; flex-shrink:0 }
+  .choice-hint{
+    font-size:.78rem; color:var(--text-mid); line-height:1.5;
+    background:rgba(27,79,138,0.05); border:1.5px solid rgba(27,79,138,0.12);
+    border-radius:8px; padding:.7rem .9rem; margin-bottom:1rem;
+  }
+
   /* ── tuner card (conditionally added for tuning stage) ── */
   .choice-card.tuner-card{ background:rgba(76,175,80,0.06); border-color:rgba(76,175,80,0.3) }
   .choice-card.tuner-card:hover{ border-color:var(--green); background:rgba(76,175,80,0.1) }
@@ -272,10 +298,7 @@
     <div class="logo-name">Visual Guitar</div>
   </a>
   <div class="nav-links">
-      <a href="index.html"   class="nav-link">Home</a>
-      <a href="songs.html"   class="nav-link">Songs</a>
-      <a href="vizi.html"    class="nav-link">Vizi</a>
-      <a href="lessons.html" class="nav-link active">Lessons</a>
+      <a href="index.html" class="nav-link">Home</a>
     </div>
 </nav>
 
@@ -705,7 +728,108 @@
     tipCard.classList.add('show');
   }
 
+  // ── Choice panel definitions ──────────────────────────────
+  const CHOICE_PANELS = {
+    'open-chords': {
+      label: 'What type of chord would you like to practice?',
+      hint: 'Vizi will suggest exercises and light up examples on your fretboard.',
+      cols: 2,
+      choices: [
+        { icon:'😊', name:'Major',  desc:'Happy, bright sound — G, C, D, A, E' },
+        { icon:'😢', name:'Minor',  desc:'Sad, darker feel — Am, Em, Dm, Bm' },
+        { icon:'🎷', name:'7th',    desc:'Bluesy tension — G7, C7, D7, A7' },
+        { icon:'✨', name:'6th',    desc:'Sweet, jazz-flavored — A6, C6, G6' },
+        { icon:'🌊', name:'Sus',    desc:'Suspended, open sound — Csus2, Gsus4' },
+        { icon:'⬇️', name:'Dim',    desc:'Tense, dramatic — Bdim, F#dim' },
+        { icon:'🎸', name:'Slash',  desc:'Bass note chords — G/B, C/E, D/F#' },
+      ]
+    },
+    'strumming': {
+      label: 'Which string group would you like to practice strumming?',
+      hint: 'Each chord type uses different strings. Vizi will show you which chords fit and give you a strumming exercise.',
+      cols: 2,
+      choices: [
+        { icon:'🎸', name:'6 Strings',             desc:'Full chord — all strings from Low E' },
+        { icon:'🎵', name:'5 Strings',             desc:'A-root chords — A string to High E' },
+        { icon:'🎶', name:'4 Strings',             desc:'D-root chords — D string to High E' },
+        { icon:'🔀', name:'Mixed — Change Groups', desc:'Switch between 6, 5, and 4-string chords mid-song' },
+      ]
+    },
+    'barre-triads': {
+      label: 'Which barre chord shape would you like to explore?',
+      hint: 'Each shape is moveable — learn it once and you can play it in any key.',
+      cols: 2,
+      choices: [
+        { icon:'🔴', name:'E Shape',  desc:'Root on Low E string — covers all keys' },
+        { icon:'🔵', name:'A Shape',  desc:'Root on A string — compact and common' },
+        { icon:'🟢', name:'C Shape',  desc:'Root on B string — open and ringing' },
+        { icon:'🟡', name:'G Shape',  desc:'Root on Low E — wide, full voicing' },
+        { icon:'🎸', name:'Triads — High E', desc:'3-note shapes on top 3 strings' },
+        { icon:'🎵', name:'Triads — B',      desc:'3-note shapes on B, G, D strings' },
+        { icon:'🎶', name:'Triads — G',      desc:'3-note shapes on G, D, A strings' },
+        { icon:'🎼', name:'Triads — D',      desc:'3-note shapes on D, A, Low E strings' },
+      ]
+    },
+    'arpeggios': {
+      label: 'Which chord type would you like to arpeggiate?',
+      hint: 'Vizi will light up the notes one at a time and guide you through the pattern.',
+      cols: 2,
+      choices: [
+        { icon:'😊', name:'Major Arpeggio',  desc:'Root, major third, fifth' },
+        { icon:'😢', name:'Minor Arpeggio',  desc:'Root, minor third, fifth' },
+        { icon:'🎷', name:'7th Arpeggio',    desc:'Root, third, fifth, seventh' },
+        { icon:'🌊', name:'Pentatonic',       desc:'5-note pattern across strings' },
+      ]
+    }
+  };
+
+  function renderChoicePanel(stage){
+    const def = CHOICE_PANELS[stage.id];
+    exList.innerHTML = '';
+    const label = document.createElement('span');
+    label.className = 'choice-panel-label';
+    label.textContent = def.label;
+    exList.appendChild(label);
+
+    if (def.hint){
+      const hint = document.createElement('div');
+      hint.className = 'choice-hint';
+      hint.textContent = def.hint;
+      exList.appendChild(hint);
+    }
+
+    const grid = document.createElement('div');
+    grid.className = `choice-grid cols-${def.cols}`;
+
+    def.choices.forEach(ch => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.innerHTML = `
+        <span class="cb-icon">${ch.icon}</span>
+        <span>
+          <span class="cb-name">${ch.name}</span>
+          <span class="cb-desc">${ch.desc}</span>
+        </span>
+        <span class="cb-arrow">→</span>
+      `;
+      btn.addEventListener('click', () => {
+        // Build a rich exercise description that Vizi will act on
+        const exercise = `${ch.name} — ${ch.desc}`;
+        const params = new URLSearchParams({ stage: stage.id, exercise });
+        window.location.href = `vizi.html?${params.toString()}`;
+      });
+      grid.appendChild(btn);
+    });
+    exList.appendChild(grid);
+  }
+
   function renderExercises(stage){
+    // Stages with choice panels get interactive selectors
+    if (CHOICE_PANELS[stage.id]){
+      renderChoicePanel(stage);
+      return;
+    }
+    // All other stages get the standard exercise list
     const p = getProgress();
     const done = (p[stage.id] && p[stage.id].exercisesDone) || [];
     exList.innerHTML = '';
