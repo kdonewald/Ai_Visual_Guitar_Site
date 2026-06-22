@@ -77,6 +77,38 @@
   .upload-btn.waiting{border-color:var(--gold);color:var(--gold);animation:pulse-btn 1.4s ease-in-out infinite}
   @keyframes pulse-btn{0%,100%{opacity:1}50%{opacity:.6}}
 
+  /* ── metronome strip ── */
+  .metro-strip{
+    display:flex; align-items:center; gap:.6rem;
+    background:var(--white); border:2px solid var(--cream-dark);
+    border-radius:12px; padding:.5rem .7rem;
+    margin-bottom:1rem; width:100%; max-width:340px;
+    box-shadow:0 2px 8px var(--shadow);
+  }
+  .metro-tap{
+    width:38px; height:38px; border-radius:50%; flex-shrink:0;
+    background:var(--cream); border:2px solid var(--cream-dark);
+    cursor:pointer; transition:all .07s; display:flex; align-items:center; justify-content:center;
+    font-size:.85rem; color:var(--text-mid);
+  }
+  .metro-tap.pulse{ background:var(--gold); border-color:var(--gold); color:white; transform:scale(0.92) }
+  .metro-mid{ flex:1; display:flex; flex-direction:column; gap:.15rem; min-width:0 }
+  .metro-bpm-row{ display:flex; align-items:baseline; gap:.3rem }
+  .metro-bpm-val{ font-family:'DM Mono',monospace; font-weight:600; font-size:.95rem; color:var(--text) }
+  .metro-bpm-label{ font-family:'DM Mono',monospace; font-size:.6rem; letter-spacing:.08em; text-transform:uppercase; color:var(--text-light) }
+  .metro-slider{ width:100%; accent-color:var(--blue); height:14px; cursor:pointer; }
+  .metro-btn{
+    width:38px; height:38px; border-radius:50%; flex-shrink:0; border:none;
+    background:var(--green); color:white; cursor:pointer; font-size:.8rem;
+    display:flex; align-items:center; justify-content:center; transition:all .15s;
+  }
+  .metro-btn.playing{ background:var(--red) }
+  .metro-ts{
+    font-family:'DM Mono',monospace; font-size:.65rem; color:var(--text-mid);
+    background:var(--cream); border:1.5px solid var(--cream-dark); border-radius:6px;
+    padding:2px 5px; cursor:pointer; flex-shrink:0;
+  }
+
   .song-banner{
     display:none;width:100%;max-width:440px;
     background:rgba(27,79,138,0.07);border:2px solid rgba(27,79,138,0.2);
@@ -182,6 +214,20 @@
 
   <button class="talk" id="talkBtn">Hold<br>to Talk</button>
   <div class="status" id="status">Ready</div>
+
+  <!-- Metronome — always visible, small strip -->
+  <div class="metro-strip">
+    <div class="metro-tap" id="metroTap" title="Tap tempo">👆</div>
+    <div class="metro-mid">
+      <div class="metro-bpm-row">
+        <span class="metro-bpm-val" id="metroBpmVal">80</span>
+        <span class="metro-bpm-label">BPM</span>
+        <span class="metro-ts" id="metroTs">4/4</span>
+      </div>
+      <input class="metro-slider" id="metroSlider" type="range" min="40" max="200" value="80">
+    </div>
+    <button class="metro-btn" id="metroBtn" title="Start/stop">▶</button>
+  </div>
 
   <button class="upload-btn" id="uploadBtn">🎵 Upload a Song</button>
   <div class="song-banner" id="songBanner"></div>
@@ -343,7 +389,7 @@
       const commands   = dec(res.headers.get('X-Vizi-Commands'));
       if (transcript) showPanel('pYou','bYou', transcript);
       if (text)       showPanel('pVizi','bVizi', text);
-      if (commands)   showPanel('pCmd','bCmd', commands);
+      if (commands)   { showPanel('pCmd','bCmd', commands); applyMetronomeCommand(commands); }
       const blob = await res.blob();
       setBtn(''); setStatus('');
       await playBlob(blob);
@@ -364,7 +410,7 @@
     pendingIntroBlob = null; pendingIntroText = null; pendingIntroCmd = null;
     setBtn(''); // clear intro state
     if (text) showPanel('pVizi','bVizi', text);
-    if (cmd)  showPanel('pCmd','bCmd', cmd);
+    if (cmd)  { showPanel('pCmd','bCmd', cmd); applyMetronomeCommand(cmd); }
     setStatus('');
     await playBlob(blob);
     currentMode = 'talk';
@@ -590,6 +636,101 @@
     uploadBtn.textContent = '⏳ Waiting for song upload…';
     setStatus('Checking for uploaded song…');
     startSongPoll();
+  }
+
+  // ════════════════════════════════════════════════════════
+  // METRONOME — compact strip, driven by UI or by Vizi's
+  // METRONOME:BPM command (colon-delimited, same as firmware)
+  // ════════════════════════════════════════════════════════
+  const metroTap    = document.getElementById('metroTap');
+  const metroBtn    = document.getElementById('metroBtn');
+  const metroSlider = document.getElementById('metroSlider');
+  const metroBpmVal = document.getElementById('metroBpmVal');
+  const metroTs     = document.getElementById('metroTs');
+
+  let metroCtx = null, metroTimer = null, metroRunning = false;
+  let metroBpm = 80, metroBeats = 4, metroBeat = 0;
+  const TS_CYCLE = [4, 3, 2, 6, 5];
+
+  function metroClick(accent){
+    if (!metroCtx) metroCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = metroCtx.createOscillator(), g = metroCtx.createGain(), t = metroCtx.currentTime;
+    o.frequency.value = accent ? 1000 : 700;
+    g.gain.setValueAtTime(accent ? 0.7 : 0.4, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    o.connect(g); g.connect(metroCtx.destination);
+    o.start(t); o.stop(t + 0.07);
+  }
+  function metroPulse(){
+    metroTap.classList.add('pulse');
+    setTimeout(() => metroTap.classList.remove('pulse'), 80);
+  }
+  function metroLoop(){
+    const ms = 60000 / metroBpm;
+    metroTimer = setInterval(() => {
+      metroBeat = (metroBeat + 1) % metroBeats;
+      const accent = metroBeat === 0;
+      metroClick(accent);
+      metroPulse();
+    }, ms);
+  }
+  function metroStart(){
+    if (metroRunning) return;
+    metroRunning = true; metroBeat = -1;
+    metroBtn.textContent = '■'; metroBtn.classList.add('playing');
+    metroLoop();
+  }
+  function metroStop(){
+    metroRunning = false;
+    if (metroTimer){ clearInterval(metroTimer); metroTimer = null; }
+    metroBtn.textContent = '▶'; metroBtn.classList.remove('playing');
+    metroBeat = 0;
+  }
+  function metroRestart(){ if (metroRunning){ metroStop(); metroStart(); } }
+  function setMetroBpm(v){
+    metroBpm = Math.max(40, Math.min(220, parseInt(v,10) || 80));
+    metroSlider.value = metroBpm;
+    metroBpmVal.textContent = metroBpm;
+    metroRestart();
+  }
+
+  metroBtn.addEventListener('click', () => { metroRunning ? metroStop() : metroStart(); });
+  metroSlider.addEventListener('input', () => setMetroBpm(metroSlider.value));
+  metroTs.addEventListener('click', () => {
+    const idx = TS_CYCLE.indexOf(metroBeats);
+    metroBeats = TS_CYCLE[(idx + 1) % TS_CYCLE.length];
+    metroTs.textContent = metroBeats === 6 ? '6/8' : metroBeats + '/4';
+    metroBeat = 0;
+    metroRestart();
+  });
+
+  // Tap tempo — average the last few taps
+  let tapTimes = [];
+  metroTap.addEventListener('click', () => {
+    const now = performance.now();
+    tapTimes.push(now);
+    if (tapTimes.length > 5) tapTimes.shift();
+    if (tapTimes.length >= 2){
+      const intervals = [];
+      for (let i=1; i<tapTimes.length; i++) intervals.push(tapTimes[i]-tapTimes[i-1]);
+      const avgMs = intervals.reduce((a,b)=>a+b,0) / intervals.length;
+      const bpm = Math.round(60000 / avgMs);
+      if (bpm >= 40 && bpm <= 220) setMetroBpm(bpm);
+    }
+    metroPulse();
+    // reset tap memory if they pause too long
+    clearTimeout(metroTap._resetT);
+    metroTap._resetT = setTimeout(() => { tapTimes = []; }, 2000);
+  });
+
+  // Parse "METRONOME:120" out of Vizi's pipe commands and apply + auto-start
+  function applyMetronomeCommand(commandsStr){
+    if (!commandsStr) return;
+    const m = commandsStr.match(/METRONOME:(\d+)/i);
+    if (m){
+      setMetroBpm(parseInt(m[1], 10));
+      metroStart();
+    }
   }
 
   loadSongSheet();
