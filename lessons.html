@@ -89,22 +89,17 @@
   }
   .fret-stage.active .fret-led{ background:var(--gold); box-shadow:0 0 8px var(--gold) }
   .fret-stage.done .fret-led{ background:var(--green); box-shadow:0 0 6px var(--green) }
+  .fret-stage.song-stage .fret-led{ background:var(--teal); box-shadow:0 0 8px var(--teal) }
+  .fret-stage.song-stage .fret-label{ color:var(--teal) }
+  .fret-stage.song-stage{ border-color:rgba(42,172,184,0.4); background:rgba(42,172,184,0.06) }
+  .fret-stage.song-stage:hover{ border-color:var(--teal); background:rgba(42,172,184,0.12) }
   .fret-label{
     font-family:'DM Sans',sans-serif; font-size:.74rem; font-weight:500;
     color:rgba(255,255,255,0.85); line-height:1.25;
   }
   .fret-stage.active .fret-label{ color:#fff }
 
-  /* play-a-song pill, separate from the sequence */
-  .song-pill{
-    display:flex; align-items:center; gap:.6rem; margin-top:1rem;
-    background:rgba(27,79,138,0.12); border:1.5px solid rgba(80,140,210,0.35);
-    border-radius:10px; padding:.7rem 1rem; cursor:pointer; transition:all .2s;
-  }
-  .song-pill:hover{ background:rgba(27,79,138,0.2) }
-  .song-pill .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal)}
-  .song-pill span{color:#dce8f5;font-size:.85rem;font-weight:500}
-  .song-pill small{color:rgba(220,232,245,0.55);font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;margin-left:auto}
+
 
   /* ── category detail panel ── */
   .panel-wrap{ max-width:920px; margin:2rem auto 0; padding:0 1.5rem; }
@@ -294,11 +289,7 @@
     <div class="frets-row" id="fretsRow"></div>
   </div>
 
-  <div class="song-pill" id="songPill">
-    <span class="dot"></span>
-    <span>Play a Song</span>
-    <small>Use what you've learned</small>
-  </div>
+
 </div>
 
 <div class="panel-wrap">
@@ -542,6 +533,30 @@
         "Short daily scale practice beats occasional long sessions for finger speed."
       ],
       exercises:['A minor pentatonic, ascending','A minor pentatonic, descending','Improvise 4 bars over Em']
+    },
+    {
+      id:'song', num:10, label:'Play a Song',
+      desc:'Put everything together — upload a song sheet and Vizi will walk you through every chord on your fretboard.',
+      video:'lesson_song_intro.mp4',
+      tips:[
+        "Pick a song with chords you already know — your first full song should feel achievable, not like a stretch.",
+        "Learn the chord changes slowly before worrying about strumming pattern or tempo.",
+        "Use the metronome at half the song's real tempo until the changes feel automatic.",
+        "It's normal for the first song to take days or even weeks — that's not slow, that's learning.",
+        "Focus on smooth transitions first; a clean slow version always sounds better than a rushed sloppy one.",
+        "If a section keeps tripping you up, isolate just that two-chord change and drill it separately.",
+        "Singing along — even just humming — helps your hands know where they are in the song.",
+        "Record yourself once you can play through it. You'll hear things you can't notice while playing.",
+        "Once one song feels solid, the next one always comes faster — the first is the hardest.",
+        "Every professional guitarist started by learning one song all the way through. This is that moment."
+      ],
+      exercises:[
+        'Upload a song sheet and ask Vizi to introduce it',
+        'Identify all the chords in the song',
+        'Practice each chord change in the song at 60 BPM',
+        'Play through the full song with the metronome'
+      ],
+      isSong: true
     }
   ];
 
@@ -556,13 +571,12 @@
       <div class="fret-led"></div>
       <div class="fret-label">${stage.label}</div>
     `;
+    if (stage.isSong) el.classList.add('song-stage');
     el.addEventListener('click', () => openStage(stage.id));
     fretsRow.appendChild(el);
   });
 
-  document.getElementById('songPill').addEventListener('click', () => {
-    window.location.href = 'vizi.html#upload';
-  });
+
 
   // ── Progress (localStorage placeholder — Railway sync comes next) ──
   function getProgress(){
@@ -620,6 +634,8 @@
   function openStage(id){
     const stage = STAGES.find(s => s.id === id);
     if (!stage) return;
+    // Song stage goes straight to songs.html
+    if (stage.isSong){ window.location.href = 'songs.html'; return; }
     activeStage = stage;
 
     document.querySelectorAll('.fret-stage').forEach(el =>
