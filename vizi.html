@@ -264,7 +264,7 @@
     </div>
   </div>
 
-  <button class="upload-btn" id="uploadBtn">🎵 Upload a Song</button>
+  <button class="upload-btn" id="uploadBtn" style="display:none">🎵 Upload a Song</button>
   <div class="song-banner" id="songBanner"></div>
 
   <button class="sheet-show-btn" id="sheetShowBtn">📄 Show Song Sheet</button>
@@ -429,7 +429,8 @@
       setBtn(''); setStatus('');
       await playBlob(blob);
       if (currentMode === 'song') currentMode = 'talk';
-      setStatus('Ready');
+      // Only reset to Ready if there is no pending exercise intro waiting
+      if (!pendingIntroBlob) setStatus('Ready');
     } catch(e){ setBtn(''); setStatus('Could not reach Vizi — check connection'); }
   }
   function dec(v){ try { return v ? decodeURIComponent(v) : ''; } catch(_){ return v||''; } }
@@ -487,6 +488,7 @@
 
         const title = data.songTitle || 'song';
         songBanner.textContent = `🎵 "${title}" loaded`;
+        const ub = document.getElementById('uploadBtn'); if (ub) ub.style.display = '';
         songBanner.classList.add('show');
         uploadBtn.className = 'upload-btn';
         uploadBtn.textContent = '🎵 Upload Another Song';
@@ -690,6 +692,12 @@
     setStatus('Getting your exercise ready…');
 
     // Stage metadata map — mirrors lessons.html STAGES array
+    // Show Upload a Song button only for song stage
+    if (stageId === 'song') {
+      const ub = document.getElementById('uploadBtn');
+      if (ub) ub.style.display = '';
+    }
+
     const STAGE_LABELS = {
       'tuning':       'Tuning & Setup',
       'rhythm':       'Rhythm Foundations',
@@ -733,10 +741,19 @@
         : 'The student chose "' + exerciseName + '". Explain which chords use this string range, show one example chord with a STRING command, then give a strumming pattern exercise at a suggested BPM using a METRONOME command.',
       'barre-triads': 'The student chose "' + exerciseName + '". Light up an example of this shape or triad on the fretboard, explain the finger placement, and suggest a practice exercise moving it to 2-3 different positions.',
       'arpeggios':    'The student chose "' + exerciseName + '". Light up the notes of a C ' + exerciseName.toLowerCase() + ' on the fretboard, then guide them through playing it ascending and descending.',
+      'chord-theory': exerciseName.includes('Construct')
+        ? 'Pick a random chord (not C major — make it interesting) and walk the student through constructing it from scratch: name the root, then the third, then the fifth. Light each note individually using NOTES commands as you name it. Ask the student to find each note on their fretboard before moving to the next.'
+        : exerciseName.includes('Mixed')
+        ? 'Pick a random chord type (major, minor, 7th, or 6th) without telling the student which type it is. Name a random chord of that type, light it with a CHORD command, and ask the student to identify the root, third, and fifth. Confirm or correct their answer with a brief explanation.'
+        : 'The student wants to identify the 1, 3, 5 of ' + exerciseName.replace('Identify 1, 3, 5 — ','') + ' chords. Pick a random chord of that type, name it, light it with a CHORD command, and ask the student to identify which note is the root, which is the third, and which is the fifth. Wait for their answer and confirm or correct it.',
+      'transitions':  'The student wants to practice a ' + exerciseName + '. Suggest a specific well-known chord progression of that length (e.g. for 4-chord: G D Em C), light the first chord with a CHORD command, set a slow tempo with a METRONOME command, and guide them through each change one at a time.',
+      'soloing':      'The student wants to solo over ' + exerciseName + '. Light up the scale on the fretboard using a SCALE command. Briefly explain which notes to target (especially the root and fifth), suggest a simple starting phrase, and invite them to start experimenting. Keep the instruction to 2-3 sentences.'
     };
 
     const specificInstruction = stageInstructions[stageId] ||
-      `The student selected "${exerciseName}". Tell them exactly what to do and give one clear starting instruction.`;
+      (stageId === 'tuning'
+        ? 'Welcome the student to the tuning and setup stage. Share one practical tip about holding the guitar, hand position, or posture — pick a different tip each time. Keep it to 2 sentences. The tuner is already open on screen for them to use.'
+        : `The student selected "${exerciseName}". Tell them exactly what to do and give one clear starting instruction.`);
 
     const message = [
       `LESSON EXERCISE START.`,

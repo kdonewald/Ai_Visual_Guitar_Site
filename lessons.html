@@ -265,7 +265,7 @@
           <div class="ct">Watch Intro Video</div>
           <div class="cs" id="introWatchedNote">Short overview of this stage</div>
         </button>
-        <button class="choice-card" id="exerciseChoice">
+        <button class="choice-card" id="exerciseChoice" style="display:none">
           <span class="ci">🎸</span>
           <div class="ct">Jump to Exercises</div>
           <div class="cs">Skip the video, start practicing</div>
@@ -325,19 +325,20 @@
       id:'tuning', num:1, label:'Tuning & Setup',
       desc:'Get your guitar in tune and learn how to hold it comfortably before anything else.',
       video:'lesson_tuning_intro.mp4',
+      autoTuner: true,
       tips:[
-        "Tune from below the note up to it — it holds pitch better than tuning down.",
-        "A guitar that drifts out of tune during a session is normal; recheck every 10–15 minutes.",
-        "Hold the neck with your thumb low and behind it, not wrapped over the top.",
-        "New strings stretch — expect to retune a few extra times the first day.",
-        "Sit with the guitar's waist resting on your right leg (or left, if left-handed) for a stable base.",
-        "Electronic tuners read the string's actual pitch — trust the tuner over your ear at first.",
-        "Press strings just behind the fret wire, not on top of it, for a cleaner sound.",
-        "Relax your shoulders — tension in your strumming arm is the #1 cause of early fatigue.",
-        "Check tuning standing up too — your ear can shift slightly between sitting and standing.",
-        "A buzzing string almost always means a finger is too close to the fret, not too far."
+        "Hold the neck with your thumb low and behind it — not wrapped over the top.",
+        "Rest the guitar waist on your right leg and tilt the neck slightly upward — not flat across your lap.",
+        "Keep your fretting wrist low and relaxed, away from the neck, so your fingers can curl naturally.",
+        "Your strumming elbow should rest lightly on the top edge of the body — not gripping.",
+        "Relax your shoulders before you play — tension travels straight to your hands.",
+        "Tune from below the note upward — it holds pitch better than tuning down to the note.",
+        "New strings stretch a lot the first day — retune every few minutes until they settle.",
+        "Your thumb behind the neck should sit roughly behind your middle finger, not sticking out.",
+        "Keep your fretting fingertips curved like you are holding a small ball.",
+        "A guitar that drifts out of tune mid-session is normal — retune every 10 to 15 minutes."
       ],
-      exercises:['Tune all six strings','Check open string sound one by one','Practice sitting position for 2 minutes']
+      exercises:[]
     },
     {
       id:'rhythm', num:2, label:'Rhythm Foundations',
@@ -392,7 +393,7 @@
         "The same three-note idea — root, third, fifth — applies whether you're playing an open chord or a barre chord.",
         "Understanding root/third/fifth means you can often figure out a new chord without ever looking it up."
       ],
-      exercises:['Find the root of G, C, and D','Switch G major to G minor by moving the third','Identify the fifth in an E major chord']
+      exercises:[]
     },
     {
       id:'transitions', num:5, label:'Chord Transitions',
@@ -410,7 +411,7 @@
         "G→D→Em→C is one of the most common progressions in popular music — worth mastering early.",
         "If a transition feels impossible, it usually just needs more reps, not a different technique."
       ],
-      exercises:['G to C, 10 slow reps','C to D, 10 slow reps','G–D–Em–C loop at 60 BPM']
+      exercises:[]
     },
     {
       id:'arpeggios', num:6, label:'Arpeggios',
@@ -487,7 +488,7 @@
         "Mistakes during improvisation are normal — recovering smoothly matters more than avoiding them.",
         "Short daily scale practice beats occasional long sessions for finger speed."
       ],
-      exercises:['A minor pentatonic, ascending','A minor pentatonic, descending','Improvise 4 bars over Em']
+      exercises:[]
     },
     {
       id:'song', num:10, label:'Play a Song',
@@ -567,6 +568,21 @@
     // Song stage goes straight to songs.html
     if (stage.isSong){ window.location.href = 'songs.html'; return; }
     activeStage = stage;
+    // Tuning stage: auto-open tuner, skip exercise panel choices
+    if (stage.autoTuner){
+      catStageTag.textContent = 'Stage ' + stage.num;
+      catTitle.textContent = stage.label;
+      catDesc.textContent = stage.desc;
+      vidWrap.classList.remove('show');
+      tipCard.classList.remove('show');
+      tunerWrap.classList.add('show');
+      exList.innerHTML = '';
+      catPanel.classList.add('show');
+      catPanel.scrollIntoView({behavior:'smooth', block:'start'});
+      // Show a random tip immediately on Tuning stage
+      showRandomTip();
+      return;
+    }
 
     catStageTag.textContent = `Stage ${stage.num}`
       + (stage.theoryMode ? '  ·  Fretboard shows root / third / fifth' : '');
@@ -579,6 +595,9 @@
       ? `Watched ${watched}× — short overview`
       : 'Short overview of this stage';
     introChoice.classList.toggle('watched', watched > 0);
+    // Show Jump to Exercises only for stages without a choice panel
+    document.getElementById('exerciseChoice').style.display =
+      CHOICE_PANELS[id] ? 'none' : '';
 
     vidWrap.classList.remove('show');
     tipCard.classList.remove('show');
@@ -668,6 +687,7 @@
         { icon:'🔵', name:'A Shape',  desc:'Root on A string — compact and common' },
         { icon:'🟢', name:'C Shape',  desc:'Root on B string — open and ringing' },
         { icon:'🟡', name:'G Shape',  desc:'Root on Low E — wide, full voicing' },
+        { icon:'🟣', name:'D Shape',  desc:'Root on B string — top 4 strings only' },
         { icon:'🎸', name:'Triads — High E', desc:'3-note shapes on top 3 strings' },
         { icon:'🎵', name:'Triads — B',      desc:'3-note shapes on B, G, D strings' },
         { icon:'🎶', name:'Triads — G',      desc:'3-note shapes on G, D, A strings' },
@@ -683,6 +703,47 @@
         { icon:'😢', name:'Minor Arpeggio',  desc:'Root, minor third, fifth' },
         { icon:'🎷', name:'7th Arpeggio',    desc:'Root, third, fifth, seventh' },
         { icon:'🌊', name:'Pentatonic',       desc:'5-note pattern across strings' },
+      ]
+    },
+    'chord-theory': {
+      label: 'What would you like to explore?',
+      hint: 'Vizi will explain the concept and give you random chord examples to work with.',
+      cols: 2,
+      choices: [
+        { icon:'🏗️', name:'Construct a Chord',      desc:'How a chord is built from scratch — Vizi picks a random chord and walks you through it' },
+        { icon:'1️⃣', name:'Identify 1, 3, 5 — Major', desc:'Vizi names a major chord, you find the root, third, and fifth' },
+        { icon:'🎭', name:'Identify 1, 3, 5 — Minor', desc:'Same exercise with minor chords — spot the lowered third' },
+        { icon:'🎷', name:'Identify 1, 3, 5 — 7th',   desc:'Find all four notes of a 7th chord' },
+        { icon:'✨', name:'Identify 1, 3, 5 — 6th',   desc:'Find the added sixth and understand what it does' },
+        { icon:'🔀', name:'Mixed — Random Chord Type', desc:'Vizi picks any chord type at random — keeps you on your toes' },
+      ]
+    },
+    'transitions': {
+      label: 'How many chords in your progression?',
+      hint: 'Vizi will suggest a common progression and guide you through the changes.',
+      cols: 2,
+      choices: [
+        { icon:'2️⃣', name:'2-Chord Progression', desc:'The simplest starting point — perfect for building a smooth change' },
+        { icon:'3️⃣', name:'3-Chord Progression', desc:'Most songs only need three — this covers a huge range of music' },
+        { icon:'4️⃣', name:'4-Chord Progression', desc:'The classic pop and rock format — I, IV, V, vi and its variations' },
+        { icon:'5️⃣', name:'5-Chord Progression', desc:'More complex sequences for when 4 feels too simple' },
+      ]
+    },
+    'soloing': {
+      label: 'Choose a backing track key and scale to solo over',
+      hint: 'Vizi will light up the scale on your fretboard. Any note in the scale will sound good over the track.',
+      cols: 1,
+      choices: [
+        { icon:'🎸', name:'C Major — Major Scale',        desc:'Full, melodic sound over C major tracks' },
+        { icon:'🎸', name:'C Major — A Minor Pentatonic', desc:'5-note scale — easier to sound musical straight away' },
+        { icon:'🎸', name:'G Major — Major Scale',        desc:'Full scale over G major — very common in rock and folk' },
+        { icon:'🎸', name:'G Major — E Minor Pentatonic', desc:'The most popular solo scale in rock guitar' },
+        { icon:'🎸', name:'D Major — Major Scale',        desc:'Bright key, great for country and bluegrass' },
+        { icon:'🎸', name:'D Major — B Minor Pentatonic', desc:'Relative minor pentatonic over D major tracks' },
+        { icon:'🎸', name:'A Major — Major Scale',        desc:'Warm key, very common in blues and rock' },
+        { icon:'🎸', name:'A Major — F# Minor Pentatonic',desc:'Classic blues-rock pentatonic over A major' },
+        { icon:'🎸', name:'E Major — Major Scale',        desc:'Open key that rings beautifully on guitar' },
+        { icon:'🎸', name:'E Major — C# Minor Pentatonic',desc:'Soulful pentatonic over E major tracks' },
       ]
     }
   };
