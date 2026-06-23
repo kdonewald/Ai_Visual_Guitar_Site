@@ -683,6 +683,12 @@
     const exerciseName = urlParams.get('exercise');
     if (!stageId || !exerciseName) return;
 
+    // ── Immediate feedback — show this BEFORE the Railway call ──
+    // Student tapped a choice and navigated here — let them know instantly
+    setBtn('thinking');
+    btn.innerHTML = 'Vizi is<br>preparing…';
+    setStatus('Getting your exercise ready…');
+
     // Stage metadata map — mirrors lessons.html STAGES array
     const STAGE_LABELS = {
       'tuning':       'Tuning & Setup',
@@ -763,8 +769,9 @@
         pendingIntroCmd  = dec(res.headers.get('X-Vizi-Commands'));
         pendingIntroBlob = await res.blob();
         setBtn('intro');
-        btn.innerHTML = 'Tap to start<br>exercise';
-        setStatus('Exercise ready — tap to hear Vizi');
+        btn.innerHTML = 'Tap to<br>start';
+        const shortName = exerciseName.split(' \u2014')[0].split(' \u2013')[0];
+        setStatus(shortName + ' ready \u2014 tap to hear Vizi');
         applyMetronomeCommand(pendingIntroCmd || '');
       } else {
         setStatus('Ready — ask Vizi about this exercise');
