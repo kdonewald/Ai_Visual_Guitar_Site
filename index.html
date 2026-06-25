@@ -82,7 +82,7 @@
 
   /* ── welcome video ── */
   .welcome-wrap{
-    width:100%;max-width:500px;padding:0 1.25rem;margin-bottom:1.5rem;
+    width:100%;max-width:340px;padding:0 1.25rem;margin-bottom:1.5rem;
   }
   .welcome-label{
     font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;
@@ -90,21 +90,11 @@
   }
   .welcome-video-box{
     position:relative;border-radius:14px;overflow:hidden;
-    background:#0a0a0a;box-shadow:0 8px 24px var(--shadow-lg);cursor:pointer;
+    background:#0a0a0a;box-shadow:0 8px 24px var(--shadow-lg);
   }
-  .welcome-video-box video{width:100%;display:block;border-radius:14px}
-  .welcome-play-btn{
-    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    background:rgba(0,0,0,0.35);transition:background .2s;border-radius:14px;
+  .welcome-video-box iframe{
+    width:100%;aspect-ratio:9/16;border:none;border-radius:14px;display:block;
   }
-  .welcome-video-box:hover .welcome-play-btn{background:rgba(0,0,0,0.2)}
-  .welcome-play-btn.hidden{display:none}
-  .play-circle{
-    width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.92);
-    display:flex;align-items:center;justify-content:center;
-    box-shadow:0 4px 16px rgba(0,0,0,0.3);
-  }
-  .play-circle svg{width:20px;height:20px;fill:var(--red);margin-left:3px}
 
   /* ── interactive fretboard ── */
   .fretboard-section{
@@ -186,13 +176,12 @@
 <!-- Welcome video -->
 <div class="welcome-wrap">
   <div class="welcome-label">Welcome — watch first</div>
-  <div class="welcome-video-box" id="welcomeBox">
-    <video id="welcomeVid" src="lesson_welcome_intro.mp4" playsinline preload="metadata"></video>
-    <div class="welcome-play-btn" id="welcomePlay">
-      <div class="play-circle">
-        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-      </div>
-    </div>
+  <div class="welcome-video-box">
+    <iframe
+      src="https://www.youtube.com/embed/4LsrFszL1o4?rel=0&modestbranding=1"
+      allow="autoplay; fullscreen"
+      allowfullscreen>
+    </iframe>
   </div>
 </div>
 
@@ -239,21 +228,6 @@
     });
     fretsRow.appendChild(el);
   });
-
-  // ── Welcome video ──
-  const welcomeBox  = document.getElementById('welcomeBox');
-  const welcomeVid  = document.getElementById('welcomeVid');
-  const welcomePlay = document.getElementById('welcomePlay');
-  welcomeBox.addEventListener('click', () => {
-    if (welcomeVid.paused){
-      welcomeVid.play().catch(()=>{});
-      welcomePlay.classList.add('hidden');
-    } else {
-      welcomeVid.pause();
-      welcomePlay.classList.remove('hidden');
-    }
-  });
-  welcomeVid.addEventListener('ended', () => welcomePlay.classList.remove('hidden'));
 
   // ── Vizi voice loop (same as vizi.html) ──
   const btn       = document.getElementById('talkBtn');
