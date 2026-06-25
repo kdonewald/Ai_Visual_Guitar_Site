@@ -345,30 +345,7 @@
       exercises:[]
     },
     {
-      id:'arpeggios', num:6, label:'Arpeggios',
-      desc:'Play the notes of a chord one at a time — root, third, fifth — to build finger independence and understand chord structure through sound.',
-      video:'lesson_arpeggios_intro.mp4',
-      tips:[
-        "An arpeggio is just the notes of a chord played one at a time — nothing more mysterious than that.",
-        "Start with a C major arpeggio: C, E, G. Find those three notes and pick them slowly in order.",
-        "Arpeggios are one of the best ways to check your chord finger placement — a buzzing note is easy to hear when picking one at a time.",
-        "Use a pick for a cleaner, more distinct sound, or fingerpick for a softer, more connected feel.",
-        "Practice ascending and descending — up through the notes, then back down.",
-        "Once you can play an arpeggio cleanly, try the same shape up the neck as a barre — it's the same three notes, just moved.",
-        "The root note in the arpeggio is the one that names the chord — make it the strongest, most deliberate note.",
-        "Classical guitar and fingerstyle are built almost entirely on arpeggios — you're learning a foundational technique.",
-        "Slow arpeggios reveal everything your chord hand is doing wrong that strumming hides.",
-        "Try alternating bass-style: pick the root with your thumb, then the third and fifth with your fingers."
-      ],
-      exercises:[
-        'C major arpeggio: C E G, ascending and descending',
-        'G major arpeggio: G B D, three strings',
-        'A minor arpeggio: A C E',
-        'Play G-C-D progression as arpeggios at 60 BPM'
-      ]
-    },
-    {
-      id:'strumming', num:7, label:'Strumming Patterns',
+      id:'strumming', num:6, label:'Strumming Patterns',
       desc:"Combine the timing and chords you've built into real strumming patterns.",
       video:'lesson_strumming_intro.mp4',
       tips:[
@@ -386,7 +363,7 @@
       exercises:[]
     },
     {
-      id:'barre-triads', num:8, label:'Barre Chords & Triads',
+      id:'barre-triads', num:7, label:'Barre Chords & Triads',
       desc:'Move beyond open position with moveable shapes that work anywhere on the neck.',
       video:'lesson_barre_intro.mp4',
       tips:[
@@ -402,6 +379,29 @@
         "It's normal for barre chords to take weeks longer than open chords to feel solid."
       ],
       exercises:[]
+    },
+    {
+      id:'arpeggios', num:8, label:'Arpeggios',
+      desc:'Play the notes of a chord one at a time — root, third, fifth — to build finger independence and understand chord structure through sound.',
+      video:'lesson_arpeggios_intro.mp4',
+      tips:[
+        "An arpeggio is just the notes of a chord played one at a time — nothing more mysterious than that.",
+        "Start with a C major arpeggio: C, E, G. Find those three notes and pick them slowly in order.",
+        "Arpeggios are one of the best ways to check your chord finger placement — a buzzing note is easy to hear when picking one at a time.",
+        "Use a pick for a cleaner, more distinct sound, or fingerpick for a softer, more connected feel.",
+        "Practice ascending and descending — up through the notes, then back down.",
+        "Once you can play an arpeggio cleanly, try the same shape up the neck as a barre — same three notes, just moved.",
+        "The root note in the arpeggio is the one that names the chord — make it the strongest note.",
+        "Classical guitar and fingerstyle are built almost entirely on arpeggios — a foundational technique.",
+        "Slow arpeggios reveal everything your chord hand is doing wrong that strumming hides.",
+        "Try alternating bass-style: pick the root with your thumb, then the third and fifth with your fingers."
+      ],
+      exercises:[
+        'C major arpeggio: C E G, ascending and descending',
+        'G major arpeggio: G B D, three strings',
+        'A minor arpeggio: A C E',
+        'Play G-C-D progression as arpeggios at 60 BPM'
+      ]
     },
     {
       id:'soloing', num:9, label:'Soloing & Scales',
@@ -750,6 +750,13 @@
       step2.className = 'choice-panel-label'; step2.style.marginTop = '.5rem';
       step2.textContent = 'Step 2 — Pick your key and scale';
       exList.appendChild(step2);
+      // Feedback bar — shows fretboard status without navigating
+      const feedback = document.createElement('div');
+      feedback.style.cssText = 'font-family:"DM Mono",monospace;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text-light);text-align:center;padding:.5rem;margin-bottom:.5rem;min-height:1.4em;';
+      feedback.textContent = 'Pick a key and scale — fretboard lights instantly';
+      exList.appendChild(feedback);
+      soloFeedbackEl = feedback;
+
       def.groups.forEach(group => {
         const grpEl = document.createElement('div'); grpEl.className = 'solo-group';
         const head = document.createElement('div'); head.className = 'solo-group-head';
@@ -761,13 +768,22 @@
           const scaleName = ch.name.split(' — ')[1] || ch.name;
           btn.innerHTML = '<span class="ssb-name">' + scaleName + '</span><span class="ssb-desc">' + ch.desc + '</span>';
           btn.addEventListener('click', () => {
-            const p = new URLSearchParams({stage:stage.id, exercise:ch.name});
-            window.location.href = 'vizi.html?' + p.toString();
+            // Option C: light fretboard directly, no navigation
+            // Backing track in other tab keeps playing
+            document.querySelectorAll('.solo-scale-btn').forEach(b => b.style.borderColor = '');
+            btn.style.borderColor = 'var(--green)';
+            lightScaleOnFretboard(ch.name);
           });
           row.appendChild(btn);
         });
         grpEl.appendChild(row); exList.appendChild(grpEl);
       });
+
+      // "Also talk to Vizi" link for deeper guidance
+      const viziLink = document.createElement('div');
+      viziLink.style.cssText = 'text-align:center;margin-top:1rem;';
+      viziLink.innerHTML = '<a href="vizi.html" style="font-family:DM Mono,monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);text-decoration:none">Ask Vizi for guidance &rarr;</a>';
+      exList.appendChild(viziLink);
       return;
     }
 
@@ -878,6 +894,60 @@
       }
     }
   } catch(e){}
+
+  // ════════════════════════════════════════════════════════
+  // SOLO SCALE LIGHTING — sends SCALE command directly to
+  // Railway fretboard relay so backing track keeps playing
+  // ════════════════════════════════════════════════════════
+  const RAILWAY_URL = 'https://vizi-tts-proxy-production.up.railway.app';
+
+  // Map scale choice names to fretboard SCALE commands
+  const SCALE_COMMANDS = {
+    'E Minor — Major Scale':        'SCALE E major shape 1',
+    'E Minor — E Minor Pentatonic': 'SCALE E minor pentatonic shape 1',
+    'A Minor — Major Scale':        'SCALE A major shape 1',
+    'A Minor — A Minor Pentatonic': 'SCALE A minor pentatonic shape 1',
+    'G Major — Major Scale':        'SCALE G major shape 1',
+    'G Major — E Minor Pentatonic': 'SCALE E minor pentatonic shape 1',
+    'D Major — Major Scale':        'SCALE D major shape 1',
+    'D Major — B Minor Pentatonic': 'SCALE B minor pentatonic shape 1',
+    'C Major — Major Scale':        'SCALE C major shape 1',
+    'C Major — A Minor Pentatonic': 'SCALE A minor pentatonic shape 1',
+  };
+
+  let soloFeedbackEl = null; // set when solo panel is rendered
+
+  async function lightScaleOnFretboard(scaleName){
+    const cmd = SCALE_COMMANDS[scaleName];
+    if (!cmd){ console.warn('No command for', scaleName); return; }
+    if (soloFeedbackEl){
+      soloFeedbackEl.textContent = 'Lighting ' + scaleName.split(' — ')[1] + ' on fretboard...';
+      soloFeedbackEl.style.color = 'var(--gold)';
+    }
+    try {
+      const res = await fetch(RAILWAY_URL + '/fretboard-command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command: cmd })
+      });
+      if (res.ok){
+        if (soloFeedbackEl){
+          soloFeedbackEl.textContent = 'Fretboard lit — solo away!';
+          soloFeedbackEl.style.color = 'var(--green)';
+        }
+      } else {
+        if (soloFeedbackEl){
+          soloFeedbackEl.textContent = 'Could not reach fretboard — check connection';
+          soloFeedbackEl.style.color = 'var(--red)';
+        }
+      }
+    } catch(e){
+      if (soloFeedbackEl){
+        soloFeedbackEl.textContent = 'Could not reach fretboard — check connection';
+        soloFeedbackEl.style.color = 'var(--red)';
+      }
+    }
+  }
 
   // ════════════════════════════════════════════════════════
   // TUNER — live pitch detection
