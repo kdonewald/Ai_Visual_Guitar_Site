@@ -781,13 +781,14 @@
           else if(isMinor) formulaDesc = 'whole, half, whole, whole, half, whole, whole';
           else if(isDim)   formulaDesc = 'whole, half, whole, half, whole, half, whole, half';
           else             formulaDesc = 'the major scale formula';
-          return 'The student just used the chord builder and watched '+root+' '+type+' being constructed step by step. '
-            +'Walk them through what they saw: starting from all 12 chromatic notes, you applied the '+formulaDesc+' interval pattern to build the '+root+' scale, '
-            +'then took the 1st, '+(isDim||isMinor?'flat ':'')+'3rd, '+(isDim?'flat ':'')+'5th'+(is7th?', and 7th':'')+' to get the chord tones. '
-            +'Light the chord on the fretboard now using CHORD '+root+(isMajor?'':isMinor?'m':is7th&&!isMinor?'7':isDim?'dim':'')
-            +' and name each note as you describe its role. '
-            +'Then show where those same notes appear elsewhere on the neck using SF commands for 2-3 positions. '
-            +'End with a question: ask the student what they think would happen to the chord if they lowered the third by one fret.';
+          // Just light the chord — keep it simple
+          const chordCmd = 'CHORD '+root+(isMajor?'':isMinor?'m':is7th&&!isMinor?'7':isDim?'dim':'');
+          return 'The student just built a '+root+' '+type+' chord using the chord builder. '
+            +'Light it on the fretboard now using '+chordCmd+'. '
+            +'Say only: "Here is your '+root+' '+type+' chord — Root is '+root+', '
+            +(isMajor?'Major 3rd':isMinor?'Minor 3rd':'3rd')+' is the '+(isDim||isMinor?'flat ':'')+'third, and the 5th completes it. '
+            +'Hold the talk button and ask me anything about it." '
+            +'Keep your entire response to 2 sentences plus the CHORD command. Do not explain further unless asked.';
         } else if(exerciseName.includes('Construct')){
           return 'Pick a random chord (not C major — make it interesting) and walk the student through constructing it from scratch: name the root, then apply the scale formula step by step, then identify the chord tones. Light each chord tone individually using SF commands as you name it.';
         } else if(exerciseName.includes('Mixed')){

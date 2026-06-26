@@ -1440,12 +1440,12 @@
   const CHROM12   = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 
   const CHORD_TYPES = {
-    'Major':      { intervals:[2,2,1,2,2,2,1], formula:'W W H W W W H', degrees:[0,2,4], labels:['Root','Major 3rd','5th'],         pillClass:['root-note','third-note','fifth-note'],    desc:'Major scale → take 1st, 3rd, 5th' },
-    'Minor':      { intervals:[2,1,2,2,1,2,2], formula:'W H W W H W W', degrees:[0,2,4], labels:['Root','Minor 3rd','5th'],         pillClass:['root-note','third-note','fifth-note'],    desc:'Minor scale → take 1st, 3rd, 5th' },
-    'Major 7th':  { intervals:[2,2,1,2,2,2,1], formula:'W W H W W W H', degrees:[0,2,4,6], labels:['Root','3rd','5th','Major 7th'], pillClass:['root-note','third-note','fifth-note','seventh-note'], desc:'Major scale → take 1st, 3rd, 5th, 7th' },
-    'Minor 7th':  { intervals:[2,1,2,2,1,2,2], formula:'W H W W H W W', degrees:[0,2,4,6], labels:['Root','♭3rd','5th','Minor 7th'],pillClass:['root-note','third-note','fifth-note','seventh-note'], desc:'Minor scale → take 1st, 3rd, 5th, 7th' },
-    'Dom 7th':    { intervals:[2,2,1,2,2,2,1], formula:'W W H W W W H', degrees:[0,2,4,5], labels:['Root','3rd','5th','♭7th'],      pillClass:['root-note','third-note','fifth-note','seventh-note'], desc:'Major scale → take 1st, 3rd, 5th, ♭7th' },
-    'Diminished': { intervals:[2,1,2,1,2,1,2,1], formula:'W H W H W H W H', degrees:[0,2,4,6], labels:['Root','♭3rd','♭5th','♭♭7th'],pillClass:['root-note','third-note','dim-note','seventh-note'], desc:'Diminished scale → 1st, ♭3rd, ♭5th, dim7th' },
+    'Major':      { intervals:[2,2,1,2,2,2,1], formula:'W W H W W W H', degrees:[0,2,4], labels:['Root','Major 3rd','5th'],         pillClass:['root-note','third-note','fifth-note'],    desc:'Major scale → take Root, 3rd, 5th' },
+    'Minor':      { intervals:[2,1,2,2,1,2,2], formula:'W H W W H W W', degrees:[0,2,4], labels:['Root','Minor 3rd','5th'],         pillClass:['root-note','third-note','fifth-note'],    desc:'Minor scale → take Root, 3rd, 5th' },
+    'Major 7th':  { intervals:[2,2,1,2,2,2,1], formula:'W W H W W W H', degrees:[0,2,4,6], labels:['Root','3rd','5th','Major 7th'], pillClass:['root-note','third-note','fifth-note','seventh-note'], desc:'Major scale → take Root, 3rd, 5th, 7th' },
+    'Minor 7th':  { intervals:[2,1,2,2,1,2,2], formula:'W H W W H W W', degrees:[0,2,4,6], labels:['Root','♭3rd','5th','Minor 7th'],pillClass:['root-note','third-note','fifth-note','seventh-note'], desc:'Minor scale → take Root, 3rd, 5th, 7th' },
+    'Dom 7th':    { intervals:[2,2,1,2,2,2,1], formula:'W W H W W W H', degrees:[0,2,4,5], labels:['Root','3rd','5th','♭7th'],      pillClass:['root-note','third-note','fifth-note','seventh-note'], desc:'Major scale → take Root, 3rd, 5th, ♭7th' },
+    'Diminished': { intervals:[2,1,2,1,2,1,2,1], formula:'W H W H W H W H', degrees:[0,2,4,6], labels:['Root','♭3rd','♭5th','♭♭7th'],pillClass:['root-note','third-note','dim-note','seventh-note'], desc:'Diminished scale → Root, ♭3rd, ♭5th, dim7th' },
     'Sus2':       { intervals:[2,2,1,2,2,2,1], formula:'W W H W W W H', degrees:[0,1,4], labels:['Root','2nd','5th'],               pillClass:['root-note','third-note','fifth-note'],    desc:'Major scale → replace 3rd with 2nd' },
     'Sus4':       { intervals:[2,2,1,2,2,2,1], formula:'W W H W W W H', degrees:[0,3,4], labels:['Root','4th','5th'],               pillClass:['root-note','third-note','fifth-note'],    desc:'Major scale → replace 3rd with 4th' },
   };
@@ -1650,8 +1650,8 @@
         container.appendChild(step);
         head.addEventListener('click',()=>{ step.classList.toggle('done'); step.classList.toggle('active'); });
         contentFn();
-        // Populate pill row
-        const info = getPillInfo();
+        // Populate pill row — pass step number so pills show correct state
+        const info = getPillInfo(num);
         info.forEach(p=>{
           const pill=document.createElement('span'); pill.className='cb-pill '+p.cls;
           pill.textContent=p.note; pillRow.appendChild(pill);
@@ -1661,20 +1661,31 @@
     });
   }
 
-  function getPillInfo(){
+  function getPillInfo(forStep){
+    // forStep: 1=all notes, 2=scale, 3=chord tones
     const def = CHORD_TYPES[cbType];
-    if(cbStep===0 || !cbRoot) return CHROM12.map(n=>({note:n,cls:'active-note'}));
-    if(cbStep===1){
+    if(forStep===1 || !cbRoot){
+      // All 12 notes, all equal
+      return CHROM12.map(n=>({note:n, cls:'active-note'}));
+    }
+    if(forStep===2){
+      // Scale notes highlighted, non-scale faded, root in red
       return CHROM12.map(n=>({
         note:n,
-        cls: cbScaleNotes.includes(n) ? (n===cbRoot?'root-note':'active-note') : 'faded'
+        cls: cbScaleNotes.includes(n)
+          ? (n===cbRoot ? 'root-note' : 'active-note')
+          : 'faded'
       }));
     }
-    // Step 2 — chord tones
+    // Step 3 — chord tones from scale, others faded
+    // Show all scale notes, highlight only chord tones
     return cbScaleNotes.map((n,i)=>({
       note:n,
       cls: cbChordNotes.includes(n)
-        ? (i===0?'root-note': i===def.degrees[1]?'third-note': i===def.degrees[2]?'fifth-note':'seventh-note')
+        ? (i===0 ? 'root-note'
+          : i===def.degrees[1] ? 'third-note'
+          : i===def.degrees[2] ? 'fifth-note'
+          : 'seventh-note')
         : 'faded'
     }));
   }
@@ -1684,16 +1695,22 @@
   function renderAllNotes(state){ cbDisplayState = state; }
 
   function buildScaleDesc(root, type, def, scale){
-    const steps = def.formula.split(' ');
-    return root + ' ' + type.split(' ')[0] + ' scale: ' + scale.join(' – ') +
-      '.  Formula: ' + def.formula + '  (' + steps.map(s=>s==='W'?'whole step':'half step').join(' → ') + ')';
+    const typeName = type.split(' ')[0];
+    return 'Starting from ' + root + ' (the Root), applying the '
+      + typeName + ' formula (' + def.formula + ') gives us: '
+      + scale.join(' – ') + '.  These ' + scale.length + ' notes form the '
+      + root + ' ' + typeName + ' scale — now we pick the chord tones from it.';
   }
 
   function buildChordDesc(root, type, def, chordNotes){
     const noteStr = chordNotes.join(', ');
     const degStr = def.labels.join(' + ');
-    return def.desc + '.  ' + root + ' ' + type + ' = ' + noteStr +
-      '  (' + degStr + ').  Any combination of these notes on the guitar = a ' + root + ' ' + type + ' chord.';
+    // Use "Root" not "1st" throughout
+    const cleanDesc = def.desc.replace('1st','Root');
+    return cleanDesc + '.  '
+      + root + ' ' + type + ' = ' + noteStr
+      + '  (' + degStr + ').  '
+      + 'Combine any of these notes on the guitar and you have a ' + root + ' ' + type + ' chord.';
   }
 
   async function lightChordOnFretboard(){
