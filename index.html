@@ -99,6 +99,7 @@
   /* ── interactive fretboard ── */
   .fretboard-section{
     width:100%;max-width:960px;padding:0 1.25rem 1rem;
+    margin-top:1.2rem;
   }
   .fretboard-label{
     font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;
@@ -160,11 +161,22 @@
   </div>
 </nav>
 
+<!-- Interactive fretboard — top of page -->
+<div class="fretboard-section">
+  <div class="fretboard-label">Tap a stage to begin</div>
+  <div class="fretboard">
+    <div class="frets-row" id="fretsRow"></div>
+  </div>
+</div>
+
 <!-- Vizi avatar -->
 <div class="stage-wrap" id="stageWrap">
   <div class="stage" id="stage">
     <img id="viziStill" src="ViziWhiteBack.png?v=2" alt="Vizi" />
     <video id="viziVid" src="VIZI%20MUTETALK.mp4" muted loop playsinline preload="auto"></video>
+    <!-- Stage intro video plays here instead of welcome box -->
+    <video id="stageIntroVid" playsinline preload="none"
+      style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .3s;border-radius:50%;"></video>
   </div>
   <div class="ring"></div>
 </div>
@@ -173,7 +185,7 @@
 <button class="talk" id="talkBtn">Hold<br>to Talk</button>
 <div class="status" id="status">Ready</div>
 
-<!-- Welcome video -->
+<!-- Welcome video — plays in Vizi circle, this label stays for reference -->
 <div class="welcome-wrap">
   <div class="welcome-label">Welcome — watch first</div>
   <div class="welcome-video-box">
@@ -182,14 +194,6 @@
       allow="autoplay; fullscreen"
       allowfullscreen>
     </iframe>
-  </div>
-</div>
-
-<!-- Interactive fretboard -->
-<div class="fretboard-section">
-  <div class="fretboard-label">Tap a stage to start</div>
-  <div class="fretboard">
-    <div class="frets-row" id="fretsRow"></div>
   </div>
 </div>
 
@@ -207,8 +211,8 @@
   const STAGES = [
     { id:'tuning',       num:'01', label:'Tuning & Setup',        song:false },
     { id:'warmup',       num:'02', label:'Warmup with Scales',    song:false },
-    { id:'open-chords',  num:'03', label:'Open Chords',           song:false },
-    { id:'chord-theory', num:'04', label:'How Chords Are Built',  song:false },
+    { id:'chord-theory', num:'03', label:'How Chords Are Built',  song:false },
+    { id:'open-chords',  num:'04', label:'Open Chords',           song:false },
     { id:'transitions',  num:'05', label:'Chord Transitions',     song:false },
     { id:'strumming',    num:'06', label:'Strumming Patterns',    song:false },
     { id:'barre-triads', num:'07', label:'Barre Chords & Triads', song:false },

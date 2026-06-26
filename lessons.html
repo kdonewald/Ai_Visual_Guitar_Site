@@ -514,6 +514,60 @@
   .tab-fret-status{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;text-align:center;padding:.35rem;min-height:1.3em;color:var(--text-light)}
   .tab-divider{border:none;border-top:1.5px solid var(--cream-dark);margin:1rem 0 .75rem}
 
+  /* ── TRIAD SHAPES (Stage 7) ── */
+  .triad-section{ margin-bottom:1.1rem; }
+  .triad-group-head{
+    font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--text-light);
+    padding:.45rem 0 .4rem;margin-bottom:.4rem;display:block;
+    border-bottom:1.5px solid var(--cream-dark);
+  }
+  .triad-group-desc{font-size:.72rem;color:var(--text-light);margin-bottom:.5rem;}
+  .triad-shape-row{ display:flex;gap:.5rem;margin-bottom:.85rem; }
+  .triad-shape-btn{
+    flex:1;border:2px solid var(--cream-dark);border-radius:10px;
+    background:var(--cream);cursor:pointer;transition:all .18s;
+    padding:.6rem .5rem .5rem;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:.35rem;
+  }
+  .triad-shape-btn:hover{ border-color:var(--blue);background:rgba(27,79,138,0.04); }
+  .triad-shape-btn.major:hover{ border-color:var(--gold); }
+  .triad-shape-btn.minor:hover{ border-color:var(--blue); }
+  .triad-shape-label{
+    font-family:'DM Mono',monospace;font-size:.62rem;font-weight:600;
+    letter-spacing:.06em;text-transform:uppercase;
+  }
+  .triad-shape-btn.major .triad-shape-label{ color:var(--gold); }
+  .triad-shape-btn.minor .triad-shape-label{ color:var(--blue); }
+  /* Mini fret diagram inside button */
+  .triad-mini-fret{
+    display:grid;
+    grid-template-columns:repeat(3,16px);
+    grid-template-rows:repeat(3,14px);
+    gap:0;position:relative;
+    border-top:3px solid var(--text);
+  }
+  .triad-mini-fret::before{
+    content:'';position:absolute;
+    left:0;right:0;top:0;bottom:0;
+    background:repeating-linear-gradient(
+      90deg,transparent 0,transparent 15px,
+      rgba(42,32,24,0.15) 15px,rgba(42,32,24,0.15) 16px
+    ),repeating-linear-gradient(
+      180deg,transparent 0,transparent 13px,
+      rgba(42,32,24,0.12) 13px,rgba(42,32,24,0.12) 14px
+    );
+    pointer-events:none;
+  }
+  .triad-dot{
+    width:10px;height:10px;border-radius:50%;
+    position:absolute;transform:translate(-50%,-50%);
+    font-size:0;
+  }
+  .triad-dot.root{ background:var(--gold); }
+  .triad-dot.major-third{ background:var(--green); }
+  .triad-dot.fifth{ background:var(--blue); }
+
 </style>
 </head>
 <body>
@@ -632,7 +686,7 @@
       exercises:[]
     },
     {
-      id:'open-chords', num:3, label:'Open Chords',
+      id:'open-chords', num:4, label:'Open Chords',
       desc:'Learn the core open chord shapes — G, C, D, A, E and their minors.',
       video:'lesson_open_chords_intro.mp4',
       tips:[
@@ -650,7 +704,7 @@
       exercises:['Form G major, check each string','Form C major, check each string','Form D major, check each string','Form E minor, check each string']
     },
     {
-      id:'chord-theory', num:4, label:'How Chords Are Built',
+      id:'chord-theory', num:3, label:'How Chords Are Built',
       desc:'Learn what root, third, and fifth mean — the three notes behind every chord you play.',
       video:'lesson_chord_theory_intro.mp4', theoryMode:true,
       tips:[
@@ -863,19 +917,30 @@
       ]
     },
     'barre-triads': {
-      label:'Which barre chord shape would you like to explore?',
-      hint:'Each shape is moveable — learn it once and you can play it in any key.',
+      label:'Choose a barre chord shape or triad string group',
+      hint:'Barre chords are moveable — learn one shape and you have it in all 12 keys. Triads are 3-note mini-chords on any string group.',
       cols:2,
+      barre: true,
       choices:[
-        { icon:'&#128308;', name:'E Shape', desc:'Root on Low E string — covers all keys' },
-        { icon:'&#128309;', name:'A Shape', desc:'Root on A string — compact and common' },
-        { icon:'&#128994;', name:'C Shape', desc:'Root on B string — open and ringing' },
-        { icon:'&#128993;', name:'G Shape', desc:'Root on Low E — wide, full voicing' },
+        { icon:'&#128308;', name:'E Shape', desc:'Root on Low E — the most common barre shape' },
+        { icon:'&#128309;', name:'A Shape', desc:'Root on A string — compact, great for rhythm' },
+        { icon:'&#128994;', name:'C Shape', desc:'Root on B string — open and ringing feel' },
+        { icon:'&#128993;', name:'G Shape', desc:'Root on Low E — wide, full 6-string voicing' },
         { icon:'&#128995;', name:'D Shape', desc:'Root on B string — top 4 strings only' },
-        { icon:'&#127928;', name:'Triads — High E', desc:'3-note shapes on top 3 strings' },
-        { icon:'&#127925;', name:'Triads — B',      desc:'3-note shapes on B, G, D strings' },
-        { icon:'&#127926;', name:'Triads — G',      desc:'3-note shapes on G, D, A strings' },
-        { icon:'&#127924;', name:'Triads — D',      desc:'3-note shapes on D, A, Low E strings' },
+      ],
+      triadGroups: [
+        { strings:'High E string', stringDesc:'e · B · G strings', cmd:'triads-hie',
+          major:{ label:'Major Shape', dots:[{s:0,f:0},{s:1,f:1},{s:2,f:0}] },
+          minor:{ label:'Minor Shape', dots:[{s:0,f:0},{s:1,f:0},{s:2,f:-1}] } },
+        { strings:'B string', stringDesc:'B · G · D strings', cmd:'triads-b',
+          major:{ label:'Major Shape', dots:[{s:0,f:0},{s:1,f:1},{s:2,f:2}] },
+          minor:{ label:'Minor Shape', dots:[{s:0,f:0},{s:1,f:0},{s:2,f:2}] } },
+        { strings:'G string', stringDesc:'G · D · A strings', cmd:'triads-g',
+          major:{ label:'Major Shape', dots:[{s:0,f:0},{s:1,f:1},{s:2,f:2}] },
+          minor:{ label:'Minor Shape', dots:[{s:0,f:0},{s:1,f:1},{s:2,f:1}] } },
+        { strings:'D string', stringDesc:'D · A · Low E strings', cmd:'triads-d',
+          major:{ label:'Major Shape', dots:[{s:0,f:2},{s:1,f:2},{s:2,f:1}] },
+          minor:{ label:'Minor Shape', dots:[{s:0,f:1},{s:1,f:2},{s:2,f:1}] } },
       ]
     },
     'soloing': {
@@ -1066,8 +1131,107 @@
   }
 
   // ── Choice panel rendering ─────────────────────────────────
+
+  // ── Barre + Triad panel (Stage 7) ───────────────────────────
+  function renderBarreTriadsPanel(def){
+    exList.innerHTML='';
+
+    // ── Barre chords section ──
+    const bl=document.createElement('span'); bl.className='choice-panel-label';
+    bl.textContent='Barre Chord Shapes — moveable, works in any key';
+    exList.appendChild(bl);
+    const bh=document.createElement('div'); bh.className='choice-hint';
+    bh.textContent=def.hint; exList.appendChild(bh);
+    const bg=document.createElement('div'); bg.className='choice-grid cols-2';
+    def.choices.forEach(ch=>{
+      const btn=document.createElement('button'); btn.className='choice-btn';
+      btn.innerHTML='<span class="cb-icon">'+ch.icon+'</span><span><span class="cb-name">'+ch.name+'</span><span class="cb-desc">'+ch.desc+'</span></span><span class="cb-arrow">&#8594;</span>';
+      btn.addEventListener('click',()=>{
+        const p=new URLSearchParams({stage:'barre-triads',exercise:ch.name});
+        window.location.href='vizi.html?'+p.toString();
+      });
+      bg.appendChild(btn);
+    });
+    exList.appendChild(bg);
+
+    // ── Triads section ──
+    const hr=document.createElement('hr');
+    hr.style.cssText='border:none;border-top:1.5px solid var(--cream-dark);margin:1rem 0 .75rem';
+    exList.appendChild(hr);
+    const tl=document.createElement('span'); tl.className='choice-panel-label';
+    tl.textContent='Triad Shapes — by string group';
+    exList.appendChild(tl);
+    const th=document.createElement('div'); th.className='choice-hint';
+    th.textContent='Each string group has a Major shape and a Minor shape. Tap either to light it on the fretboard and send it to Vizi.';
+    exList.appendChild(th);
+
+    def.triadGroups.forEach(grp=>{
+      const sec=document.createElement('div'); sec.className='triad-section';
+      const lbl=document.createElement('span'); lbl.className='triad-group-head';
+      lbl.textContent=grp.strings;
+      sec.appendChild(lbl);
+      const desc=document.createElement('div'); desc.className='triad-group-desc';
+      desc.textContent='Strings: '+grp.stringDesc;
+      sec.appendChild(desc);
+      const row=document.createElement('div'); row.className='triad-shape-row';
+      ['major','minor'].forEach(type=>{
+        const shape=grp[type];
+        const btn=document.createElement('button');
+        btn.className='triad-shape-btn '+type;
+        // Build mini fret diagram
+        const diagram=buildMiniTriadDiagram(shape.dots, type);
+        const label=document.createElement('span'); label.className='triad-shape-label';
+        label.textContent=shape.label;
+        btn.appendChild(diagram); btn.appendChild(label);
+        btn.addEventListener('click',()=>{
+          document.querySelectorAll('.triad-shape-btn').forEach(b=>b.style.borderColor='');
+          btn.style.borderColor=type==='major'?'var(--gold)':'var(--blue)';
+          const cmd='TRIAD '+grp.cmd+' '+type;
+          sendFretboardCmd(cmd);
+          const p=new URLSearchParams({stage:'barre-triads',exercise:grp.strings+' — '+shape.label});
+          // Don't navigate — just light fretboard and let Vizi respond if on vizi page
+        });
+        row.appendChild(btn);
+      });
+      sec.appendChild(row);
+      exList.appendChild(sec);
+    });
+
+    const viziLink=document.createElement('div');
+    viziLink.style.cssText='text-align:center;margin-top:.5rem;';
+    viziLink.innerHTML='<a href="vizi.html" style="font-family:DM Mono,monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);text-decoration:none">Ask Vizi for guidance →</a>';
+    exList.appendChild(viziLink);
+  }
+
+  function buildMiniTriadDiagram(dots, type){
+    const wrap=document.createElement('div');
+    wrap.style.cssText='position:relative;width:48px;height:42px;border-top:3px solid #2A2018;';
+    // Draw grid lines
+    const grid=document.createElement('div');
+    grid.style.cssText='position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0,transparent 15px,rgba(42,32,24,0.18) 15px,rgba(42,32,24,0.18) 16px),repeating-linear-gradient(180deg,transparent 0,transparent 13px,rgba(42,32,24,0.12) 13px,rgba(42,32,24,0.12) 14px);pointer-events:none;';
+    wrap.appendChild(grid);
+    const colors=['#E8A020','#4CAF50','#1B4F8A']; // root=gold, third=green, fifth=blue
+    dots.forEach((dot,i)=>{
+      const el=document.createElement('div');
+      const x=dot.s*16+8, y=Math.max(0,dot.f)*14+7;
+      el.style.cssText='position:absolute;width:11px;height:11px;border-radius:50%;transform:translate(-50%,-50%);left:'+x+'px;top:'+y+'px;background:'+colors[i]+';box-shadow:0 1px 3px rgba(0,0,0,0.3);';
+      wrap.appendChild(el);
+    });
+    return wrap;
+  }
+
+  async function sendFretboardCmd(cmd){
+    try{
+      await fetch(RAILWAY_URL+'/fretboard-command',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({command:cmd})
+      });
+    }catch(e){}
+  }
+
   function renderChoicePanel(stage){
     if (stage.id==='strumming'){ renderStrummingPanel(); return; }
+    if (stage.id==='barre-triads'){ renderBarreTriadsPanel(CHOICE_PANELS[stage.id]); return; }
     const def = CHOICE_PANELS[stage.id];
     exList.innerHTML = '';
     const label = document.createElement('span');
@@ -1441,13 +1605,19 @@
     const g=tabGroups[tabStepIdx];
     const sEl=document.getElementById('tabFretStatus');
     const strMap={He:'HiE',B:'B',G:'G',D:'D',A:'A',Le:'LoE'};
-    const m=g[0].match(/^S(He|B|G|D|A|Le)(\d+)$/);
-    if(!m)return;
-    const cmd='SF '+strMap[m[1]]+' '+m[2];
+    // Build pipe-delimited command for all simultaneous notes
+    const cmds=g.map(t=>{
+      const m=t.match(/^S(He|B|G|D|A|Le)(\d+)$/);
+      if(!m)return null;
+      return 'SF '+strMap[m[1]]+' '+m[2];
+    }).filter(Boolean);
+    if(!cmds.length)return;
+    const cmd=cmds.join(' | ');
+    const noteNames=g.map(tokenToNote).join('+');
     if(sEl){sEl.textContent='Sending...';sEl.style.color='var(--gold)';}
     try{
       const res=await fetch(RAILWAY_URL+'/fretboard-command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:cmd})});
-      if(res.ok){if(sEl){sEl.textContent=tokenToNote(g[0])+' — lit';sEl.style.color='var(--green)';}}
+      if(res.ok){if(sEl){sEl.textContent=noteNames+' — lit';sEl.style.color='var(--green)';}}
       else{if(sEl){sEl.textContent='Could not reach fretboard';sEl.style.color='var(--red)';}}
     }catch(e){if(sEl){sEl.textContent='Could not reach fretboard';sEl.style.color='var(--red)';}}
   }
@@ -1984,13 +2154,32 @@ document.getElementById('bpmSlider').addEventListener('input',e=>{
 document.querySelectorAll('[data-feel]').forEach(btn=>{
   btn.addEventListener('click',()=>{
     const feel = parseInt(btn.dataset.feel);
-    // Sixteenth notes — switch to Custom automatically
+    const prevSubdiv = subdivisions;
+    // Sixteenth notes on custom — keep custom, scale slots
+    // Sixteenth on preset — scale the preset pattern to fill 16 slots
     if (feel===4 && !isCustom()){
-      stopPlayback();
-      const ts = TIME_SIGS[currentTS];
-      const customIdx = ts.patterns.findIndex(p=>p.custom);
-      if (customIdx>=0) currentPatternIdx=customIdx;
-      slots=[...ts.patterns[currentPatternIdx].slots];
+      // Scale current preset slots from 8 to 16 by doubling each slot
+      const scaled=[];
+      slots.forEach(s=>{ scaled.push(s); scaled.push(' '); });
+      slots=scaled;
+    } else if (feel===2 && prevSubdiv===4 && !isCustom()){
+      // Scale down from 16 to 8 — take every other slot (the originals)
+      slots=slots.filter((_,i)=>i%2===0);
+    } else if (feel===1 && !isCustom()){
+      // Quarter — one slot per beat, use only the downbeats (every subdiv*beat)
+      const ts=TIME_SIGS[currentTS];
+      const quarterSlots=[];
+      for(let b=0;b<ts.beats;b++){
+        const idx=b*(prevSubdiv);
+        quarterSlots.push(slots[idx]||'D');
+        // pad to 1 per beat
+      }
+      slots=quarterSlots;
+    } else if (feel===2 && prevSubdiv===1 && !isCustom()){
+      // Quarter to eighth — double each slot
+      const doubled=[];
+      slots.forEach(s=>{ doubled.push(s); doubled.push(' '); });
+      slots=doubled;
     }
     document.querySelectorAll('[data-feel]').forEach(b=>b.classList.remove('active-feel'));
     btn.classList.add('active-feel');
