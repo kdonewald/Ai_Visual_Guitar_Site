@@ -515,58 +515,33 @@
   .tab-divider{border:none;border-top:1.5px solid var(--cream-dark);margin:1rem 0 .75rem}
 
   /* ── TRIAD SHAPES (Stage 7) ── */
-  .triad-section{ margin-bottom:1.1rem; }
+  .triad-section{ margin-bottom:1.2rem; }
   .triad-group-head{
     font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.12em;
     text-transform:uppercase;color:var(--text-light);
-    padding:.45rem 0 .4rem;margin-bottom:.4rem;display:block;
+    padding:.45rem 0 .4rem;margin-bottom:.5rem;display:block;
     border-bottom:1.5px solid var(--cream-dark);
   }
-  .triad-group-desc{font-size:.72rem;color:var(--text-light);margin-bottom:.5rem;}
-  .triad-shape-row{ display:flex;gap:.5rem;margin-bottom:.85rem; }
+  .triad-shape-row{ display:flex;gap:.6rem;margin-bottom:.85rem; }
   .triad-shape-btn{
-    flex:1;border:2px solid var(--cream-dark);border-radius:10px;
-    background:var(--cream);cursor:pointer;transition:all .18s;
-    padding:.6rem .5rem .5rem;text-align:center;
-    display:flex;flex-direction:column;align-items:center;gap:.35rem;
+    flex:1;border:1.5px solid var(--cream-dark);border-radius:12px;
+    background:var(--white);cursor:pointer;transition:all .18s;
+    padding:14px 8px 10px;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:8px;
   }
-  .triad-shape-btn:hover{ border-color:var(--blue);background:rgba(27,79,138,0.04); }
+  .triad-shape-btn:hover{ background:var(--cream); }
+  .triad-shape-btn.major{ border-color:rgba(232,160,32,0.5); }
   .triad-shape-btn.major:hover{ border-color:var(--gold); }
+  .triad-shape-btn.minor{ border-color:rgba(27,79,138,0.35); }
   .triad-shape-btn.minor:hover{ border-color:var(--blue); }
+  .triad-shape-btn.selected-major{ border-color:var(--gold);background:rgba(232,160,32,0.06); }
+  .triad-shape-btn.selected-minor{ border-color:var(--blue);background:rgba(27,79,138,0.06); }
   .triad-shape-label{
-    font-family:'DM Mono',monospace;font-size:.62rem;font-weight:600;
+    font-family:'DM Mono',monospace;font-size:.6rem;font-weight:600;
     letter-spacing:.06em;text-transform:uppercase;
   }
-  .triad-shape-btn.major .triad-shape-label{ color:var(--gold); }
+  .triad-shape-btn.major .triad-shape-label{ color:#BA7517; }
   .triad-shape-btn.minor .triad-shape-label{ color:var(--blue); }
-  /* Mini fret diagram inside button */
-  .triad-mini-fret{
-    display:grid;
-    grid-template-columns:repeat(3,16px);
-    grid-template-rows:repeat(3,14px);
-    gap:0;position:relative;
-    border-top:3px solid var(--text);
-  }
-  .triad-mini-fret::before{
-    content:'';position:absolute;
-    left:0;right:0;top:0;bottom:0;
-    background:repeating-linear-gradient(
-      90deg,transparent 0,transparent 15px,
-      rgba(42,32,24,0.15) 15px,rgba(42,32,24,0.15) 16px
-    ),repeating-linear-gradient(
-      180deg,transparent 0,transparent 13px,
-      rgba(42,32,24,0.12) 13px,rgba(42,32,24,0.12) 14px
-    );
-    pointer-events:none;
-  }
-  .triad-dot{
-    width:10px;height:10px;border-radius:50%;
-    position:absolute;transform:translate(-50%,-50%);
-    font-size:0;
-  }
-  .triad-dot.root{ background:var(--gold); }
-  .triad-dot.major-third{ background:var(--green); }
-  .triad-dot.fifth{ background:var(--blue); }
 
 </style>
 </head>
@@ -929,18 +904,39 @@
         { icon:'&#128995;', name:'D Shape', desc:'Root on B string — top 4 strings only' },
       ],
       triadGroups: [
-        { strings:'High E string', stringDesc:'e · B · G strings', cmd:'triads-hie',
-          major:{ label:'Major Shape', dots:[{s:0,f:0},{s:1,f:1},{s:2,f:0}] },
-          minor:{ label:'Minor Shape', dots:[{s:0,f:0},{s:1,f:0},{s:2,f:-1}] } },
-        { strings:'B string', stringDesc:'B · G · D strings', cmd:'triads-b',
-          major:{ label:'Major Shape', dots:[{s:0,f:0},{s:1,f:1},{s:2,f:2}] },
-          minor:{ label:'Minor Shape', dots:[{s:0,f:0},{s:1,f:0},{s:2,f:2}] } },
-        { strings:'G string', stringDesc:'G · D · A strings', cmd:'triads-g',
-          major:{ label:'Major Shape', dots:[{s:0,f:0},{s:1,f:1},{s:2,f:2}] },
-          minor:{ label:'Minor Shape', dots:[{s:0,f:0},{s:1,f:1},{s:2,f:1}] } },
-        { strings:'D string', stringDesc:'D · A · Low E strings', cmd:'triads-d',
-          major:{ label:'Major Shape', dots:[{s:0,f:2},{s:1,f:2},{s:2,f:1}] },
-          minor:{ label:'Minor Shape', dots:[{s:0,f:1},{s:1,f:2},{s:2,f:1}] } },
+        {
+          strings:'Root on High E', stringDesc:'G · B · e strings', cmd:'triads-hie',
+          major:{
+            label:'Major',
+            shape:[ {str:'G',role:'third', row:2}, {str:'B',role:'fifth', row:1}, {str:'e',role:'root',  row:1} ]
+          },
+          minor:{
+            label:'Minor',
+            shape:[ {str:'G',role:'third', row:1}, {str:'B',role:'fifth', row:1}, {str:'e',role:'root',  row:1} ]
+          }
+        },
+        {
+          strings:'Root on B', stringDesc:'G · B · e strings', cmd:'triads-b',
+          major:{
+            label:'Major',
+            shape:[ {str:'G',role:'fifth', row:1}, {str:'B',role:'root',  row:2}, {str:'e',role:'third', row:1} ]
+          },
+          minor:{
+            label:'Minor',
+            shape:[ {str:'G',role:'fifth', row:2}, {str:'B',role:'root',  row:3}, {str:'e',role:'third', row:1} ]
+          }
+        },
+        {
+          strings:'Root on G', stringDesc:'G · B · e strings', cmd:'triads-g',
+          major:{
+            label:'Major',
+            shape:[ {str:'G',role:'root',  row:3}, {str:'B',role:'third', row:3}, {str:'e',role:'fifth', row:1} ]
+          },
+          minor:{
+            label:'Minor',
+            shape:[ {str:'G',role:'root',  row:3}, {str:'B',role:'third', row:2}, {str:'e',role:'fifth', row:1} ]
+          }
+        },
       ]
     },
     'soloing': {
@@ -1170,26 +1166,23 @@
       const lbl=document.createElement('span'); lbl.className='triad-group-head';
       lbl.textContent=grp.strings;
       sec.appendChild(lbl);
-      const desc=document.createElement('div'); desc.className='triad-group-desc';
-      desc.textContent='Strings: '+grp.stringDesc;
-      sec.appendChild(desc);
+
       const row=document.createElement('div'); row.className='triad-shape-row';
       ['major','minor'].forEach(type=>{
-        const shape=grp[type];
+        const shapeData=grp[type];
         const btn=document.createElement('button');
         btn.className='triad-shape-btn '+type;
-        // Build mini fret diagram
-        const diagram=buildMiniTriadDiagram(shape.dots, type);
+        const diagram=buildMiniTriadDiagram(shapeData.shape, type);
         const label=document.createElement('span'); label.className='triad-shape-label';
-        label.textContent=shape.label;
+        label.textContent=shapeData.label;
         btn.appendChild(diagram); btn.appendChild(label);
         btn.addEventListener('click',()=>{
-          document.querySelectorAll('.triad-shape-btn').forEach(b=>b.style.borderColor='');
-          btn.style.borderColor=type==='major'?'var(--gold)':'var(--blue)';
+          document.querySelectorAll('.triad-shape-btn').forEach(b=>{
+            b.classList.remove('selected-major','selected-minor');
+          });
+          btn.classList.add(type==='major'?'selected-major':'selected-minor');
           const cmd='TRIAD '+grp.cmd+' '+type;
           sendFretboardCmd(cmd);
-          const p=new URLSearchParams({stage:'barre-triads',exercise:grp.strings+' — '+shape.label});
-          // Don't navigate — just light fretboard and let Vizi respond if on vizi page
         });
         row.appendChild(btn);
       });
@@ -1203,21 +1196,84 @@
     exList.appendChild(viziLink);
   }
 
-  function buildMiniTriadDiagram(dots, type){
-    const wrap=document.createElement('div');
-    wrap.style.cssText='position:relative;width:48px;height:42px;border-top:3px solid #2A2018;';
-    // Draw grid lines
-    const grid=document.createElement('div');
-    grid.style.cssText='position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0,transparent 15px,rgba(42,32,24,0.18) 15px,rgba(42,32,24,0.18) 16px),repeating-linear-gradient(180deg,transparent 0,transparent 13px,rgba(42,32,24,0.12) 13px,rgba(42,32,24,0.12) 14px);pointer-events:none;';
-    wrap.appendChild(grid);
-    const colors=['#E8A020','#4CAF50','#1B4F8A']; // root=gold, third=green, fifth=blue
-    dots.forEach((dot,i)=>{
-      const el=document.createElement('div');
-      const x=dot.s*16+8, y=Math.max(0,dot.f)*14+7;
-      el.style.cssText='position:absolute;width:11px;height:11px;border-radius:50%;transform:translate(-50%,-50%);left:'+x+'px;top:'+y+'px;background:'+colors[i]+';box-shadow:0 1px 3px rgba(0,0,0,0.3);';
-      wrap.appendChild(el);
+  function buildMiniTriadDiagram(shape, type){
+    // shape: array of {str, role, row} for G, B, e strings
+    // Standard chord diagram: E A D on left (faded), G B e on right (active)
+    // Columns: E=x10, A=x24, D=x38, G=x52, B=x66, e=x80
+    // Fret rows: nut=y6, fret1-center=y13, fret2=y28, fret3=y44, fret4=y60
+    const roleColor = { root: type==='major'?'#BA7517':'#185FA5', third:'#444', fifth:'#444' };
+    const roleLabel = { root:'R', third: type==='major'?'Δ3':'♭3', fifth:'p5' };
+    const colX = { G:52, B:66, e:80 };
+    const rowY = { 1:13, 2:28, 3:44, 4:60 };
+
+    const ns='http://www.w3.org/2000/svg';
+    const svg=document.createElementNS(ns,'svg');
+    svg.setAttribute('width','88'); svg.setAttribute('height','88');
+    svg.setAttribute('viewBox','0 0 88 88');
+
+    function line(x1,y1,x2,y2,stroke,w,op){
+      const l=document.createElementNS(ns,'line');
+      l.setAttribute('x1',x1);l.setAttribute('y1',y1);
+      l.setAttribute('x2',x2);l.setAttribute('y2',y2);
+      l.setAttribute('stroke',stroke);l.setAttribute('stroke-width',w||1);
+      if(op) l.setAttribute('opacity',op);
+      return l;
+    }
+    function txt(x,y,label,size,fill){
+      const t=document.createElementNS(ns,'text');
+      t.setAttribute('x',x);t.setAttribute('y',y);
+      t.setAttribute('text-anchor','middle');
+      t.setAttribute('font-size',size||8);
+      t.setAttribute('font-weight','600');
+      t.setAttribute('fill',fill||'white');
+      t.textContent=label;
+      return t;
+    }
+    function circle(cx,cy,r,fill){
+      const c=document.createElementNS(ns,'circle');
+      c.setAttribute('cx',cx);c.setAttribute('cy',cy);c.setAttribute('r',r||8);
+      c.setAttribute('fill',fill);
+      return c;
+    }
+
+    // Nut
+    svg.appendChild(line(4,6,84,6,'#2A2018',3));
+    // Fret lines
+    [20,36,52,68].forEach(y=>svg.appendChild(line(4,y,84,y,'rgba(42,32,24,0.15)')));
+    // Low strings E A D — faded
+    [10,24,38].forEach(x=>svg.appendChild(line(x,6,x,72,'rgba(42,32,24,0.2)',1)));
+    // Active strings G B e
+    [52,66,80].forEach(x=>svg.appendChild(line(x,6,x,72,'rgba(42,32,24,0.45)',1)));
+
+    // Dots
+    shape.forEach(dot=>{
+      const cx=colX[dot.str], cy=rowY[dot.row];
+      const fill=roleColor[dot.role];
+      const label=roleLabel[dot.role];
+      svg.appendChild(circle(cx,cy,8,fill));
+      const t=document.createElementNS(ns,'text');
+      t.setAttribute('x',cx);t.setAttribute('y',cy+4);
+      t.setAttribute('text-anchor','middle');
+      t.setAttribute('font-size','7');
+      t.setAttribute('font-weight','600');
+      t.setAttribute('fill','white');
+      t.textContent=label;
+      svg.appendChild(t);
     });
-    return wrap;
+
+    // String labels
+    [['E',10],['A',24],['D',38],['G',52],['B',66],['e',80]].forEach(([lbl,x],i)=>{
+      const t=document.createElementNS(ns,'text');
+      t.setAttribute('x',x);t.setAttribute('y',83);
+      t.setAttribute('text-anchor','middle');
+      t.setAttribute('font-size',i<3?'7':'8');
+      t.setAttribute('fill',i<3?'rgba(42,32,24,0.3)':'rgba(42,32,24,0.65)');
+      t.setAttribute('font-weight','400');
+      t.textContent=lbl;
+      svg.appendChild(t);
+    });
+
+    return svg;
   }
 
   async function sendFretboardCmd(cmd){
