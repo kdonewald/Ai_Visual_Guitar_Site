@@ -700,6 +700,7 @@
 
     const STAGE_LABELS = {
       'tuning':       'Tuning & Setup',
+      'warmup':       'Warmup with Scales',
       'rhythm':       'Rhythm Foundations',
       'open-chords':  'Open Chords',
       'chord-theory': 'How Chords Are Built',
@@ -739,13 +740,62 @@
       'strumming':    exerciseName.includes('Mixed')
         ? 'The student chose Mixed string groups. Give them a chord progression that moves between different string groups: G chord (6 strings), D chord (4 strings), C chord (5 strings). Show the string range for each chord using STRING commands, explain why the aim changes, and give a strumming exercise that practices the switch.'
         : 'The student chose "' + exerciseName + '". Explain which chords use this string range, show one example chord with a STRING command, then give a strumming pattern exercise at a suggested BPM using a METRONOME command.',
-      'barre-triads': 'The student chose "' + exerciseName + '". Light up an example of this shape or triad on the fretboard, explain the finger placement, and suggest a practice exercise moving it to 2-3 different positions.',
+      'barre-triads': (()=>{
+        const isTriad = exerciseName.includes('Root on');
+        if(isTriad){
+          const isMajor = exerciseName.includes('Major');
+          const strGroup = exerciseName.includes('High E')?'HE'
+                         : exerciseName.includes('Root on B')?'B':'G';
+          const quality = isMajor?'major':'minor';
+          const qualityM = isMajor?'':'M';
+          const strLabel = strGroup==='HE'?'high E string'
+                         : strGroup==='B'?'B string':'G string';
+          return 'The student has selected the '+quality+' triad shape with the root on the '+strLabel+'. '
+            +'This is a moveable shape — the same finger pattern works at any fret, and whichever fret the root lands on names the chord. '
+            +'Ask them which root note they would like to try — suggest C, G, or D as easy starting points. '
+            +'Once they tell you, light the triad using a TRIAD command: format is TRIAD '+strGroup+' <NOTE>'+qualityM+' '
+            +'— for example TRIAD '+strGroup+' G'+qualityM+' for G '+quality+'. '
+            +'After lighting it, name the three notes they are playing (root, '+(isMajor?'major third':'minor third')+', fifth) '
+            +'and invite them to slide the shape up two frets to hear a different root. '
+            +'Keep your opening to 2 sentences then ask for their note choice.';
+        } else {
+          return 'The student chose "'+exerciseName+'". Light up an example of this barre chord shape using a CHORD command with a specific root — for E Shape try CHORD G (fret 3), for A Shape try CHORD D (fret 5). Explain the finger placement and suggest practicing the shape at 3 different positions on the neck.';
+        }
+      })(),
       'arpeggios':    'The student chose "' + exerciseName + '". Light up the notes of a C ' + exerciseName.toLowerCase() + ' on the fretboard, then guide them through playing it ascending and descending.',
-      'chord-theory': exerciseName.includes('Construct')
-        ? 'Pick a random chord (not C major — make it interesting) and walk the student through constructing it from scratch: name the root, then the third, then the fifth. Light each note individually using NOTES commands as you name it. Ask the student to find each note on their fretboard before moving to the next.'
-        : exerciseName.includes('Mixed')
-        ? 'Pick a random chord type (major, minor, 7th, or 6th) without telling the student which type it is. Name a random chord of that type, light it with a CHORD command, and ask the student to identify the root, third, and fifth. Confirm or correct their answer with a brief explanation.'
-        : 'The student wants to identify the 1, 3, 5 of ' + exerciseName.replace('Identify 1, 3, 5 — ','') + ' chords. Pick a random chord of that type, name it, light it with a CHORD command, and ask the student to identify which note is the root, which is the third, and which is the fifth. Wait for their answer and confirm or correct it.',
+      'chord-theory': (()=>{
+        if(exerciseName.includes('Chord Construction')){
+          // Student used the chord builder — they already saw the animation
+          // Parse "C Major — Chord Construction" format
+          const parts = exerciseName.replace(' — Chord Construction','').split(' ');
+          const root = parts[0] || 'C';
+          const type = parts.slice(1).join(' ') || 'Major';
+          const isMajor = type.includes('Major') && !type.includes('Minor') && !type.includes('7');
+          const isMinor = type.includes('Minor') && !type.includes('7');
+          const is7th   = type.includes('7');
+          const isDim   = type.includes('Dim');
+          const isSus   = type.includes('Sus');
+          // Build formula description
+          let formulaDesc = '';
+          if(isMajor||type==='Dom 7th') formulaDesc = 'whole, whole, half, whole, whole, whole, half';
+          else if(isMinor) formulaDesc = 'whole, half, whole, whole, half, whole, whole';
+          else if(isDim)   formulaDesc = 'whole, half, whole, half, whole, half, whole, half';
+          else             formulaDesc = 'the major scale formula';
+          return 'The student just used the chord builder and watched '+root+' '+type+' being constructed step by step. '
+            +'Walk them through what they saw: starting from all 12 chromatic notes, you applied the '+formulaDesc+' interval pattern to build the '+root+' scale, '
+            +'then took the 1st, '+(isDim||isMinor?'flat ':'')+'3rd, '+(isDim?'flat ':'')+'5th'+(is7th?', and 7th':'')+' to get the chord tones. '
+            +'Light the chord on the fretboard now using CHORD '+root+(isMajor?'':isMinor?'m':is7th&&!isMinor?'7':isDim?'dim':'')
+            +' and name each note as you describe its role. '
+            +'Then show where those same notes appear elsewhere on the neck using SF commands for 2-3 positions. '
+            +'End with a question: ask the student what they think would happen to the chord if they lowered the third by one fret.';
+        } else if(exerciseName.includes('Construct')){
+          return 'Pick a random chord (not C major — make it interesting) and walk the student through constructing it from scratch: name the root, then apply the scale formula step by step, then identify the chord tones. Light each chord tone individually using SF commands as you name it.';
+        } else if(exerciseName.includes('Mixed')){
+          return 'Pick a random chord type (major, minor, 7th, or diminished) without telling the student which type it is. Name a random chord of that type, light it with a CHORD command, and ask the student to identify the root, third, and fifth. Confirm or correct their answer.';
+        } else {
+          return 'The student wants to identify the 1, 3, 5 of ' + exerciseName.replace('Identify 1, 3, 5 — ','') + ' chords. Pick a random chord of that type, name it, light it with a CHORD command, and ask the student to identify which note is the root, which is the third, and which is the fifth. Wait for their answer and confirm or correct it.';
+        }
+      })(),
       'transitions':  'The student wants to practice a ' + exerciseName + '. Suggest a specific well-known chord progression of that length (e.g. for 4-chord: G D Em C), light the first chord with a CHORD command, set a slow tempo with a METRONOME command, and guide them through each change one at a time.',
       'soloing':      'The student wants to solo over ' + exerciseName + '. Light up the scale on the fretboard using a SCALE command. Briefly explain which notes to target (especially the root and fifth), suggest a simple starting phrase, and invite them to start experimenting. Keep the instruction to 2-3 sentences.'
     };
