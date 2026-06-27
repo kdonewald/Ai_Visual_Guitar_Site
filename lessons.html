@@ -848,7 +848,7 @@
     color:var(--text-light);background:var(--cream);cursor:default;
     border-style:dashed;
   }
-  .cp-chord-btn.barre-chord:hover{ border-color:var(--cream-dark);background:var(--cream); }
+  .cp-chord-btn.barre-chord:hover{ border-color:var(--blue);background:rgba(27,79,138,0.05);cursor:pointer; }
   .cp-chord-btn .cp-badge{
     position:absolute;top:-4px;right:-4px;
     width:14px;height:14px;border-radius:50%;
@@ -1158,6 +1158,7 @@
 </div>
 
 <script>
+(function(){
   const STAGES = [
     {
       id:'tuning', num:1, label:'Tuning & Setup',
@@ -2165,8 +2166,14 @@
       btn.className='oc-chord-btn'+(type==='barre'?' barre':'')+(ocSelectedChord===chord?' selected':'');
       btn.textContent=chord;
       if(type==='barre'){
-        btn.disabled=true;
-        btn.title='Barre chord — see Stage 7';
+        btn.title='Barre chord — tap to send to Vizi';
+        btn.addEventListener('click',()=>{
+          const cleanChord=chord.replace('/','').split('/')[0];
+          ocSelectedChord=chord;
+          document.querySelectorAll('.oc-chord-btn').forEach(b=>b.classList.remove('selected'));
+          btn.classList.add('selected');
+          showOcActionRow(chord);
+        });
       } else {
         btn.addEventListener('click',()=>{
           ocSelectedChord=chord;
@@ -2384,6 +2391,21 @@
     container.appendChild(list);
   }
 
+
+  function makeVideoIntroBtn(label, videoUrl){
+    const btn = document.createElement('button');
+    btn.className = 'cp-video-intro-btn';
+    btn.innerHTML = '<span class="cp-vid-icon">▶</span><span>'+label+'</span>';
+    if(!videoUrl){
+      btn.style.opacity = '.45';
+      btn.title = 'Video coming soon';
+      btn.disabled = true;
+    } else {
+      btn.addEventListener('click', ()=>{ openStageVideo(videoUrl); });
+    }
+    return btn;
+  }
+
   function renderChordsPanel(){
     exList.innerHTML='';
 
@@ -2487,8 +2509,13 @@
         btn.appendChild(badge);
       }
       if(!open){
-        btn.disabled=true;
-        btn.title='Barre chord — use the Barre section below';
+        // Barre chords still clickable — route to Vizi as barre chord
+        btn.title='Barre chord — tap to send to Vizi';
+        btn.addEventListener('click',()=>{
+          const cleanN=n.replace('/','').split('/')[0];
+          cpSelectedChord={label:n, cmd:'CHORD '+cleanN, type:'barre'};
+          showChordActions(exList);
+        });
       } else {
         btn.addEventListener('click',()=>{
           cpSelectedChord={label:n, cmd:OPEN_VOICINGS[n]||'CHORD '+n, type:'open'};
@@ -2501,7 +2528,7 @@
 
     const barreNote=document.createElement('div');
     barreNote.style.cssText='font-size:.7rem;color:var(--text-light);margin-bottom:.85rem;text-align:center;';
-    barreNote.textContent='Greyed = barre chord — see Barre section below';
+    barreNote.textContent='Greyed = barre chord — tap to send to Vizi, or use the Barre section below for more control';
     exList.appendChild(barreNote);
 
     // ── SECTION 2: Barre Chords ──
@@ -3734,6 +3761,7 @@ renderAll();
   renderAll();
 } // end initStrumPlayer
 
+})(); // end IIFE
 </script>
 </body>
 </html>
