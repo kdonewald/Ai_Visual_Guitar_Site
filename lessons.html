@@ -770,15 +770,19 @@
 
   /* ── CHORDS PANEL (Stage 4) ── */
   .cp-section-head{
-    font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.14em;
-    text-transform:uppercase;color:var(--text-light);
-    padding:.5rem 0 .4rem;margin-bottom:.5rem;display:flex;
-    align-items:center;gap:.5rem;border-bottom:1.5px solid var(--cream-dark);
+    display:flex;align-items:center;gap:.6rem;
+    padding:.6rem .85rem;border-radius:10px;
+    background:linear-gradient(135deg,var(--cream),var(--cream-dark));
+    margin:.85rem 0 .6rem;border:1.5px solid var(--cream-mid);
   }
-  .cp-section-head span{ flex:1; }
+  .cp-section-icon{ font-size:1.1rem;flex-shrink:0; }
+  .cp-section-head span{
+    flex:1;font-family:'DM Sans',sans-serif;font-size:.88rem;
+    font-weight:600;color:var(--text);
+  }
   .cp-section-toggle{
-    font-size:.55rem;padding:.2rem .5rem;border-radius:4px;
-    border:1px solid var(--cream-dark);background:var(--cream);
+    font-size:.58rem;padding:.25rem .55rem;border-radius:5px;
+    border:1px solid var(--cream-mid);background:var(--white);
     color:var(--text-light);cursor:pointer;transition:all .15s;
   }
   .cp-section-toggle:hover{ border-color:var(--blue);color:var(--blue); }
@@ -1005,6 +1009,67 @@
   }
   .yt-close:hover{ background:var(--red); }
 
+  /* ── BY CHORD VIEW ── */
+  .cp-view-toggle{
+    display:flex;gap:.3rem;margin-bottom:.85rem;
+    background:var(--cream);border-radius:10px;padding:.3rem;
+    border:1.5px solid var(--cream-dark);
+  }
+  .cp-view-btn{
+    flex:1;padding:.4rem .5rem;border-radius:7px;
+    border:none;background:none;
+    font-family:'DM Mono',monospace;font-size:.65rem;font-weight:500;
+    color:var(--text-light);cursor:pointer;transition:all .18s;text-align:center;
+  }
+  .cp-view-btn.active{
+    background:var(--white);color:var(--text);
+    box-shadow:0 1px 4px var(--shadow);font-weight:600;
+  }
+  .cp-chord-note-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem;
+    margin-bottom:.85rem;
+  }
+  .cp-chord-note-btn{
+    padding:.5rem .25rem;border-radius:8px;
+    border:1.5px solid var(--cream-dark);background:var(--white);
+    font-family:'DM Mono',monospace;font-size:.78rem;font-weight:700;
+    color:var(--text);cursor:pointer;transition:all .15s;text-align:center;
+  }
+  .cp-chord-note-btn:hover{ border-color:var(--red);color:var(--red); }
+  .cp-chord-note-btn.active{ border-color:var(--red);background:rgba(217,64,37,0.07);color:var(--red); }
+  .cp-voicings-list{ display:flex;flex-direction:column;gap:.4rem;margin-bottom:.85rem; }
+  .cp-voicing-item{
+    display:flex;align-items:center;gap:.6rem;
+    background:var(--cream);border:1.5px solid var(--cream-dark);
+    border-radius:8px;padding:.55rem .75rem;cursor:pointer;
+    transition:all .18s;
+  }
+  .cp-voicing-item:hover{ border-color:var(--gold);background:rgba(232,160,32,0.05); }
+  .cp-voicing-tag{
+    font-family:'DM Mono',monospace;font-size:.6rem;font-weight:600;
+    letter-spacing:.06em;text-transform:uppercase;
+    padding:.2rem .45rem;border-radius:4px;
+    background:var(--cream-dark);color:var(--text-mid);flex-shrink:0;
+  }
+  .cp-voicing-tag.open{ background:rgba(76,175,80,0.12);color:var(--green); }
+  .cp-voicing-tag.barre{ background:rgba(27,79,138,0.12);color:var(--blue); }
+  .cp-voicing-tag.triad{ background:rgba(232,160,32,0.12);color:#BA7517; }
+  .cp-voicing-name{ font-size:.84rem;font-weight:500;color:var(--text);flex:1; }
+  .cp-voicing-arrow{ color:var(--text-light);font-size:.8rem; }
+
+  /* ── Section video intro button ── */
+  .cp-video-intro-btn{
+    display:flex;align-items:center;gap:.5rem;
+    padding:.45rem .75rem;border-radius:8px;
+    border:1.5px solid var(--cream-dark);background:var(--white);
+    font-family:'DM Mono',monospace;font-size:.6rem;font-weight:500;
+    letter-spacing:.06em;text-transform:uppercase;
+    color:var(--text-mid);cursor:pointer;transition:all .18s;
+    margin-bottom:.6rem;
+  }
+  .cp-video-intro-btn:hover{ border-color:var(--red);color:var(--red); }
+  .cp-video-intro-btn .cp-vid-icon{ font-size:.85rem; }
+
 </style>
 </head>
 <body>
@@ -1133,7 +1198,9 @@
     {
       id:'chords', num:4, label:'Chords',
       desc:'Open chords, barre chords, and triads — explore any chord, build progressions, and filter by scale.',
-      videoUrl:'', // add YouTube link when ready — stage chords
+      videoUrl:'',       // main stage intro — open chords + chord builder
+      barreVideoUrl:'',  // barre chords section intro
+      triadVideoUrl:'',  // triads section intro
       tips:[
         "Press only as hard as needed to stop the buzz — squeezing harder just tires your hand.",
         "Curl your fretting fingers like you're holding a small ball, not flat across the strings.",
@@ -1316,37 +1383,34 @@
       ],
       triadGroups: [
         {
-          strings:'Root on High E', stringDesc:'G · B · e strings', cmd:'triads-hie',
-          major:{
-            label:'Major',
-            shape:[ {str:'G',role:'third', row:2}, {str:'B',role:'fifth', row:1}, {str:'e',role:'root',  row:1} ]
-          },
-          minor:{
-            label:'Minor',
-            shape:[ {str:'G',role:'third', row:1}, {str:'B',role:'fifth', row:1}, {str:'e',role:'root',  row:1} ]
-          }
+          strings:'Root on High E', stringDesc:'G · B · e strings', cmd:'triads-hie', group:'high',
+          major:{ label:'Major', shape:[ {str:'G',role:'third', row:2}, {str:'B',role:'fifth', row:1}, {str:'e',role:'root',  row:1} ] },
+          minor:{ label:'Minor', shape:[ {str:'G',role:'third', row:1}, {str:'B',role:'fifth', row:1}, {str:'e',role:'root',  row:1} ] }
         },
         {
-          strings:'Root on B', stringDesc:'G · B · e strings', cmd:'triads-b',
-          major:{
-            label:'Major',
-            shape:[ {str:'G',role:'fifth', row:1}, {str:'B',role:'root',  row:2}, {str:'e',role:'third', row:1} ]
-          },
-          minor:{
-            label:'Minor',
-            shape:[ {str:'G',role:'fifth', row:2}, {str:'B',role:'root',  row:3}, {str:'e',role:'third', row:1} ]
-          }
+          strings:'Root on B', stringDesc:'G · B · e strings', cmd:'triads-b', group:'high',
+          major:{ label:'Major', shape:[ {str:'G',role:'fifth', row:1}, {str:'B',role:'root',  row:2}, {str:'e',role:'third', row:1} ] },
+          minor:{ label:'Minor', shape:[ {str:'G',role:'fifth', row:2}, {str:'B',role:'root',  row:3}, {str:'e',role:'third', row:1} ] }
         },
         {
-          strings:'Root on G', stringDesc:'G · B · e strings', cmd:'triads-g',
-          major:{
-            label:'Major',
-            shape:[ {str:'G',role:'root',  row:3}, {str:'B',role:'third', row:3}, {str:'e',role:'fifth', row:1} ]
-          },
-          minor:{
-            label:'Minor',
-            shape:[ {str:'G',role:'root',  row:3}, {str:'B',role:'third', row:2}, {str:'e',role:'fifth', row:1} ]
-          }
+          strings:'Root on G', stringDesc:'G · B · e strings', cmd:'triads-g', group:'high',
+          major:{ label:'Major', shape:[ {str:'G',role:'root',  row:3}, {str:'B',role:'third', row:3}, {str:'e',role:'fifth', row:1} ] },
+          minor:{ label:'Minor', shape:[ {str:'G',role:'root',  row:3}, {str:'B',role:'third', row:2}, {str:'e',role:'fifth', row:1} ] }
+        },
+        {
+          strings:'Root on D', stringDesc:'D · A · Low E strings', cmd:'triads-d', group:'low',
+          major:{ label:'Major', shape:[ {str:'D',role:'root',  row:1}, {str:'A',role:'fifth', row:1}, {str:'LoE',role:'third', row:3} ] },
+          minor:{ label:'Minor', shape:[ {str:'D',role:'root',  row:1}, {str:'A',role:'fifth', row:1}, {str:'LoE',role:'third', row:2} ] }
+        },
+        {
+          strings:'Root on A', stringDesc:'D · A · Low E strings', cmd:'triads-a', group:'low',
+          major:{ label:'Major', shape:[ {str:'D',role:'third', row:1}, {str:'A',role:'root',  row:2}, {str:'LoE',role:'fifth', row:2} ] },
+          minor:{ label:'Minor', shape:[ {str:'D',role:'third', row:1}, {str:'A',role:'root',  row:3}, {str:'LoE',role:'fifth', row:3} ] }
+        },
+        {
+          strings:'Root on Low E', stringDesc:'D · A · Low E strings', cmd:'triads-le', group:'low',
+          major:{ label:'Major', shape:[ {str:'D',role:'fifth', row:1}, {str:'A',role:'third', row:3}, {str:'LoE',role:'root',  row:4} ] },
+          minor:{ label:'Minor', shape:[ {str:'D',role:'fifth', row:1}, {str:'A',role:'third', row:3}, {str:'LoE',role:'root',  row:4} ] }
         },
       ]
     },
@@ -1569,6 +1633,7 @@
     const bl=document.createElement('span'); bl.className='choice-panel-label';
     bl.textContent='Barre Chord Shapes — moveable, works in any key';
     exList.appendChild(bl);
+    exList.appendChild(makeVideoIntroBtn('Watch Barre Chord Intro', activeStage&&activeStage.barreVideoUrl||''));
     const bh=document.createElement('div'); bh.className='choice-hint';
     bh.textContent=def.hint; exList.appendChild(bh);
     const bg=document.createElement('div'); bg.className='choice-grid cols-2';
@@ -1594,7 +1659,13 @@
     th.textContent='Each string group has a Major shape and a Minor shape. Tap either to light it on the fretboard and send it to Vizi.';
     exList.appendChild(th);
 
-    def.triadGroups.forEach(grp=>{
+    // High strings header
+    const highHead=document.createElement('div');
+    highHead.style.cssText='font-family:"DM Mono",monospace;font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-light);padding:.3rem 0 .4rem;margin-top:.2rem;border-bottom:1px solid var(--cream-dark);margin-bottom:.5rem;';
+    highHead.textContent='High Strings — e · B · G';
+    exList.appendChild(highHead);
+
+    def.triadGroups.filter(g=>g.group==='high').forEach(grp=>{
       const sec=document.createElement('div'); sec.className='triad-section';
       const lbl=document.createElement('span'); lbl.className='triad-group-head';
       lbl.textContent=grp.strings;
@@ -1625,6 +1696,36 @@
       exList.appendChild(sec);
     });
 
+    // Low strings header
+    const lowHead=document.createElement('div');
+    lowHead.style.cssText='font-family:"DM Mono",monospace;font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-light);padding:.3rem 0 .4rem;margin-top:.85rem;border-bottom:1px solid var(--cream-dark);margin-bottom:.5rem;';
+    lowHead.textContent='Low Strings — D · A · Low E';
+    exList.appendChild(lowHead);
+
+    def.triadGroups.filter(g=>g.group==='low').forEach(grp=>{
+      const sec=document.createElement('div'); sec.className='triad-section';
+      const lbl=document.createElement('span'); lbl.className='triad-group-head'; lbl.textContent=grp.strings;
+      sec.appendChild(lbl);
+      const row=document.createElement('div'); row.className='triad-shape-row';
+      ['major','minor'].forEach(type=>{
+        const shape=grp[type];
+        const btn=document.createElement('button');
+        btn.className='triad-shape-btn '+type;
+        const diagram=buildMiniTriadDiagram(shape.shape, type);
+        const label=document.createElement('span'); label.className='triad-shape-label'; label.textContent=shape.label;
+        btn.appendChild(diagram); btn.appendChild(label);
+        btn.addEventListener('click',()=>{
+          document.querySelectorAll('.triad-shape-btn').forEach(b=>b.classList.remove('selected-major','selected-minor'));
+          btn.classList.add(type==='major'?'selected-major':'selected-minor');
+          const grpUp=grp.cmd.replace('triads-','').toUpperCase();
+          const p=new URLSearchParams({stage:'barre-triads',exercise:grp.strings+' — '+(type==='major'?'Major':'Minor')});
+          window.location.href='vizi.html?'+p.toString();
+        });
+        row.appendChild(btn);
+      });
+      sec.appendChild(row); exList.appendChild(sec);
+    });
+
     const viziLink=document.createElement('div');
     viziLink.style.cssText='text-align:center;margin-top:.5rem;';
     viziLink.innerHTML='<a href="vizi.html" style="font-family:DM Mono,monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);text-decoration:none">Ask Vizi for guidance →</a>';
@@ -1638,7 +1739,9 @@
     // Fret rows: nut=y6, fret1-center=y13, fret2=y28, fret3=y44, fret4=y60
     const roleColor = { root: type==='major'?'#BA7517':'#185FA5', third:'#444', fifth:'#444' };
     const roleLabel = { root:'R', third: type==='major'?'Δ3':'♭3', fifth:'p5' };
-    const colX = { G:52, B:66, e:80 };
+    // High strings: G=left, B=mid, e=right
+    // Low strings: D=left, A=mid, LoE=right (same x positions)
+    const colX = { G:52, B:66, e:80, D:52, A:66, LoE:80 };
     const rowY = { 1:13, 2:28, 3:44, 4:60 };
 
     const ns='http://www.w3.org/2000/svg';
@@ -1696,15 +1799,19 @@
       svg.appendChild(t);
     });
 
-    // String labels
-    [['E',10],['A',24],['D',38],['G',52],['B',66],['e',80]].forEach(([lbl,x],i)=>{
+    // String labels — adapt for high vs low string group
+    const isLowGroup = shape.some(d=>d.str==='D'||d.str==='A'||d.str==='LoE');
+    const strLabels = isLowGroup
+      ? [['E',10,'muted'],['A_hi',24,'muted'],['G',38,'muted'],['D',52,'active'],['A',66,'active'],['E (low)',80,'active']]
+      : [['E',10,'muted'],['A',24,'muted'],['D',38,'muted'],['G',52,'active'],['B',66,'active'],['e',80,'active']];
+    strLabels.forEach(([lbl,x,cls],i)=>{
       const t=document.createElementNS(ns,'text');
       t.setAttribute('x',x);t.setAttribute('y',83);
       t.setAttribute('text-anchor','middle');
       t.setAttribute('font-size',i<3?'7':'8');
       t.setAttribute('fill',i<3?'rgba(42,32,24,0.3)':'rgba(42,32,24,0.65)');
       t.setAttribute('font-weight','400');
-      t.textContent=lbl;
+      t.textContent = lbl==='A_hi'?'A':lbl==='E (low)'?'E':lbl;
       svg.appendChild(t);
     });
 
@@ -2175,12 +2282,17 @@
   const BARRE_SHAPES = ['E Shape','A Shape','C Shape','G Shape','D Shape'];
   const CHROMATIC_ROOTS = ['C','C#/Db','D','D#/Eb','E','F','F#/Gb','G','G#/Ab','A','A#/Bb','B'];
   const TRIAD_GROUPS_CP = [
-    { label:'Root on High E', key:'hie' },
-    { label:'Root on B',      key:'b'   },
-    { label:'Root on G',      key:'g'   },
+    { label:'Root on High E', key:'hie', group:'high' },
+    { label:'Root on B',      key:'b',   group:'high' },
+    { label:'Root on G',      key:'g',   group:'high' },
+    { label:'Root on D',      key:'d',   group:'low'  },
+    { label:'Root on A',      key:'a',   group:'low'  },
+    { label:'Root on Low E',  key:'le',  group:'low'  },
   ];
 
   // Progression state
+  let cpView = 'byType'; // 'byType' or 'byChord'
+  let cpByChordNote = null;
   let cpProgression = [];
   let cpLooping = false;
   let cpPlayTimer = null;
@@ -2192,12 +2304,126 @@
   let cpTriadRoot = null;
   let cpSelectedChord = null;
 
+
+  // ── BY CHORD VIEW ────────────────────────────────────────────
+  const ALL_NOTES_CP = ['C','C#/Db','D','D#/Eb','E','F','F#/Gb','G','G#/Ab','A','A#/Bb','B'];
+
+  // Map display note to clean root for commands
+  function cleanNote(n){ return n.replace('/','').split('/')[0]; }
+
+  // All voicings for a given note
+  function getVoicings(note){
+    const root = cleanNote(note);
+    const voicings = [];
+    // Open chord if available
+    const openCmd = OPEN_VOICINGS[root] || OPEN_VOICINGS[root+'m'] || null;
+    if(OPEN_VOICINGS[root])   voicings.push({tag:'open',  label:'Open '+root+' Major',          cmd:'CHORD '+root,    type:'open'});
+    if(OPEN_VOICINGS[root+'m']) voicings.push({tag:'open',label:'Open '+root+' Minor',           cmd:'CHORD '+root+'m',type:'open'});
+    if(OPEN_VOICINGS[root+'maj7']) voicings.push({tag:'open',label:'Open '+root+' Major 7th',   cmd:'CHORD '+root+'maj7',type:'open'});
+    if(OPEN_VOICINGS[root+'m7'])   voicings.push({tag:'open',label:'Open '+root+' Minor 7th',   cmd:'CHORD '+root+'m7', type:'open'});
+    if(OPEN_VOICINGS[root+'7'])    voicings.push({tag:'open',label:'Open '+root+' Dom 7th',      cmd:'CHORD '+root+'7',  type:'open'});
+    // Barre shapes
+    ['E Shape','A Shape','C Shape','G Shape','D Shape'].forEach(shape=>{
+      voicings.push({tag:'barre', label:root+' Major — '+shape, cmd:'CHORD '+root, type:'barre', shape});
+      voicings.push({tag:'barre', label:root+' Minor — '+shape, cmd:'CHORD '+root+'m', type:'barre', shape});
+    });
+    // Triads high
+    ['Root on High E','Root on B','Root on G'].forEach(grp=>{
+      const key = grp.includes('High E')?'HE':grp.includes('Root on B')?'B':'G';
+      voicings.push({tag:'triad', label:root+' Major Triad ('+key+')', cmd:'TRIAD '+key+' '+root,     type:'triad'});
+      voicings.push({tag:'triad', label:root+' Minor Triad ('+key+')', cmd:'TRIAD '+key+' '+root+'M', type:'triad'});
+    });
+    // Triads low
+    [['Root on D','D'],['Root on A','A'],['Root on Low E','LE']].forEach(([grp,key])=>{
+      voicings.push({tag:'triad', label:root+' Major Triad ('+key+')', cmd:'TRIAD '+key+' '+root,     type:'triad'});
+      voicings.push({tag:'triad', label:root+' Minor Triad ('+key+')', cmd:'TRIAD '+key+' '+root+'M', type:'triad'});
+    });
+    return voicings;
+  }
+
+  function renderByChordView(container){
+    // Note picker
+    const noteLabel=document.createElement('span'); noteLabel.className='choice-panel-label';
+    noteLabel.textContent='Choose a note — see every way to play it';
+    container.appendChild(noteLabel);
+
+    const noteGrid=document.createElement('div'); noteGrid.className='cp-chord-note-grid';
+    ALL_NOTES_CP.forEach(note=>{
+      const btn=document.createElement('button');
+      btn.className='cp-chord-note-btn'+(cpByChordNote===note?' active':'');
+      btn.textContent=note;
+      btn.addEventListener('click',()=>{
+        cpByChordNote=note;
+        renderChordsPanel();
+      });
+      noteGrid.appendChild(btn);
+    });
+    container.appendChild(noteGrid);
+
+    if(!cpByChordNote) return;
+
+    // Voicings list
+    const voicings = getVoicings(cpByChordNote);
+    const listLabel=document.createElement('span'); listLabel.className='choice-panel-label';
+    listLabel.textContent='All ways to play '+cpByChordNote;
+    container.appendChild(listLabel);
+
+    const list=document.createElement('div'); list.className='cp-voicings-list';
+    voicings.forEach(v=>{
+      const item=document.createElement('div'); item.className='cp-voicing-item';
+      const tag=document.createElement('span'); tag.className='cp-voicing-tag '+v.tag; tag.textContent=v.tag;
+      const name=document.createElement('span'); name.className='cp-voicing-name'; name.textContent=v.label;
+      const arr=document.createElement('span'); arr.className='cp-voicing-arrow'; arr.textContent='›';
+      item.appendChild(tag); item.appendChild(name); item.appendChild(arr);
+      item.addEventListener('click',()=>{
+        cpSelectedChord={label:v.label, cmd:v.cmd, type:v.type};
+        showChordActions(container.parentElement||exList);
+      });
+      list.appendChild(item);
+    });
+    container.appendChild(list);
+  }
+
   function renderChordsPanel(){
     exList.innerHTML='';
 
+    // ── View toggle: By Type / By Chord ──
+    const viewToggle=document.createElement('div'); viewToggle.className='cp-view-toggle';
+    const byTypeBtn=document.createElement('button'); byTypeBtn.className='cp-view-btn'+(cpView==='byType'?' active':''); byTypeBtn.textContent='By Type';
+    const byChordBtn=document.createElement('button'); byChordBtn.className='cp-view-btn'+(cpView==='byChord'?' active':''); byChordBtn.textContent='By Chord';
+    byTypeBtn.addEventListener('click',()=>{ cpView='byType'; renderChordsPanel(); });
+    byChordBtn.addEventListener('click',()=>{ cpView='byChord'; renderChordsPanel(); });
+    viewToggle.appendChild(byTypeBtn); viewToggle.appendChild(byChordBtn);
+    exList.appendChild(viewToggle);
+
+    // By Chord view — show note picker and all voicings
+    if(cpView==='byChord'){
+      renderByChordView(exList);
+      // Still show action panel + progression at bottom
+      const actionWrap2=document.createElement('div');
+      actionWrap2.className='cp-chord-actions'; actionWrap2.id='cpChordActions';
+      const selName2=document.createElement('div'); selName2.className='cp-selected-chord'; selName2.id='cpSelName';
+      selName2.textContent=cpSelectedChord?cpSelectedChord.label:'';
+      const actBtns2=document.createElement('div'); actBtns2.className='cp-action-btns';
+      const sendBtn2=document.createElement('button'); sendBtn2.className='cp-action-btn send'; sendBtn2.textContent='🎸 Light Chord';
+      const progBtn2=document.createElement('button'); progBtn2.className='cp-action-btn prog'; progBtn2.textContent='+ Add to Progression';
+      const arpBtn2=document.createElement('button'); arpBtn2.className='cp-action-btn arp'; arpBtn2.textContent='🎵 Arpeggio';
+      actBtns2.appendChild(sendBtn2); actBtns2.appendChild(progBtn2); actBtns2.appendChild(arpBtn2);
+      actionWrap2.appendChild(selName2); actionWrap2.appendChild(actBtns2);
+      if(cpSelectedChord) actionWrap2.classList.add('show');
+      exList.appendChild(actionWrap2);
+      sendBtn2.addEventListener('click',()=>{ if(cpSelectedChord) goToVizi('chords',cpSelectedChord.label+' — Chord'); });
+      arpBtn2.addEventListener('click',()=>{ if(cpSelectedChord) goToVizi('chords',cpSelectedChord.label+' — Arpeggio'); });
+      progBtn2.addEventListener('click',()=>{ if(cpSelectedChord){ cpProgression.push({...cpSelectedChord}); updateProgBar(); }});
+      // Add progression builder
+      const progSec2=buildProgSection();
+      exList.appendChild(progSec2);
+      return;
+    }
+
     // ── Scale filter toggle ──
     const filterHead=document.createElement('div'); filterHead.className='cp-section-head';
-    filterHead.innerHTML='<span>Scale Filter</span>';
+    filterHead.innerHTML='<span class="cp-section-icon">🎵</span><span>Scale Filter</span>';
     const filterToggle=document.createElement('button'); filterToggle.className='cp-section-toggle';
     filterToggle.textContent=cpActiveScale?'On — '+cpActiveScale:'Off';
     filterToggle.style.color=cpActiveScale?'var(--teal)':'';
@@ -2235,7 +2461,7 @@
 
     // ── SECTION 1: Open Chords ──
     const ocHead=document.createElement('div'); ocHead.className='cp-section-head';
-    ocHead.innerHTML='<span>Open Chords</span>';
+    ocHead.innerHTML='<span class="cp-section-icon">🎸</span><span>Open Chords</span>';
     exList.appendChild(ocHead);
 
     const tabs=document.createElement('div'); tabs.className='cp-tabs';
@@ -2280,8 +2506,9 @@
 
     // ── SECTION 2: Barre Chords ──
     const bcHead=document.createElement('div'); bcHead.className='cp-section-head';
-    bcHead.innerHTML='<span>Barre Chords — pick shape then root</span>';
+    bcHead.innerHTML='<span class="cp-section-icon">🤘</span><span>Barre Chords</span>';
     exList.appendChild(bcHead);
+    exList.appendChild(makeVideoIntroBtn('Watch Barre Chord Intro', activeStage&&activeStage.barreVideoUrl||''));
 
     const barreWrap=document.createElement('div'); barreWrap.className='cp-barre-wrap';
     const shapes=document.createElement('div'); shapes.className='cp-barre-shapes';
@@ -2326,8 +2553,9 @@
 
     // ── SECTION 3: Triads ──
     const triHead=document.createElement('div'); triHead.className='cp-section-head';
-    triHead.innerHTML='<span>Triads — pick string group then root</span>';
+    triHead.innerHTML='<span class="cp-section-icon">✨</span><span>Triads</span>';
     exList.appendChild(triHead);
+    exList.appendChild(makeVideoIntroBtn('Watch Triad Intro', activeStage&&activeStage.triadVideoUrl||''));
 
     const triadGroupRow=document.createElement('div'); triadGroupRow.className='cp-tabs';
     TRIAD_GROUPS_CP.forEach(grp=>{
@@ -2348,19 +2576,21 @@
         btn.addEventListener('click',()=>{
           cpTriadRoot=root;
           const cleanRoot=root.replace('/','').split('/')[0];
-          // Show major/minor choice
           cpSelectedChord=null;
+          // Re-render panel then show type picker in correct spot
           renderChordsPanel();
-          // Show triad type picker
-          showTriadTypePicker(cleanRoot, cpTriadGroup, exList);
         });
         triadRootGrid.appendChild(btn);
       });
       exList.appendChild(triadRootGrid);
 
+      // Triad type picker goes here — BEFORE action panel
+      const triadPickerMount=document.createElement('div');
+      triadPickerMount.id='cpTriadPickerMount';
+      exList.appendChild(triadPickerMount);
       if(cpTriadRoot){
         const cleanRoot=cpTriadRoot.replace('/','').split('/')[0];
-        showTriadTypePicker(cleanRoot, cpTriadGroup, exList);
+        showTriadTypePicker(cleanRoot, cpTriadGroup, triadPickerMount);
       }
     } else {
       const hint=document.createElement('div');
@@ -2398,51 +2628,38 @@
     });
 
     // ── PROGRESSION BUILDER ──
+    const progSec=buildProgSection();
+    exList.appendChild(progSec);
+  }
+
+  function buildProgSection(){
     const progSection=document.createElement('div'); progSection.className='cp-prog-section';
-    const progLabel=document.createElement('span'); progLabel.className='cp-prog-label';
-    progLabel.textContent='Progression';
+    const progLabel=document.createElement('span'); progLabel.className='cp-prog-label'; progLabel.textContent='Progression';
     progSection.appendChild(progLabel);
-
     const progBar=document.createElement('div'); progBar.className='cp-prog-bar'; progBar.id='cpProgBar';
-    buildProgBar(progBar);
-    progSection.appendChild(progBar);
-
+    buildProgBar(progBar); progSection.appendChild(progBar);
     const loopRow=document.createElement('div'); loopRow.className='cp-loop-row';
     const loopLabel=document.createElement('span'); loopLabel.className='cp-loop-label'; loopLabel.textContent='Loop';
     const loopToggle=document.createElement('button'); loopToggle.className='cp-loop-toggle'+(cpLooping?' on':''); loopToggle.id='cpLoopToggle';
     loopToggle.addEventListener('click',()=>{ cpLooping=!cpLooping; loopToggle.classList.toggle('on',cpLooping); });
-    loopRow.appendChild(loopLabel); loopRow.appendChild(loopToggle);
-    progSection.appendChild(loopRow);
-
+    loopRow.appendChild(loopLabel); loopRow.appendChild(loopToggle); progSection.appendChild(loopRow);
     const progControls=document.createElement('div'); progControls.className='cp-prog-controls';
-    const playBtn2=document.createElement('button'); playBtn2.className='cp-prog-btn play'; playBtn2.textContent='▶ Play Progression';
-    const viziBtn2=document.createElement('button'); viziBtn2.className='cp-prog-btn vizi'; viziBtn2.textContent='Ask Vizi →';
-    const clearBtn2=document.createElement('button'); clearBtn2.className='cp-prog-btn clear'; clearBtn2.textContent='Clear';
-    playBtn2.disabled=cpProgression.length<1;
-    viziBtn2.disabled=cpProgression.length<1;
-    progControls.appendChild(playBtn2); progControls.appendChild(viziBtn2); progControls.appendChild(clearBtn2);
+    const playBtn=document.createElement('button'); playBtn.className='cp-prog-btn play'; playBtn.textContent='▶ Play Progression';
+    const viziBtn=document.createElement('button'); viziBtn.className='cp-prog-btn vizi'; viziBtn.textContent='Ask Vizi →';
+    const clearBtn=document.createElement('button'); clearBtn.className='cp-prog-btn clear'; clearBtn.textContent='Clear';
+    playBtn.disabled=cpProgression.length<1; viziBtn.disabled=cpProgression.length<1;
+    progControls.appendChild(playBtn); progControls.appendChild(viziBtn); progControls.appendChild(clearBtn);
     progSection.appendChild(progControls);
-
     const progStatus=document.createElement('div'); progStatus.className='cp-prog-status'; progStatus.id='cpProgStatus';
     progSection.appendChild(progStatus);
-    exList.appendChild(progSection);
-
-    playBtn2.addEventListener('click',()=>playProgression(progStatus));
-    viziBtn2.addEventListener('click',()=>{
-      if(!cpProgression.length)return;
-      const progStr=cpProgression.map(p=>p.label).join(' → ');
-      goToVizi('chords','Progression: '+progStr);
-    });
-    clearBtn2.addEventListener('click',()=>{
-      cpProgression=[]; cpPlayTimer=null;
-      renderChordsPanel();
-    });
+    playBtn.addEventListener('click',()=>playProgression(progStatus));
+    viziBtn.addEventListener('click',()=>{ if(!cpProgression.length)return; const progStr=cpProgression.map(p=>p.label).join(' → '); goToVizi('chords','Progression: '+progStr); });
+    clearBtn.addEventListener('click',()=>{ cpProgression=[]; cpPlayTimer=null; renderChordsPanel(); });
+    return progSection;
   }
 
   function showTriadTypePicker(root, group, container){
-    // Remove existing picker if any
-    const old=container.querySelector('#cpTriadTypePicker');
-    if(old) old.remove();
+    container.innerHTML='';
     const picker=document.createElement('div'); picker.id='cpTriadTypePicker';
     picker.style.cssText='display:flex;gap:.4rem;margin:.5rem 0 .85rem;';
     ['Major','Minor'].forEach(type=>{
@@ -2503,21 +2720,11 @@
     if(viziBtn) viziBtn.disabled=cpProgression.length<1;
   }
 
-  async function playProgression(statusEl){
+  function playProgression(statusEl){
     if(!cpProgression.length)return;
-    let i=0;
-    const step=async()=>{
-      if(i>=cpProgression.length){
-        if(cpLooping){ i=0; cpPlayTimer=setTimeout(step,1000); }
-        else{ if(statusEl) statusEl.textContent='Done'; }
-        return;
-      }
-      const ch=cpProgression[i];
-      if(statusEl){ statusEl.textContent='Playing: '+ch.label+'...'; statusEl.style.color='var(--gold)'; }
-      // Send to Vizi pipeline
-      goToVizi('chords','Progression step: '+ch.label+' — Chord');
-    };
-    step();
+    // Send entire progression to Vizi in one call
+    const progStr = cpProgression.map(p=>p.label).join(' → ');
+    goToVizi('chords','Progression: '+progStr);
   }
 
   function goToVizi(stage, exercise){
