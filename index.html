@@ -7,11 +7,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
   :root{
-    --cream:#F5F0E8; --cream-dark:#EDE6D6; --cream-mid:#E0D5C0;
-    --red:#D94025; --red-dark:#B83320; --blue:#1B4F8A;
-    --gold:#E8A020; --teal:#2AACB8; --green:#4CAF50;
-    --text:#2A2018; --text-mid:#5A4A38; --text-light:#8A7A68;
-    --white:#FFFFFF; --shadow:rgba(42,32,24,0.10); --shadow-lg:rgba(42,32,24,0.18);
+    --cream:#F0EBE0; --cream-dark:#D6CCBA; --cream-mid:#C8BCA8;
+    --red:#C93820; --red-dark:#A82D18; --blue:#1A4A82;
+    --gold:#C8880A; --teal:#1E8A94; --green:#2E7D32;
+    --vizi:#2D5A27; --vizi-light:#4A8A42;
+    --text:#18110A; --text-mid:#3A2A18; --text-light:#5C4830;
+    --white:#FFFFFF; --shadow:rgba(24,17,10,0.12); --shadow-lg:rgba(24,17,10,0.22);
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
@@ -76,27 +77,30 @@
 
   .status{
     font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;
-    text-transform:uppercase;color:var(--text-light);min-height:1.1em;
+    text-transform:uppercase;color:var(--text-mid);min-height:1.1em;font-weight:500;
     margin-bottom:1rem;text-align:center;
   }
 
 
   /* ── welcome button ── */
   .welcome-btn{
-    background:none;border:1.5px solid var(--cream-dark);
-    border-radius:20px;padding:.4rem 1rem;
-    font-family:'DM Mono',monospace;font-size:.62rem;font-weight:500;
-    letter-spacing:.06em;text-transform:uppercase;
-    color:var(--text-mid);cursor:pointer;transition:all .18s;
-    margin-bottom:.5rem;
+    background:var(--vizi);color:white;
+    border:none;border-radius:12px;
+    padding:.85rem 2rem;
+    font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:600;
+    cursor:pointer;transition:all .18s;
+    margin-bottom:.75rem;
+    box-shadow:0 4px 16px rgba(45,90,39,0.35);
+    display:flex;align-items:center;gap:.6rem;
   }
-  .welcome-btn:hover{ border-color:var(--red);color:var(--red); }
-  .welcome-btn.active{ border-color:var(--red);color:var(--red); }
+  .welcome-btn:hover{ background:var(--vizi-light);transform:translateY(-1px);box-shadow:0 6px 20px rgba(45,90,39,0.45); }
+  .welcome-btn.active{ background:var(--vizi-light); }
+  .welcome-btn .wb-icon{ font-size:1.1rem; }
   /* ── welcome video ── */
   .welcome-wrap{
     display:none; /* hidden until triggered */
     position:relative;
-    width:200px;margin:.5rem auto;
+    width:280px;margin:.5rem auto;
     animation:fade-up .25s ease both;
   }
   .welcome-wrap.show{ display:block; }
@@ -124,7 +128,7 @@
   }
   .fretboard-label{
     font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--text-light);text-align:center;margin-bottom:.6rem;
+    color:var(--text-mid);text-align:center;margin-bottom:.6rem;font-weight:500;
   }
   .fretboard{
     background:linear-gradient(180deg,#3a2a1c,#231810);
@@ -155,7 +159,7 @@
   .fret-stage.song-stage .fret-led{background:var(--teal);box-shadow:0 0 6px var(--teal)}
   .fret-stage.song-stage{border-color:rgba(42,172,184,0.35)}
   .fret-stage.song-stage .fret-label{color:var(--teal)}
-  .fret-label{font-family:'DM Sans',sans-serif;font-size:.68rem;font-weight:500;color:rgba(255,255,255,0.8);line-height:1.2}
+  .fret-label{font-family:'DM Sans',sans-serif;font-size:.68rem;font-weight:600;color:rgba(255,255,255,0.95);line-height:1.2}
   .fret-stage.active .fret-label{color:#fff}
 
   /* response panels */
@@ -207,7 +211,7 @@
 <div class="status" id="status">Ready</div>
 
 <!-- Welcome video button + window -->
-<button class="welcome-btn" id="welcomeBtn">▶ Watch Welcome Video</button>
+<button class="welcome-btn" id="welcomeBtn"><span class="wb-icon">▶</span> Watch Welcome Video</button>
 
 <div class="welcome-wrap" id="welcomeWrap">
   <div class="welcome-video-box">
