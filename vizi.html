@@ -794,9 +794,8 @@
           }
           return 'The student chose '+chordRoot+' ('+shapeName+'). '
             +'Light it: '+chordCmd+'. '
-            +'In one sentence describe the key finger placement for this barre shape. '
-            +'Ask them to strum slowly and report any buzzing strings. '
-            +'Keep to 2-3 sentences.';
+            +'Say the chord name and shape, then ask them to strum slowly and report any buzzing. '
+            +'Keep to one sentence — the fretboard already shows the fingering.';
         }
 
         // Open chord — default
@@ -812,9 +811,8 @@
         }
         return 'The student chose '+chordName+'. '
           +'Light it immediately: '+chordCmd+'. '
-          +'In one sentence describe the finger placement. '
-          +'Ask them to strum slowly and tell you if anything buzzes. '
-          +'Keep to 2-3 sentences.';
+          +'Say the chord name and ask them to strum slowly and tell you if anything buzzes. '
+          +'Keep to one sentence — the fretboard already shows the fingering.';
       })(),
       'strumming':    exerciseName.includes('Mixed')
         ? 'The student chose Mixed string groups. Give them a chord progression that moves between different string groups: G chord (6 strings), D chord (4 strings), C chord (5 strings). Show the string range for each chord using STRING commands, explain why the aim changes, and give a strumming exercise that practices the switch.'
