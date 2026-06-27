@@ -690,6 +690,297 @@
     width:9px;height:9px;border-radius:50%;flex-shrink:0;
   }
 
+  /* ── OPEN CHORDS PANEL (Stage 4) ── */
+  .oc-tabs{
+    display:flex;gap:.35rem;margin-bottom:.85rem;
+  }
+  .oc-tab{
+    flex:1;padding:.45rem .3rem;border-radius:8px;
+    border:1.5px solid var(--cream-dark);background:var(--white);
+    font-family:'DM Mono',monospace;font-size:.72rem;font-weight:500;
+    color:var(--text-mid);cursor:pointer;transition:all .18s;text-align:center;
+  }
+  .oc-tab:hover{border-color:var(--blue);color:var(--blue);}
+  .oc-tab.active{border-color:var(--red);background:rgba(217,64,37,0.07);color:var(--red);font-weight:600;}
+
+  .oc-chord-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem;
+    margin-bottom:.85rem;
+  }
+  .oc-chord-btn{
+    padding:.5rem .3rem;border-radius:8px;
+    border:1.5px solid var(--cream-dark);background:var(--white);
+    font-family:'DM Mono',monospace;font-size:.75rem;font-weight:600;
+    color:var(--text);cursor:pointer;transition:all .18s;text-align:center;
+  }
+  .oc-chord-btn:hover{border-color:var(--blue);background:rgba(27,79,138,0.05);}
+  .oc-chord-btn.selected{border-color:var(--gold);background:rgba(232,160,32,0.08);color:var(--text);}
+  .oc-chord-btn.barre{
+    color:var(--text-light);border-color:var(--cream-dark);
+    background:var(--cream);cursor:default;
+    position:relative;
+  }
+  .oc-chord-btn.barre::after{
+    content:'barre';
+    display:block;font-size:.48rem;letter-spacing:.04em;
+    text-transform:uppercase;color:var(--text-light);
+    margin-top:.1rem;
+  }
+  .oc-chord-btn.barre:hover{border-color:var(--cream-dark);background:var(--cream);}
+
+  .oc-action-row{
+    display:none;flex-direction:column;gap:.5rem;margin-bottom:.75rem;
+  }
+  .oc-action-row.show{display:flex;}
+  .oc-selected-label{
+    font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--text-light);text-align:center;
+  }
+  .oc-selected-name{
+    font-family:'Playfair Display',serif;font-weight:700;
+    font-size:1.3rem;color:var(--text);text-align:center;margin-bottom:.25rem;
+  }
+  .oc-btn-row{display:flex;gap:.5rem;}
+  .oc-action-btn{
+    flex:1;padding:.65rem .5rem;border-radius:10px;
+    border:2px solid var(--cream-dark);background:var(--cream);
+    font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;
+    color:var(--text-mid);cursor:pointer;transition:all .18s;text-align:center;
+  }
+  .oc-action-btn.chord-btn-oc{
+    border-color:var(--gold);background:rgba(232,160,32,0.07);color:var(--text);
+  }
+  .oc-action-btn.chord-btn-oc:hover{background:rgba(232,160,32,0.14);}
+  .oc-action-btn.arpeggio-btn-oc{
+    border-color:var(--blue);background:rgba(27,79,138,0.07);color:var(--blue);
+  }
+  .oc-action-btn.arpeggio-btn-oc:hover{background:rgba(27,79,138,0.14);}
+  .oc-fret-status{
+    font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.06em;
+    text-transform:uppercase;text-align:center;
+    padding:.35rem;min-height:1.3em;color:var(--text-light);
+  }
+  .oc-barre-hint{
+    font-size:.75rem;color:var(--text-light);text-align:center;
+    padding:.4rem .6rem;background:var(--cream);border-radius:8px;
+    border:1.5px solid var(--cream-dark);margin-bottom:.5rem;
+    display:none;
+  }
+  .oc-barre-hint.show{display:block;}
+
+  /* ── CHORDS PANEL (Stage 4) ── */
+  .cp-section-head{
+    font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--text-light);
+    padding:.5rem 0 .4rem;margin-bottom:.5rem;display:flex;
+    align-items:center;gap:.5rem;border-bottom:1.5px solid var(--cream-dark);
+  }
+  .cp-section-head span{ flex:1; }
+  .cp-section-toggle{
+    font-size:.55rem;padding:.2rem .5rem;border-radius:4px;
+    border:1px solid var(--cream-dark);background:var(--cream);
+    color:var(--text-light);cursor:pointer;transition:all .15s;
+  }
+  .cp-section-toggle:hover{ border-color:var(--blue);color:var(--blue); }
+
+  /* Scale filter */
+  .cp-scale-filter{
+    display:none;background:rgba(42,172,184,0.05);
+    border:1.5px solid rgba(42,172,184,0.2);border-radius:10px;
+    padding:.7rem .85rem;margin-bottom:.85rem;
+  }
+  .cp-scale-filter.show{ display:block; }
+  .cp-scale-filter-label{
+    font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--teal);margin-bottom:.5rem;display:block;
+  }
+  .cp-scale-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;
+    margin-bottom:.4rem;
+  }
+  .cp-scale-btn{
+    padding:.35rem .3rem;border-radius:6px;
+    border:1.5px solid var(--cream-dark);background:var(--white);
+    font-family:'DM Mono',monospace;font-size:.62rem;font-weight:500;
+    color:var(--text-mid);cursor:pointer;transition:all .15s;text-align:center;
+  }
+  .cp-scale-btn:hover{ border-color:var(--teal);color:var(--teal); }
+  .cp-scale-btn.active{ border-color:var(--teal);background:rgba(42,172,184,0.08);color:var(--teal);font-weight:600; }
+  .cp-filter-hint{
+    font-size:.72rem;color:var(--text-light);margin-top:.35rem;
+  }
+
+  /* Chord type tabs */
+  .cp-tabs{
+    display:flex;gap:.3rem;margin-bottom:.6rem;flex-wrap:wrap;
+  }
+  .cp-tab{
+    padding:.38rem .65rem;border-radius:7px;
+    border:1.5px solid var(--cream-dark);background:var(--white);
+    font-family:'DM Mono',monospace;font-size:.68rem;font-weight:500;
+    color:var(--text-mid);cursor:pointer;transition:all .15s;
+  }
+  .cp-tab:hover{ border-color:var(--blue);color:var(--blue); }
+  .cp-tab.active{ border-color:var(--red);background:rgba(217,64,37,0.07);color:var(--red);font-weight:600; }
+
+  /* Chord grid */
+  .cp-chord-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;
+    margin-bottom:.6rem;
+  }
+  .cp-chord-btn{
+    padding:.5rem .25rem;border-radius:8px;
+    border:1.5px solid var(--cream-dark);background:var(--white);
+    font-family:'DM Mono',monospace;font-size:.72rem;font-weight:600;
+    color:var(--text);cursor:pointer;transition:all .15s;text-align:center;
+    position:relative;
+  }
+  .cp-chord-btn:hover{ border-color:var(--gold);background:rgba(232,160,32,0.06); }
+  .cp-chord-btn.in-scale{ border-color:rgba(42,172,184,0.5);background:rgba(42,172,184,0.05); }
+  .cp-chord-btn.in-progression{
+    border-color:var(--gold);background:rgba(232,160,32,0.1);
+  }
+  .cp-chord-btn.barre-chord{
+    color:var(--text-light);background:var(--cream);cursor:default;
+    border-style:dashed;
+  }
+  .cp-chord-btn.barre-chord:hover{ border-color:var(--cream-dark);background:var(--cream); }
+  .cp-chord-btn .cp-badge{
+    position:absolute;top:-4px;right:-4px;
+    width:14px;height:14px;border-radius:50%;
+    background:var(--gold);color:white;
+    font-size:.48rem;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* Barre picker */
+  .cp-barre-wrap{ margin-bottom:.85rem; }
+  .cp-barre-shapes{
+    display:grid;grid-template-columns:repeat(5,1fr);gap:.3rem;
+    margin-bottom:.5rem;
+  }
+  .cp-shape-btn{
+    padding:.45rem .3rem;border-radius:7px;
+    border:1.5px solid var(--cream-dark);background:var(--white);
+    font-family:'DM Mono',monospace;font-size:.65rem;font-weight:600;
+    color:var(--text-mid);cursor:pointer;transition:all .15s;text-align:center;
+  }
+  .cp-shape-btn:hover{ border-color:var(--blue);color:var(--blue); }
+  .cp-shape-btn.active{ border-color:var(--blue);background:rgba(27,79,138,0.08);color:var(--blue); }
+  .cp-root-grid{
+    display:grid;grid-template-columns:repeat(6,1fr);gap:.3rem;
+    margin-bottom:.5rem;
+  }
+  .cp-root-btn{
+    padding:.4rem .2rem;border-radius:6px;
+    border:1.5px solid var(--cream-dark);background:var(--white);
+    font-family:'DM Mono',monospace;font-size:.65rem;font-weight:600;
+    color:var(--text-mid);cursor:pointer;transition:all .15s;text-align:center;
+  }
+  .cp-root-btn:hover{ border-color:var(--red);color:var(--red); }
+  .cp-root-btn.active{ border-color:var(--red);background:rgba(217,64,37,0.08);color:var(--red); }
+
+  /* Triad picker — reuse existing triad SVG buttons, just smaller section head */
+
+  /* Chord action buttons */
+  .cp-chord-actions{
+    display:none;flex-direction:column;gap:.45rem;
+    background:var(--cream);border:1.5px solid var(--cream-dark);
+    border-radius:10px;padding:.7rem .85rem;margin-bottom:.85rem;
+  }
+  .cp-chord-actions.show{ display:flex; }
+  .cp-selected-chord{
+    font-family:'Playfair Display',serif;font-weight:700;
+    font-size:1.2rem;color:var(--text);text-align:center;
+  }
+  .cp-action-btns{ display:flex;gap:.4rem; }
+  .cp-action-btn{
+    flex:1;padding:.55rem .4rem;border-radius:8px;
+    border:2px solid var(--cream-dark);background:var(--white);
+    font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;
+    color:var(--text-mid);cursor:pointer;transition:all .18s;text-align:center;
+  }
+  .cp-action-btn.send{ border-color:var(--gold);color:var(--text);background:rgba(232,160,32,0.07); }
+  .cp-action-btn.send:hover{ background:rgba(232,160,32,0.14); }
+  .cp-action-btn.prog{ border-color:var(--blue);color:var(--blue);background:rgba(27,79,138,0.05); }
+  .cp-action-btn.prog:hover{ background:rgba(27,79,138,0.12); }
+  .cp-action-btn.arp{ border-color:var(--green);color:var(--green);background:rgba(76,175,80,0.05); }
+  .cp-action-btn.arp:hover{ background:rgba(76,175,80,0.12); }
+
+  /* Progression builder */
+  .cp-prog-section{
+    border-top:2px solid var(--cream-dark);padding-top:.85rem;margin-top:.5rem;
+  }
+  .cp-prog-label{
+    font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--text-light);margin-bottom:.5rem;display:block;
+  }
+  .cp-prog-bar{
+    display:flex;flex-wrap:wrap;gap:.3rem;min-height:36px;
+    background:var(--cream);border:1.5px solid var(--cream-dark);
+    border-radius:8px;padding:.4rem .5rem;margin-bottom:.6rem;
+    align-items:center;
+  }
+  .cp-prog-empty{
+    font-family:'DM Mono',monospace;font-size:.62rem;
+    color:var(--text-light);font-style:italic;
+  }
+  .cp-prog-chord{
+    display:flex;align-items:center;gap:.25rem;
+    background:var(--white);border:1.5px solid var(--gold);
+    border-radius:6px;padding:.25rem .45rem;
+    font-family:'DM Mono',monospace;font-size:.72rem;font-weight:600;color:var(--text);
+  }
+  .cp-prog-chord .cp-prog-x{
+    color:var(--text-light);cursor:pointer;font-size:.65rem;
+    padding:0 .1rem;transition:color .15s;
+  }
+  .cp-prog-chord .cp-prog-x:hover{ color:var(--red); }
+  .cp-prog-arrow{
+    font-family:'DM Mono',monospace;font-size:.6rem;color:var(--text-light);
+  }
+  .cp-prog-controls{
+    display:flex;gap:.4rem;margin-bottom:.5rem;
+  }
+  .cp-prog-btn{
+    flex:1;padding:.5rem .3rem;border-radius:8px;
+    border:1.5px solid var(--cream-dark);background:var(--cream);
+    font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;
+    color:var(--text-mid);cursor:pointer;transition:all .18s;text-align:center;
+  }
+  .cp-prog-btn.play{ border-color:var(--red);color:var(--red);background:rgba(217,64,37,0.06); }
+  .cp-prog-btn.play:hover{ background:rgba(217,64,37,0.12); }
+  .cp-prog-btn.vizi{ border-color:var(--blue);color:var(--blue);background:rgba(27,79,138,0.05); }
+  .cp-prog-btn.vizi:hover{ background:rgba(27,79,138,0.12); }
+  .cp-prog-btn.clear{ color:var(--text-light); }
+  .cp-prog-btn:disabled{ opacity:.4;cursor:not-allowed; }
+  .cp-loop-row{
+    display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem;
+  }
+  .cp-loop-label{
+    font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--text-light);flex:1;
+  }
+  .cp-loop-toggle{
+    width:36px;height:20px;border-radius:10px;
+    background:var(--cream-dark);cursor:pointer;
+    position:relative;transition:background .2s;border:none;
+    flex-shrink:0;
+  }
+  .cp-loop-toggle.on{ background:var(--green); }
+  .cp-loop-toggle::after{
+    content:'';position:absolute;
+    width:14px;height:14px;border-radius:50%;
+    background:white;top:3px;left:3px;
+    transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);
+  }
+  .cp-loop-toggle.on::after{ left:19px; }
+  .cp-prog-status{
+    font-family:'DM Mono',monospace;font-size:.6rem;
+    color:var(--text-light);text-align:center;
+    min-height:1.3em;padding:.25rem;
+  }
+
 </style>
 </head>
 <body>
@@ -808,22 +1099,22 @@
       exercises:[]
     },
     {
-      id:'open-chords', num:4, label:'Open Chords',
-      desc:'Learn the core open chord shapes — G, C, D, A, E and their minors.',
-      video:'lesson_open_chords_intro.mp4',
+      id:'chords', num:4, label:'Chords',
+      desc:'Open chords, barre chords, and triads — explore any chord, build progressions, and filter by scale.',
+      video:'lesson_chords_intro.mp4',
       tips:[
         "Press only as hard as needed to stop the buzz — squeezing harder just tires your hand.",
         "Curl your fretting fingers like you're holding a small ball, not flat across the strings.",
         "Practice forming one chord, releasing fully, and reforming it — that's the real skill.",
         "It's normal for fingertips to hurt the first 1-2 weeks. Calluses build fast after that.",
         "Strum slowly and listen for any muted or buzzing string — that tells you which finger to fix.",
-        "Your thumb belongs behind the neck, roughly behind your middle finger.",
-        "Learn one chord deeply before adding a second — depth beats breadth early on.",
-        "If a chord sounds muddy, check that no finger is accidentally touching a neighboring string.",
         "G and C share a finger position — learning them together speeds up both.",
-        "A chord chart's dots show finger position, not pressure — pressure comes from practice."
+        "Barre chords take real hand strength — short daily practice beats one long session.",
+        "Roll your barre finger slightly onto its side — flat-on-the-fret rarely works well.",
+        "Triads are 3-note mini-chords — lighter on the hand and great for rhythm playing.",
+        "Building a chord progression and looping it is one of the fastest ways to improve transitions."
       ],
-      exercises:['Form G major, check each string','Form C major, check each string','Form D major, check each string','Form E minor, check each string']
+      exercises:[]
     },
     {
       id:'chord-theory', num:3, label:'How Chords Are Built',
@@ -844,25 +1135,7 @@
       exercises:[]
     },
     {
-      id:'transitions', num:5, label:'Chord Transitions',
-      desc:"Move smoothly between chords — this is where most beginners get stuck, and where consistent practice pays off fastest.",
-      video:'lesson_transitions_intro.mp4',
-      tips:[
-        "Practice just two chords at a time — G to C, then C to G — before adding a third.",
-        "Look for a pivot finger that stays on the same string between two chords.",
-        "It's fine to stop strumming during a slow change at first — timing comes after accuracy.",
-        "Move your fingers as a shape, together, rather than one at a time.",
-        "Practice the change in silence first — just the hand motion, no strumming.",
-        "Speed comes from smaller finger movements, not faster effort.",
-        "A common beginner habit is lifting fingers too high between chords — keep them close to the strings.",
-        "Loop a single hard transition 10 times slowly rather than playing the whole song fast.",
-        "G-D-Em-C is one of the most common progressions in popular music — worth mastering early.",
-        "If a transition feels impossible, it usually just needs more reps, not a different technique."
-      ],
-      exercises:[]
-    },
-    {
-      id:'strumming', num:6, label:'Strumming Patterns',
+      id:'strumming', num:5, label:'Strumming Patterns',
       desc:"Combine the timing and chords you've built into real strumming patterns.",
       video:'lesson_strumming_intro.mp4',
       tips:[
@@ -880,48 +1153,7 @@
       exercises:[]
     },
     {
-      id:'barre-triads', num:7, label:'Barre Chords & Triads',
-      desc:'Move beyond open position with moveable shapes that work anywhere on the neck.',
-      video:'lesson_barre_intro.mp4',
-      tips:[
-        "Roll your barre finger slightly onto its side — flat-on-the-fret rarely works well.",
-        "Barre chords take real hand strength — short daily practice beats one long session.",
-        "Position your barre finger right against the fret wire, not in the middle of the fret.",
-        "If a barre buzzes, check your thumb position behind the neck first.",
-        "E-shape and A-shape barre chords cover most of the neck once learned.",
-        "Triads (3-note chord shapes) are lighter on the hand than full barre chords — good for fast songs.",
-        "Practice barre chords for short bursts; hand fatigue affects technique fast.",
-        "A slight wrist rotation toward the headstock can add barre pressure without more grip force.",
-        "Moveable shapes mean once you learn one, you've learned it in all 12 keys.",
-        "It's normal for barre chords to take weeks longer than open chords to feel solid."
-      ],
-      exercises:[]
-    },
-    {
-      id:'arpeggios', num:8, label:'Arpeggios',
-      desc:'Play the notes of a chord one at a time — root, third, fifth — to build finger independence and understand chord structure through sound.',
-      video:'lesson_arpeggios_intro.mp4',
-      tips:[
-        "An arpeggio is just the notes of a chord played one at a time — nothing more mysterious than that.",
-        "Start with a C major arpeggio: C, E, G. Find those three notes and pick them slowly in order.",
-        "Arpeggios are one of the best ways to check your chord finger placement — a buzzing note is easy to hear when picking one at a time.",
-        "Use a pick for a cleaner, more distinct sound, or fingerpick for a softer, more connected feel.",
-        "Practice ascending and descending — up through the notes, then back down.",
-        "Once you can play an arpeggio cleanly, try the same shape up the neck as a barre — same three notes, just moved.",
-        "The root note in the arpeggio is the one that names the chord — make it the strongest note.",
-        "Classical guitar and fingerstyle are built almost entirely on arpeggios — a foundational technique.",
-        "Slow arpeggios reveal everything your chord hand is doing wrong that strumming hides.",
-        "Try alternating bass-style: pick the root with your thumb, then the third and fifth with your fingers."
-      ],
-      exercises:[
-        'C major arpeggio: C E G, ascending and descending',
-        'G major arpeggio: G B D, three strings',
-        'A minor arpeggio: A C E',
-        'Play G-C-D progression as arpeggios at 60 BPM'
-      ]
-    },
-    {
-      id:'soloing', num:9, label:'Soloing & Scales',
+      id:'soloing', num:6, label:'Soloing & Scales',
       desc:'Warm up with scales and start playing single-note lines and simple solos.',
       video:'lesson_soloing_intro.mp4',
       tips:[
@@ -939,7 +1171,7 @@
       exercises:[]
     },
     {
-      id:'song', num:10, label:'Play a Song',
+      id:'song', num:7,  label:'Play a Song',
       desc:'Put everything together — upload a song sheet and Vizi will walk you through every chord on your fretboard.',
       video:'lesson_song_intro.mp4',
       tips:[
@@ -1737,10 +1969,512 @@
     }
   }
 
+
+  // ── OPEN CHORDS PANEL (Stage 4) ─────────────────────────────
+  const OC_CHORDS = {
+    'Major': [('A', 'open'), ('A#/Bb', 'barre'), ('B', 'barre'), ('C', 'open'), ('C#/Db', 'barre'), ('D', 'open'), ('D#/Eb', 'barre'), ('E', 'open'), ('F', 'barre'), ('F#/Gb', 'barre'), ('G', 'open'), ('G#/Ab', 'barre')],
+    'Minor': [('Am', 'open'), ('A#m/Bbm', 'barre'), ('Bm', 'barre'), ('Cm', 'barre'), ('C#m/Dbm', 'barre'), ('Dm', 'open'), ('D#m/Ebm', 'barre'), ('Em', 'open'), ('Fm', 'barre'), ('F#m/Gbm', 'barre'), ('Gm', 'barre'), ('G#m/Abm', 'barre')],
+    '7th — Major': [('Amaj7', 'open'), ('Bbmaj7', 'barre'), ('Bmaj7', 'barre'), ('Cmaj7', 'open'), ('Dmaj7', 'open'), ('Emaj7', 'open'), ('Fmaj7', 'open'), ('Gmaj7', 'open'), ('G#maj7', 'barre')],
+    '7th — Minor': [('Am7', 'open'), ('Bm7', 'barre'), ('Cm7', 'barre'), ('Dm7', 'open'), ('Em7', 'open'), ('Fm7', 'barre'), ('Gm7', 'barre')],
+  };
+
+  let ocActiveTab = 'Major';
+  let ocSelectedChord = null;
+
+  function renderOpenChordsPanel(){
+    exList.innerHTML='';
+
+    // Tabs
+    const tabRow=document.createElement('div'); tabRow.className='oc-tabs';
+    Object.keys(OC_CHORDS).forEach(tab=>{
+      const btn=document.createElement('button'); btn.className='oc-tab'+(tab===ocActiveTab?' active':'');
+      btn.textContent=tab;
+      btn.addEventListener('click',()=>{
+        ocActiveTab=tab; ocSelectedChord=null;
+        renderOpenChordsPanel();
+      });
+      tabRow.appendChild(btn);
+    });
+    exList.appendChild(tabRow);
+
+    // Chord grid
+    const grid=document.createElement('div'); grid.className='oc-chord-grid';
+    OC_CHORDS[ocActiveTab].forEach(([chord, type])=>{
+      const btn=document.createElement('button');
+      btn.className='oc-chord-btn'+(type==='barre'?' barre':'')+(ocSelectedChord===chord?' selected':'');
+      btn.textContent=chord;
+      if(type==='barre'){
+        btn.disabled=true;
+        btn.title='Barre chord — see Stage 7';
+      } else {
+        btn.addEventListener('click',()=>{
+          ocSelectedChord=chord;
+          document.querySelectorAll('.oc-chord-btn').forEach(b=>b.classList.remove('selected'));
+          btn.classList.add('selected');
+          showOcActionRow(chord);
+          document.getElementById('ocBarreHint').classList.remove('show');
+        });
+      }
+      grid.appendChild(btn);
+    });
+    exList.appendChild(grid);
+
+    // Barre hint
+    const barreHint=document.createElement('div'); barreHint.className='oc-barre-hint'; barreHint.id='ocBarreHint';
+    barreHint.textContent='Greyed out chords are barre chords — head to Stage 7 to learn those with Vizi.';
+    exList.appendChild(barreHint);
+
+    // Action row (hidden until chord selected)
+    const actionRow=document.createElement('div'); actionRow.className='oc-action-row'; actionRow.id='ocActionRow';
+    const selLabel=document.createElement('div'); selLabel.className='oc-selected-label'; selLabel.textContent='You selected';
+    const selName=document.createElement('div'); selName.className='oc-selected-name'; selName.id='ocSelName'; selName.textContent='—';
+    const btnRow=document.createElement('div'); btnRow.className='oc-btn-row';
+    const chordBtn=document.createElement('button'); chordBtn.className='oc-action-btn chord-btn-oc'; chordBtn.textContent='🎸 Chord';
+    const arpBtn=document.createElement('button'); arpBtn.className='oc-action-btn arpeggio-btn-oc'; arpBtn.textContent='🎵 Arpeggio';
+    btnRow.appendChild(chordBtn); btnRow.appendChild(arpBtn);
+    actionRow.appendChild(selLabel); actionRow.appendChild(selName);
+    actionRow.appendChild(btnRow);
+    const fretStatus=document.createElement('div'); fretStatus.className='oc-fret-status'; fretStatus.id='ocFretStatus';
+    actionRow.appendChild(fretStatus);
+    exList.appendChild(actionRow);
+
+    chordBtn.addEventListener('click',()=>{
+      if(!ocSelectedChord)return;
+      navigateToVizi('open-chords', ocSelectedChord+' — Chord');
+    });
+    arpBtn.addEventListener('click',()=>{
+      if(!ocSelectedChord)return;
+      navigateToVizi('open-chords', ocSelectedChord+' — Arpeggio');
+    });
+
+    // Restore selection if any
+    if(ocSelectedChord) showOcActionRow(ocSelectedChord);
+
+    // Show barre hint if any barre chords in current tab
+    const hasBarres = OC_CHORDS[ocActiveTab].some(([,t])=>t==='barre');
+    if(hasBarres) document.getElementById('ocBarreHint').classList.add('show');
+  }
+
+  function showOcActionRow(chord){
+    const row=document.getElementById('ocActionRow');
+    const name=document.getElementById('ocSelName');
+    if(row){ row.classList.add('show'); }
+    if(name){ name.textContent=chord; }
+  }
+
+  function navigateToVizi(stage, exercise){
+    const p=new URLSearchParams({stage, exercise});
+    window.location.href='vizi.html?'+p.toString();
+  }
+
+
+  // Diatonic chord sets — which chords naturally belong to each scale
+  const DIATONIC = {
+    'G Major':  ['G','Am','Bm','C','D','Em','F#dim'],
+    'C Major':  ['C','Dm','Em','F','G','Am','Bdim'],
+    'D Major':  ['D','Em','F#m','G','A','Bm','C#dim'],
+    'A Major':  ['A','Bm','C#m','D','E','F#m','G#dim'],
+    'E Major':  ['E','F#m','G#m','A','B','C#m','D#dim'],
+    'A Minor':  ['Am','Bdim','C','Dm','Em','F','G'],
+    'E Minor':  ['Em','F#dim','G','Am','Bm','C','D'],
+    'D Minor':  ['Dm','Edim','F','Gm','Am','Bb','C'],
+  };
+
+  // Open chord voicings
+  const OPEN_VOICINGS = {
+    'A':'CHORD A','C':'CHORD C','D':'CHORD D','E':'CHORD E',
+    'G':'CHORD G','F':'CHORD F','B':'CHORD B',
+    'Am':'CHORD Am','Dm':'CHORD Dm','Em':'CHORD Em',
+    'Bm':'CHORD Bm','Gm':'CHORD Gm',
+    'Amaj7':'CHORD Amaj7','Cmaj7':'CHORD Cmaj7','Dmaj7':'CHORD Dmaj7',
+    'Emaj7':'CHORD Emaj7','Fmaj7':'CHORD Fmaj7','Gmaj7':'CHORD Gmaj7',
+    'Am7':'CHORD Am7','Dm7':'CHORD Dm7','Em7':'CHORD Em7',
+    'G7':'CHORD G7','C7':'CHORD C7','D7':'CHORD D7',
+    'E7':'CHORD E7','A7':'CHORD A7','B7':'CHORD B7',
+  };
+
+  // All 12 chromatic chords per type
+  const ALL_CHORDS = {
+    'Major': [
+      {n:'A',open:true},{n:'A#/Bb',open:false},{n:'B',open:false},
+      {n:'C',open:true},{n:'C#/Db',open:false},{n:'D',open:true},
+      {n:'D#/Eb',open:false},{n:'E',open:true},{n:'F',open:false},
+      {n:'F#/Gb',open:false},{n:'G',open:true},{n:'G#/Ab',open:false},
+    ],
+    'Minor': [
+      {n:'Am',open:true},{n:'A#m/Bbm',open:false},{n:'Bm',open:false},
+      {n:'Cm',open:false},{n:'C#m/Dbm',open:false},{n:'Dm',open:true},
+      {n:'D#m/Ebm',open:false},{n:'Em',open:true},{n:'Fm',open:false},
+      {n:'F#m/Gbm',open:false},{n:'Gm',open:false},{n:'G#m/Abm',open:false},
+    ],
+    'Major 7th': [
+      {n:'Amaj7',open:true},{n:'Bbmaj7',open:false},{n:'Bmaj7',open:false},
+      {n:'Cmaj7',open:true},{n:'Dmaj7',open:true},{n:'Emaj7',open:true},
+      {n:'Fmaj7',open:true},{n:'Gmaj7',open:true},{n:'G#maj7',open:false},
+    ],
+    'Minor 7th': [
+      {n:'Am7',open:true},{n:'Bm7',open:false},{n:'Cm7',open:false},
+      {n:'Dm7',open:true},{n:'Em7',open:true},{n:'Fm7',open:false},{n:'Gm7',open:false},
+    ],
+  };
+
+  const BARRE_SHAPES = ['E Shape','A Shape','C Shape','G Shape','D Shape'];
+  const CHROMATIC_ROOTS = ['C','C#/Db','D','D#/Eb','E','F','F#/Gb','G','G#/Ab','A','A#/Bb','B'];
+  const TRIAD_GROUPS_CP = [
+    { label:'Root on High E', key:'hie' },
+    { label:'Root on B',      key:'b'   },
+    { label:'Root on G',      key:'g'   },
+  ];
+
+  // Progression state
+  let cpProgression = [];
+  let cpLooping = false;
+  let cpPlayTimer = null;
+  let cpActiveTab = 'Major';
+  let cpActiveScale = null;
+  let cpBarreShape = null;
+  let cpBarreRoot = null;
+  let cpTriadGroup = null;
+  let cpTriadRoot = null;
+  let cpSelectedChord = null;
+
+  function renderChordsPanel(){
+    exList.innerHTML='';
+
+    // ── Scale filter toggle ──
+    const filterHead=document.createElement('div'); filterHead.className='cp-section-head';
+    filterHead.innerHTML='<span>Scale Filter</span>';
+    const filterToggle=document.createElement('button'); filterToggle.className='cp-section-toggle';
+    filterToggle.textContent=cpActiveScale?'On — '+cpActiveScale:'Off';
+    filterToggle.style.color=cpActiveScale?'var(--teal)':'';
+    filterToggle.style.borderColor=cpActiveScale?'var(--teal)':'';
+    filterHead.appendChild(filterToggle);
+    exList.appendChild(filterHead);
+
+    const filterPanel=document.createElement('div');
+    filterPanel.className='cp-scale-filter'+(cpActiveScale?' show':'');
+    filterPanel.id='cpScaleFilter';
+    const filterLabel=document.createElement('span'); filterLabel.className='cp-scale-filter-label';
+    filterLabel.textContent='Show only chords from this scale';
+    filterPanel.appendChild(filterLabel);
+    const scaleGrid=document.createElement('div'); scaleGrid.className='cp-scale-grid';
+    Object.keys(DIATONIC).forEach(scale=>{
+      const btn=document.createElement('button'); btn.className='cp-scale-btn'+(cpActiveScale===scale?' active':'');
+      btn.textContent=scale;
+      btn.addEventListener('click',()=>{
+        cpActiveScale=cpActiveScale===scale?null:scale;
+        renderChordsPanel();
+      });
+      scaleGrid.appendChild(btn);
+    });
+    filterPanel.appendChild(scaleGrid);
+    if(cpActiveScale){
+      const hint=document.createElement('div'); hint.className='cp-filter-hint';
+      hint.textContent='Teal chords belong to '+cpActiveScale+'. Others are still tappable.';
+      filterPanel.appendChild(hint);
+    }
+    exList.appendChild(filterPanel);
+
+    filterToggle.addEventListener('click',()=>{
+      filterPanel.classList.toggle('show');
+    });
+
+    // ── SECTION 1: Open Chords ──
+    const ocHead=document.createElement('div'); ocHead.className='cp-section-head';
+    ocHead.innerHTML='<span>Open Chords</span>';
+    exList.appendChild(ocHead);
+
+    const tabs=document.createElement('div'); tabs.className='cp-tabs';
+    Object.keys(ALL_CHORDS).forEach(tab=>{
+      const btn=document.createElement('button'); btn.className='cp-tab'+(tab===cpActiveTab?' active':'');
+      btn.textContent=tab;
+      btn.addEventListener('click',()=>{ cpActiveTab=tab; renderChordsPanel(); });
+      tabs.appendChild(btn);
+    });
+    exList.appendChild(tabs);
+
+    const chordGrid=document.createElement('div'); chordGrid.className='cp-chord-grid';
+    const diatonicSet=cpActiveScale?DIATONIC[cpActiveScale]:null;
+    ALL_CHORDS[cpActiveTab].forEach(({n,open})=>{
+      const btn=document.createElement('button');
+      const inScale=diatonicSet&&diatonicSet.some(d=>d.replace('dim','').replace('m','')===n.replace('m','').replace('maj7','').replace('7','').replace('/','').split('/')[0]);
+      const inProg=cpProgression.some(p=>p.label===n);
+      btn.className='cp-chord-btn'+(open?'':' barre-chord')+(inScale?' in-scale':'')+(inProg?' in-progression':'');
+      btn.textContent=n;
+      if(inProg){
+        const badge=document.createElement('span'); badge.className='cp-badge';
+        badge.textContent=cpProgression.filter(p=>p.label===n).length;
+        btn.appendChild(badge);
+      }
+      if(!open){
+        btn.disabled=true;
+        btn.title='Barre chord — use the Barre section below';
+      } else {
+        btn.addEventListener('click',()=>{
+          cpSelectedChord={label:n, cmd:OPEN_VOICINGS[n]||'CHORD '+n, type:'open'};
+          showChordActions(exList);
+        });
+      }
+      chordGrid.appendChild(btn);
+    });
+    exList.appendChild(chordGrid);
+
+    const barreNote=document.createElement('div');
+    barreNote.style.cssText='font-size:.7rem;color:var(--text-light);margin-bottom:.85rem;text-align:center;';
+    barreNote.textContent='Greyed = barre chord — see Barre section below';
+    exList.appendChild(barreNote);
+
+    // ── SECTION 2: Barre Chords ──
+    const bcHead=document.createElement('div'); bcHead.className='cp-section-head';
+    bcHead.innerHTML='<span>Barre Chords — pick shape then root</span>';
+    exList.appendChild(bcHead);
+
+    const barreWrap=document.createElement('div'); barreWrap.className='cp-barre-wrap';
+    const shapes=document.createElement('div'); shapes.className='cp-barre-shapes';
+    BARRE_SHAPES.forEach(shape=>{
+      const btn=document.createElement('button');
+      btn.className='cp-shape-btn'+(cpBarreShape===shape?' active':'');
+      btn.textContent=shape;
+      btn.addEventListener('click',()=>{ cpBarreShape=shape; renderChordsPanel(); });
+      shapes.appendChild(btn);
+    });
+    barreWrap.appendChild(shapes);
+
+    if(cpBarreShape){
+      const rootGrid=document.createElement('div'); rootGrid.className='cp-root-grid';
+      CHROMATIC_ROOTS.forEach(root=>{
+        const btn=document.createElement('button');
+        btn.className='cp-root-btn'+(cpBarreRoot===root?' active':'');
+        btn.textContent=root;
+        btn.addEventListener('click',()=>{
+          cpBarreRoot=root;
+          const cleanRoot=root.replace('/','').split('/')[0];
+          cpSelectedChord={
+            label:cleanRoot+' ('+cpBarreShape+')',
+            cmd:'CHORD '+cleanRoot,
+            type:'barre',
+            shape:cpBarreShape,
+            root:root
+          };
+          renderChordsPanel();
+          showChordActions(exList);
+        });
+        rootGrid.appendChild(btn);
+      });
+      barreWrap.appendChild(rootGrid);
+    } else {
+      const hint=document.createElement('div');
+      hint.style.cssText='font-size:.74rem;color:var(--text-light);padding:.4rem 0 .6rem;';
+      hint.textContent='Tap a shape first, then pick your root note';
+      barreWrap.appendChild(hint);
+    }
+    exList.appendChild(barreWrap);
+
+    // ── SECTION 3: Triads ──
+    const triHead=document.createElement('div'); triHead.className='cp-section-head';
+    triHead.innerHTML='<span>Triads — pick string group then root</span>';
+    exList.appendChild(triHead);
+
+    const triadGroupRow=document.createElement('div'); triadGroupRow.className='cp-tabs';
+    TRIAD_GROUPS_CP.forEach(grp=>{
+      const btn=document.createElement('button');
+      btn.className='cp-tab'+(cpTriadGroup===grp.key?' active':'');
+      btn.textContent=grp.label;
+      btn.addEventListener('click',()=>{ cpTriadGroup=grp.key; renderChordsPanel(); });
+      triadGroupRow.appendChild(btn);
+    });
+    exList.appendChild(triadGroupRow);
+
+    if(cpTriadGroup){
+      const triadRootGrid=document.createElement('div'); triadRootGrid.className='cp-root-grid';
+      CHROMATIC_ROOTS.forEach(root=>{
+        const btn=document.createElement('button');
+        btn.className='cp-root-btn'+(cpTriadRoot===root?' active':'');
+        btn.textContent=root;
+        btn.addEventListener('click',()=>{
+          cpTriadRoot=root;
+          const cleanRoot=root.replace('/','').split('/')[0];
+          // Show major/minor choice
+          cpSelectedChord=null;
+          renderChordsPanel();
+          // Show triad type picker
+          showTriadTypePicker(cleanRoot, cpTriadGroup, exList);
+        });
+        triadRootGrid.appendChild(btn);
+      });
+      exList.appendChild(triadRootGrid);
+
+      if(cpTriadRoot){
+        const cleanRoot=cpTriadRoot.replace('/','').split('/')[0];
+        showTriadTypePicker(cleanRoot, cpTriadGroup, exList);
+      }
+    } else {
+      const hint=document.createElement('div');
+      hint.style.cssText='font-size:.74rem;color:var(--text-light);padding:.4rem 0 .6rem;';
+      hint.textContent='Tap a string group to choose where the root sits';
+      exList.appendChild(hint);
+    }
+
+    // ── Chord action panel (shows after selection) ──
+    const actionWrap=document.createElement('div');
+    actionWrap.className='cp-chord-actions'; actionWrap.id='cpChordActions';
+    const selName=document.createElement('div'); selName.className='cp-selected-chord'; selName.id='cpSelName';
+    selName.textContent=cpSelectedChord?cpSelectedChord.label:'';
+    const actBtns=document.createElement('div'); actBtns.className='cp-action-btns';
+    const sendBtn=document.createElement('button'); sendBtn.className='cp-action-btn send'; sendBtn.textContent='🎸 Light Chord';
+    const progBtn=document.createElement('button'); progBtn.className='cp-action-btn prog'; progBtn.textContent='+ Add to Progression';
+    const arpBtn=document.createElement('button'); arpBtn.className='cp-action-btn arp'; arpBtn.textContent='🎵 Arpeggio';
+    actBtns.appendChild(sendBtn); actBtns.appendChild(progBtn); actBtns.appendChild(arpBtn);
+    actionWrap.appendChild(selName); actionWrap.appendChild(actBtns);
+    if(cpSelectedChord) actionWrap.classList.add('show');
+    exList.appendChild(actionWrap);
+
+    sendBtn.addEventListener('click',()=>{
+      if(!cpSelectedChord)return;
+      goToVizi('chords', cpSelectedChord.label+' — Chord');
+    });
+    arpBtn.addEventListener('click',()=>{
+      if(!cpSelectedChord)return;
+      goToVizi('chords', cpSelectedChord.label+' — Arpeggio');
+    });
+    progBtn.addEventListener('click',()=>{
+      if(!cpSelectedChord)return;
+      cpProgression.push({...cpSelectedChord});
+      updateProgBar();
+    });
+
+    // ── PROGRESSION BUILDER ──
+    const progSection=document.createElement('div'); progSection.className='cp-prog-section';
+    const progLabel=document.createElement('span'); progLabel.className='cp-prog-label';
+    progLabel.textContent='Progression';
+    progSection.appendChild(progLabel);
+
+    const progBar=document.createElement('div'); progBar.className='cp-prog-bar'; progBar.id='cpProgBar';
+    buildProgBar(progBar);
+    progSection.appendChild(progBar);
+
+    const loopRow=document.createElement('div'); loopRow.className='cp-loop-row';
+    const loopLabel=document.createElement('span'); loopLabel.className='cp-loop-label'; loopLabel.textContent='Loop';
+    const loopToggle=document.createElement('button'); loopToggle.className='cp-loop-toggle'+(cpLooping?' on':''); loopToggle.id='cpLoopToggle';
+    loopToggle.addEventListener('click',()=>{ cpLooping=!cpLooping; loopToggle.classList.toggle('on',cpLooping); });
+    loopRow.appendChild(loopLabel); loopRow.appendChild(loopToggle);
+    progSection.appendChild(loopRow);
+
+    const progControls=document.createElement('div'); progControls.className='cp-prog-controls';
+    const playBtn2=document.createElement('button'); playBtn2.className='cp-prog-btn play'; playBtn2.textContent='▶ Play Progression';
+    const viziBtn2=document.createElement('button'); viziBtn2.className='cp-prog-btn vizi'; viziBtn2.textContent='Ask Vizi →';
+    const clearBtn2=document.createElement('button'); clearBtn2.className='cp-prog-btn clear'; clearBtn2.textContent='Clear';
+    playBtn2.disabled=cpProgression.length<1;
+    viziBtn2.disabled=cpProgression.length<1;
+    progControls.appendChild(playBtn2); progControls.appendChild(viziBtn2); progControls.appendChild(clearBtn2);
+    progSection.appendChild(progControls);
+
+    const progStatus=document.createElement('div'); progStatus.className='cp-prog-status'; progStatus.id='cpProgStatus';
+    progSection.appendChild(progStatus);
+    exList.appendChild(progSection);
+
+    playBtn2.addEventListener('click',()=>playProgression(progStatus));
+    viziBtn2.addEventListener('click',()=>{
+      if(!cpProgression.length)return;
+      const progStr=cpProgression.map(p=>p.label).join(' → ');
+      goToVizi('chords','Progression: '+progStr);
+    });
+    clearBtn2.addEventListener('click',()=>{
+      cpProgression=[]; cpPlayTimer=null;
+      renderChordsPanel();
+    });
+  }
+
+  function showTriadTypePicker(root, group, container){
+    // Remove existing picker if any
+    const old=container.querySelector('#cpTriadTypePicker');
+    if(old) old.remove();
+    const picker=document.createElement('div'); picker.id='cpTriadTypePicker';
+    picker.style.cssText='display:flex;gap:.4rem;margin:.5rem 0 .85rem;';
+    ['Major','Minor'].forEach(type=>{
+      const btn=document.createElement('button');
+      btn.style.cssText='flex:1;padding:.5rem;border-radius:8px;font-family:"DM Mono",monospace;font-size:.7rem;font-weight:600;cursor:pointer;border:1.5px solid var(--cream-dark);background:var(--white);transition:all .18s;';
+      btn.textContent=root+' '+type+' Triad';
+      btn.style.borderColor=type==='Major'?'rgba(232,160,32,0.6)':'rgba(27,79,138,0.4)';
+      btn.style.color=type==='Major'?'#BA7517':'var(--blue)';
+      btn.addEventListener('click',()=>{
+        const grpUp=group.toUpperCase();
+        cpSelectedChord={
+          label:root+' '+type+' Triad ('+group.toUpperCase()+')',
+          cmd:'TRIAD '+grpUp+' '+root+(type==='Minor'?'M':''),
+          type:'triad'
+        };
+        document.getElementById('cpSelName').textContent=cpSelectedChord.label;
+        document.getElementById('cpChordActions').classList.add('show');
+      });
+      picker.appendChild(btn);
+    });
+    container.appendChild(picker);
+  }
+
+  function showChordActions(container){
+    const el=document.getElementById('cpChordActions');
+    const nm=document.getElementById('cpSelName');
+    if(el){ el.classList.add('show'); }
+    if(nm&&cpSelectedChord){ nm.textContent=cpSelectedChord.label; }
+  }
+
+  function buildProgBar(bar){
+    bar.innerHTML='';
+    if(!cpProgression.length){
+      const empty=document.createElement('span'); empty.className='cp-prog-empty';
+      empty.textContent='Tap a chord then "+ Add to Progression"';
+      bar.appendChild(empty); return;
+    }
+    cpProgression.forEach((ch,i)=>{
+      const item=document.createElement('div'); item.className='cp-prog-chord';
+      const lbl=document.createElement('span'); lbl.textContent=ch.label;
+      const x=document.createElement('span'); x.className='cp-prog-x'; x.textContent='×';
+      x.addEventListener('click',()=>{ cpProgression.splice(i,1); updateProgBar(); });
+      item.appendChild(lbl); item.appendChild(x);
+      bar.appendChild(item);
+      if(i<cpProgression.length-1){
+        const arr=document.createElement('span'); arr.className='cp-prog-arrow'; arr.textContent='→';
+        bar.appendChild(arr);
+      }
+    });
+  }
+
+  function updateProgBar(){
+    const bar=document.getElementById('cpProgBar');
+    if(bar) buildProgBar(bar);
+    const playBtn=document.querySelector('.cp-prog-btn.play');
+    const viziBtn=document.querySelector('.cp-prog-btn.vizi');
+    if(playBtn) playBtn.disabled=cpProgression.length<1;
+    if(viziBtn) viziBtn.disabled=cpProgression.length<1;
+  }
+
+  async function playProgression(statusEl){
+    if(!cpProgression.length)return;
+    let i=0;
+    const step=async()=>{
+      if(i>=cpProgression.length){
+        if(cpLooping){ i=0; cpPlayTimer=setTimeout(step,1000); }
+        else{ if(statusEl) statusEl.textContent='Done'; }
+        return;
+      }
+      const ch=cpProgression[i];
+      if(statusEl){ statusEl.textContent='Playing: '+ch.label+'...'; statusEl.style.color='var(--gold)'; }
+      // Send to Vizi pipeline
+      goToVizi('chords','Progression step: '+ch.label+' — Chord');
+    };
+    step();
+  }
+
+  function goToVizi(stage, exercise){
+    const p=new URLSearchParams({stage,exercise});
+    window.location.href='vizi.html?'+p.toString();
+  }
+
   function renderChoicePanel(stage){
     if (stage.id==='strumming'){ renderStrummingPanel(); return; }
-    if (stage.id==='barre-triads'){ renderBarreTriadsPanel(CHOICE_PANELS[stage.id]); return; }
     if (stage.id==='chord-theory'){ renderChordBuilder(); return; }
+    if (stage.id==='chords'){ renderChordsPanel(); return; }
     const def = CHOICE_PANELS[stage.id];
     exList.innerHTML = '';
     const label = document.createElement('span');
@@ -1830,7 +2564,7 @@
   }
 
   function renderExercises(stage){
-    if (CHOICE_PANELS[stage.id]||stage.id==='strumming'||stage.id==='chord-theory'){ renderChoicePanel(stage); return; }
+    if (CHOICE_PANELS[stage.id]||stage.id==='strumming'||stage.id==='chord-theory'||stage.id==='chords'){ renderChoicePanel(stage); return; }
     const p = getProgress();
     const done = (p[stage.id] && p[stage.id].exercisesDone) || [];
     exList.innerHTML = '';

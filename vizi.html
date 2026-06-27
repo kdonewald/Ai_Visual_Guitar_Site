@@ -702,12 +702,9 @@
       'tuning':       'Tuning & Setup',
       'warmup':       'Warmup with Scales',
       'rhythm':       'Rhythm Foundations',
-      'open-chords':  'Open Chords',
+      'chords':       'Chords',
       'chord-theory': 'How Chords Are Built',
-      'transitions':  'Chord Transitions',
-      'arpeggios':    'Arpeggios',
       'strumming':    'Strumming Patterns',
-      'barre-triads': 'Barre Chords & Triads',
       'soloing':      'Soloing & Scales',
       'song':         'Play a Song'
     };
@@ -731,38 +728,97 @@
     }, { once: true });
 
     // Build stage-specific context so Vizi knows exactly what the student chose
-    const choicePanelStages = ['open-chords','strumming','barre-triads','arpeggios'];
+    const choicePanelStages = ['chords','strumming'];
     const isChoicePanel = choicePanelStages.includes(stageId);
 
     // Stage-specific instructions for Vizi
     const stageInstructions = {
-      'open-chords':  'The student chose "' + exerciseName + '". Show them 2-3 open chord examples of this type, light each one on the fretboard using CHORD commands, and suggest a simple exercise to practice forming and switching between them.',
+      'chords': (()=>{
+        const isArpeggio = exerciseName.includes('Arpeggio');
+        const isProgression = exerciseName.startsWith('Progression:') || exerciseName.startsWith('Progression step:');
+        const isTriad = exerciseName.includes('Triad');
+        const isBarre = exerciseName.includes('Shape)');
+
+        if(isProgression){
+          // Playing through a progression
+          const progStr = exerciseName.replace('Progression:','').replace('Progression step:','').trim();
+          const isSingleStep = exerciseName.startsWith('Progression step:');
+          if(isSingleStep){
+            // Single chord in progression — just light it
+            const chordPart = progStr.replace(' — Chord','').replace(' — Arpeggio','').trim();
+            const cleanCmd = chordPart.replace(/ \(.*\)/,'').replace('/','').split('/')[0];
+            return 'Light the chord on the fretboard: CHORD '+cleanCmd+'. '
+              +'Say the chord name and one note — keep it to one sentence.';
+          }
+          return 'The student built this chord progression: '+progStr+'. '
+            +'Walk through each chord one at a time — light each with a CHORD command, '
+            +'name it, and give one tip about the transition to the next chord. '
+            +'Tell them which scale this progression comes from if you recognise it. '
+            +'Keep each chord description to one sentence.';
+        }
+
+        if(isTriad){
+          const isMajor = exerciseName.includes('Major');
+          const isArpTriad = isArpeggio;
+          const grpMatch = exerciseName.match(/\((\w+)\)/);
+          const grp = grpMatch ? grpMatch[1].toUpperCase() : 'HIE';
+          const rootMatch = exerciseName.match(/^(\w+(?:#\/\w+)?)\s/);
+          const root = rootMatch ? rootMatch[1].replace('/','').split('/')[0] : 'G';
+          const quality = isMajor?'major':'minor';
+          const qualityM = isMajor?'':'M';
+          if(isArpTriad){
+            return 'The student wants to arpeggiate a '+root+' '+quality+' triad on the '+grp+' string group. '
+              +'Light the triad: TRIAD '+grp+' '+root+qualityM+'. '
+              +'Then pick through Root, 3rd, 5th one at a time using SF commands, naming each note. '
+              +'Keep to 2 sentences.';
+          }
+          return 'The student chose the '+root+' '+quality+' triad on the '+grp+' string group. '
+            +'Light it: TRIAD '+grp+' '+root+qualityM+'. '
+            +'Name the three notes (Root, '+(isMajor?'major third':'minor third')+', fifth) '
+            +'and tell them to slide the shape up two frets to hear a new root. '
+            +'Keep to 2 sentences.';
+        }
+
+        if(isBarre){
+          const shapeMatch = exerciseName.match(/\((.+Shape)\)/);
+          const shapeName = shapeMatch ? shapeMatch[1] : 'E Shape';
+          const chordRoot = exerciseName.split(' ')[0].replace('/','').split('/')[0];
+          const isArpBarre = isArpeggio;
+          const chordCmd = 'CHORD '+chordRoot;
+          if(isArpBarre){
+            return 'The student wants to arpeggiate a '+chordRoot+' barre chord ('+shapeName+'). '
+              +'Light it: '+chordCmd+'. '
+              +'Pick through Root, 3rd, 5th using SF commands from low to high, naming each note. '
+              +'Remind them this is the best way to check every note in a barre chord rings clean. '
+              +'Keep to 2 sentences.';
+          }
+          return 'The student chose '+chordRoot+' ('+shapeName+'). '
+            +'Light it: '+chordCmd+'. '
+            +'In one sentence describe the key finger placement for this barre shape. '
+            +'Ask them to strum slowly and report any buzzing strings. '
+            +'Keep to 2-3 sentences.';
+        }
+
+        // Open chord — default
+        const chordName = exerciseName.replace(' — Chord','').replace(' — Arpeggio','').trim();
+        const chordCmd = 'CHORD '+chordName.replace('/','').split('/')[0];
+        if(isArpeggio){
+          return 'The student wants to arpeggiate '+chordName+'. '
+            +'Light the shape: '+chordCmd+'. '
+            +'Pick through the chord tones low to high using SF commands, '
+            +'naming Root, 3rd, and 5th as you light each one. '
+            +'Tell them buzzing notes reveal exactly which finger needs adjusting. '
+            +'Keep to 3 sentences.';
+        }
+        return 'The student chose '+chordName+'. '
+          +'Light it immediately: '+chordCmd+'. '
+          +'In one sentence describe the finger placement. '
+          +'Ask them to strum slowly and tell you if anything buzzes. '
+          +'Keep to 2-3 sentences.';
+      })(),
       'strumming':    exerciseName.includes('Mixed')
         ? 'The student chose Mixed string groups. Give them a chord progression that moves between different string groups: G chord (6 strings), D chord (4 strings), C chord (5 strings). Show the string range for each chord using STRING commands, explain why the aim changes, and give a strumming exercise that practices the switch.'
         : 'The student chose "' + exerciseName + '". Explain which chords use this string range, show one example chord with a STRING command, then give a strumming pattern exercise at a suggested BPM using a METRONOME command.',
-      'barre-triads': (()=>{
-        const isTriad = exerciseName.includes('Root on');
-        if(isTriad){
-          const isMajor = exerciseName.includes('Major');
-          const strGroup = exerciseName.includes('High E')?'HE'
-                         : exerciseName.includes('Root on B')?'B':'G';
-          const quality = isMajor?'major':'minor';
-          const qualityM = isMajor?'':'M';
-          const strLabel = strGroup==='HE'?'high E string'
-                         : strGroup==='B'?'B string':'G string';
-          return 'The student has selected the '+quality+' triad shape with the root on the '+strLabel+'. '
-            +'This is a moveable shape — the same finger pattern works at any fret, and whichever fret the root lands on names the chord. '
-            +'Ask them which root note they would like to try — suggest C, G, or D as easy starting points. '
-            +'Once they tell you, light the triad using a TRIAD command: format is TRIAD '+strGroup+' <NOTE>'+qualityM+' '
-            +'— for example TRIAD '+strGroup+' G'+qualityM+' for G '+quality+'. '
-            +'After lighting it, name the three notes they are playing (root, '+(isMajor?'major third':'minor third')+', fifth) '
-            +'and invite them to slide the shape up two frets to hear a different root. '
-            +'Keep your opening to 2 sentences then ask for their note choice.';
-        } else {
-          return 'The student chose "'+exerciseName+'". Light up an example of this barre chord shape using a CHORD command with a specific root — for E Shape try CHORD G (fret 3), for A Shape try CHORD D (fret 5). Explain the finger placement and suggest practicing the shape at 3 different positions on the neck.';
-        }
-      })(),
-      'arpeggios':    'The student chose "' + exerciseName + '". Light up the notes of a C ' + exerciseName.toLowerCase() + ' on the fretboard, then guide them through playing it ascending and descending.',
       'chord-theory': (()=>{
         if(exerciseName.includes('Chord Construction')){
           // Student used the chord builder — they already saw the animation
