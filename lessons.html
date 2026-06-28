@@ -3466,6 +3466,7 @@ let currentPatternIdx = 0;
 let slots = [];
 let bpm = 70;
 let subdivisions = 2;
+let currentBeat = -1;  // always counts quarter-note beats 0..beats-1
 let isPlaying = false;
 let currentSlot = -1;
 let schedulerTimer = null;
@@ -3529,7 +3530,26 @@ function scheduleNotes(){
     if (val==='D'||val==='U') playStrum(nextNoteTime, val, isDownbeat);
     const cap = idx, capT = nextNoteTime;
     const delay = Math.max(0,(capT-ctx.currentTime)*1000);
-    setTimeout(()=>{ if (!isPlaying) return; currentSlot=cap; updateHighlights(); }, delay);
+    // Schedule beat ticks within this slot so foot always taps every quarter note
+    const beats = TIME_SIGS[currentTS] ? TIME_SIGS[currentTS].beats : 4;
+    const beatsThisSlot = currentTS==='68' ? 1
+      : subdivisions===0  ? beats        // whole: all beats in one slot
+      : subdivisions===-1 ? beats/2      // half:  2 beats per slot in 4/4
+      : subdivisions===1  ? 1            // quarter: 1 beat per slot
+      : 0.5;                             // eighth: half a beat per slot
+    const beatDur = secPerSlot() / beatsThisSlot;
+    const slotsPerBeat = currentTS==='68' ? 1 : subdivisions===2 ? 2 : 1;
+    const totalBeats = beats;
+    for (let b=0; b<Math.round(beatsThisSlot); b++){
+      const beatDelay = delay + b * beatDur * 1000;
+      setTimeout(()=>{
+        if (!isPlaying) return;
+        currentBeat = (currentBeat+1) % totalBeats;
+        updateHighlights();
+      }, beatDelay);
+    }
+    // Also update currentSlot at the start of the slot
+    setTimeout(()=>{ if (!isPlaying) return; currentSlot=cap; }, delay);
     nextNoteTime += secPerSlot();
     currentSlotIndex++;
   }
@@ -3539,12 +3559,13 @@ function startScheduler(){
   const ctx = getAudioCtx();
   nextNoteTime = ctx.currentTime+0.05;
   currentSlotIndex = 0;
+  currentBeat = -1;
   schedulerTimer = setInterval(scheduleNotes, TICK_INTERVAL);
 }
 
 function stopScheduler(){
   clearInterval(schedulerTimer); schedulerTimer=null;
-  currentSlot=-1; updateHighlights();
+  currentSlot=-1; currentBeat=-1; updateHighlights();
 }
 
 function stopPlayback(){
@@ -3573,12 +3594,9 @@ function updateHighlights(){
   });
   const taps = document.querySelectorAll('.foot-tap');
   taps.forEach(t=>t.classList.remove('active','downbeat'));
-  if (currentSlot>=0){
-    const slotsPerFt = subdivisions<=0?1:subdivisions===1?1:2;
-    const ti = currentTS==='68' ? (currentSlot<3?0:1)
-             : subdivisions===0  ? 0
-             : subdivisions===-1 ? currentSlot
-             : Math.floor(currentSlot/slotsPerFt);
+  if (currentBeat>=0){
+    // Foot always taps every quarter-note beat regardless of note duration
+    const ti = currentTS==='68' ? (currentBeat<1?0:1) : currentBeat;
     if (taps[ti]) taps[ti].classList.add(ti===0?'downbeat':'active');
   }
 }
