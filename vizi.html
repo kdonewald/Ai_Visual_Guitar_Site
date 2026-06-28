@@ -7,33 +7,54 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
   :root{
-    --cream:#F5F0E8; --cream-dark:#EDE6D6; --cream-mid:#E0D5C0;
-    --red:#D94025; --red-dark:#B83320; --blue:#1B4F8A;
-    --gold:#E8A020; --teal:#2AACB8; --green:#4CAF50;
-    --text:#2A2018; --text-mid:#5A4A38; --text-light:#8A7A68;
-    --white:#FFFFFF; --shadow:rgba(42,32,24,0.10); --shadow-lg:rgba(42,32,24,0.18);
+    --bg:#0f1117; --surface:#1a1d2e; --surface2:#22263a;
+    --border:rgba(255,255,255,0.10); --border2:rgba(255,255,255,0.06);
+    --red:#e05540; --red-dark:#c44432; --blue:#4f8ef7;
+    --gold:#e8a020; --teal:#2dd4bf; --green:#3dba72;
+    --text:#f0ede8; --text-mid:#a89f94; --text-dim:#6b6560;
+    --white:#ffffff; --shadow:rgba(0,0,0,0.35); --shadow-lg:rgba(0,0,0,0.55);
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
   body{
-    background:var(--cream); color:var(--text);
-    font-family:'DM Sans',sans-serif; font-weight:300;
+    background:var(--bg); color:var(--text);
+    font-family:'DM Sans',sans-serif; font-weight:400;
     min-height:100vh; display:flex; flex-direction:column;
-    align-items:center; padding:1.25rem 1.25rem 2.5rem;
+    align-items:center; padding:0 1.25rem 5rem;
   }
 
-  .head{display:flex;align-items:center;gap:10px;margin-top:0.5rem}
-  .logo-mark{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:900;line-height:1}
+  /* ── nav ── */
+  .site-nav{
+    width:100%; position:sticky; top:0; z-index:60;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:.7rem 1.25rem; background:rgba(15,17,23,0.96);
+    backdrop-filter:blur(12px); border-bottom:1.5px solid var(--border);
+    margin-bottom:.75rem;
+  }
+  .site-nav .nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+  .logo-mark{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;line-height:1}
   .logo-mark .A{color:var(--red)} .logo-mark .i{color:var(--blue)}
-  .logo-name{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700}
-  .tag{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.16em;
-       text-transform:uppercase;color:var(--text-light);text-align:center;margin:0.2rem 0 1.75rem}
+  .logo-name{font-family:'Playfair Display',serif;font-size:.85rem;font-weight:700;color:var(--text)}
+  .nav-links{display:flex;gap:.4rem;align-items:center}
+  .nav-link{
+    font-size:.75rem;font-weight:500;color:var(--text-mid);text-decoration:none;
+    padding:5px 11px;border-radius:6px;border:1.5px solid var(--border);
+    transition:all .2s;white-space:nowrap;
+  }
+  .nav-link:hover{border-color:var(--blue);color:var(--blue)}
+  .nav-link.active{border-color:var(--red);color:var(--red);background:rgba(224,85,64,0.10)}
 
-  .stage-wrap{position:relative;margin-bottom:1.5rem}
+  .tag{
+    font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--text-dim);text-align:center;margin:.25rem 0 1.5rem;
+  }
+
+  /* ── vizi avatar ── */
+  .stage-wrap{position:relative;margin-bottom:1.25rem}
   .stage{
-    position:relative;width:230px;height:230px;border-radius:50%;overflow:hidden;
-    border:4px solid var(--cream-dark);background:#0a0a0a;
-    box-shadow:0 10px 30px var(--shadow-lg);
+    position:relative;width:220px;height:220px;border-radius:50%;overflow:hidden;
+    border:3px solid var(--border);background:#0a0a0a;
+    box-shadow:0 10px 30px var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.04);
   }
   .stage img,.stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .stage img{object-position:center top}
@@ -44,11 +65,12 @@
   .stage-wrap.listening .ring{animation:ring 1.15s ease-out infinite}
   @keyframes ring{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.28);opacity:0}}
 
+  /* ── talk button ── */
   .talk{
     width:140px;height:140px;border-radius:50%;
-    background:var(--red);color:var(--white);border:none;
-    font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;
-    cursor:pointer;box-shadow:0 8px 24px rgba(217,64,37,0.32);
+    background:var(--red);color:#fff;border:none;
+    font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:600;
+    cursor:pointer;box-shadow:0 8px 24px rgba(224,85,64,0.38);
     transition:transform .12s, background .2s, box-shadow .2s;
     display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.3;
     touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
@@ -57,85 +79,55 @@
   .talk:active{background:var(--red-dark)}
   .talk.listening{background:var(--blue);transform:scale(0.96)}
   .talk.thinking{background:var(--gold)}
-  /* intro-pending: pulsing ring to invite the tap */
   .talk.intro{background:var(--blue);animation:intro-pulse 1.2s ease-in-out infinite}
-  @keyframes intro-pulse{0%,100%{box-shadow:0 0 0 0 rgba(27,79,138,0.5)}60%{box-shadow:0 0 0 18px rgba(27,79,138,0)}}
+  @keyframes intro-pulse{0%,100%{box-shadow:0 0 0 0 rgba(79,142,247,0.5)}60%{box-shadow:0 0 0 18px rgba(79,142,247,0)}}
 
-  .status{font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.08em;
-          text-transform:uppercase;color:var(--text-light);min-height:1.2em;margin-bottom:1rem;text-align:center}
+  .status{
+    font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--text-dim);min-height:1.2em;margin-bottom:1rem;text-align:center;
+  }
 
+  /* ── upload btn ── */
   .upload-btn{
     display:flex;align-items:center;justify-content:center;gap:.5rem;
-    background:var(--white);border:2px solid var(--cream-dark);
+    background:var(--surface);border:1.5px solid var(--border);
     border-radius:10px;padding:.65rem 1.4rem;
-    font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:500;
+    font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;
     color:var(--text-mid);cursor:pointer;transition:all .2s;
-    margin-bottom:1.5rem;text-decoration:none;
+    margin-bottom:1.25rem;text-decoration:none;
     box-shadow:0 2px 8px var(--shadow);
   }
-  .upload-btn:hover{border-color:var(--blue);color:var(--blue);background:rgba(27,79,138,0.04)}
+  .upload-btn:hover{border-color:var(--blue);color:var(--blue)}
   .upload-btn.waiting{border-color:var(--gold);color:var(--gold);animation:pulse-btn 1.4s ease-in-out infinite}
   @keyframes pulse-btn{0%,100%{opacity:1}50%{opacity:.6}}
 
-  /* ── metronome strip ── */
-  .metro-strip{
-    display:flex; flex-direction:column; align-items:stretch;
-    background:var(--white); border:2px solid var(--cream-dark);
-    border-radius:12px; padding:.5rem .7rem .5rem;
-    margin-bottom:1rem; width:100%; max-width:340px;
-    box-shadow:0 2px 8px var(--shadow);
-  }
-  .metro-label{
-    font-family:'DM Mono',monospace; font-size:.58rem; letter-spacing:.14em;
-    text-transform:uppercase; color:var(--text-light); text-align:center;
-    margin-bottom:.35rem;
-  }
-  .metro-controls{ display:flex; align-items:center; gap:.6rem; }
-  .metro-tap{
-    width:38px; height:38px; border-radius:50%; flex-shrink:0;
-    background:var(--cream); border:2px solid var(--cream-dark);
-    cursor:pointer; transition:all .07s; display:flex; align-items:center; justify-content:center;
-    font-size:.85rem; color:var(--text-mid);
-  }
-  .metro-tap.pulse{ background:var(--gold); border-color:var(--gold); color:white; transform:scale(0.92) }
-  .metro-mid{ flex:1; display:flex; flex-direction:column; gap:.15rem; min-width:0 }
-  .metro-bpm-row{ display:flex; align-items:baseline; gap:.3rem }
-  .metro-bpm-val{ font-family:'DM Mono',monospace; font-weight:600; font-size:.95rem; color:var(--text) }
-  .metro-bpm-label{ font-family:'DM Mono',monospace; font-size:.6rem; letter-spacing:.08em; text-transform:uppercase; color:var(--text-light) }
-  .metro-slider{ width:100%; accent-color:var(--blue); height:14px; cursor:pointer; }
-  .metro-btn{
-    width:38px; height:38px; border-radius:50%; flex-shrink:0; border:none;
-    background:var(--green); color:white; cursor:pointer; font-size:.8rem;
-    display:flex; align-items:center; justify-content:center; transition:all .15s;
-  }
-  .metro-btn.playing{ background:var(--red) }
-  .metro-ts{
-    font-family:'DM Mono',monospace; font-size:.65rem; color:var(--text-mid);
-    background:var(--cream); border:1.5px solid var(--cream-dark); border-radius:6px;
-    padding:2px 5px; cursor:pointer; flex-shrink:0;
-  }
-
+  /* ── song banner ── */
   .song-banner{
     display:none;width:100%;max-width:440px;
-    background:rgba(27,79,138,0.07);border:2px solid rgba(27,79,138,0.2);
-    border-radius:10px;padding:.7rem 1rem;margin-bottom:1.25rem;
+    background:rgba(79,142,247,0.10);border:1.5px solid rgba(79,142,247,0.25);
+    border-radius:10px;padding:.7rem 1rem;margin-bottom:1.1rem;
     font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.04em;
     color:var(--blue);text-align:center;cursor:pointer;transition:background .2s;
   }
   .song-banner.show{display:block}
-  .song-banner:hover{background:rgba(27,79,138,0.12)}
+  .song-banner:hover{background:rgba(79,142,247,0.16)}
 
-  .panels{width:100%;max-width:440px;display:flex;flex-direction:column;gap:0.85rem}
-  .panel{background:var(--white);border:2px solid var(--cream-dark);border-radius:12px;
-         padding:0.9rem 1.1rem;opacity:0;transform:translateY(8px);transition:all .3s}
+  /* ── panels ── */
+  .panels{width:100%;max-width:440px;display:flex;flex-direction:column;gap:.85rem}
+  .panel{
+    background:var(--surface);border:1.5px solid var(--border);border-radius:12px;
+    padding:.9rem 1.1rem;opacity:0;transform:translateY(8px);transition:all .3s;
+  }
   .panel.show{opacity:1;transform:none}
-  .panel .label{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.14em;
-                text-transform:uppercase;color:var(--text-light);margin-bottom:0.3rem}
-  .panel.you{border-left:4px solid var(--blue)}
-  .panel.vizi{border-left:4px solid var(--red)}
-  .panel.cmd{border-left:4px solid var(--gold);background:var(--cream)}
-  .panel .body{font-size:0.95rem;line-height:1.55;color:var(--text)}
-  .panel.cmd .body{font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--text-mid);word-break:break-word}
+  .panel .label{
+    font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--text-dim);margin-bottom:.35rem;
+  }
+  .panel.you{border-left:3px solid var(--blue)}
+  .panel.vizi{border-left:3px solid var(--red)}
+  .panel.cmd{border-left:3px solid var(--gold);background:rgba(232,160,32,0.06)}
+  .panel .body{font-size:.95rem;line-height:1.55;color:var(--text);font-weight:400}
+  .panel.cmd .body{font-family:'DM Mono',monospace;font-size:.78rem;color:var(--text-mid);word-break:break-word}
 
   /* ── song sheet floating panel ── */
   .sheet-float{
@@ -143,10 +135,10 @@
     top:60px; right:16px;
     width:min(440px, calc(100vw - 32px));
     height:min(580px, calc(100vh - 80px));
-    background:var(--white);
-    border:2px solid var(--cream-dark);
+    background:var(--surface);
+    border:1.5px solid var(--border);
     border-radius:14px;
-    box-shadow:0 12px 40px rgba(42,32,24,0.22);
+    box-shadow:0 12px 40px var(--shadow-lg);
     display:none; flex-direction:column;
     overflow:hidden; resize:both;
     min-width:280px; min-height:200px;
@@ -154,73 +146,52 @@
   .sheet-float.show{display:flex}
   .sheet-head{
     display:flex;align-items:center;justify-content:space-between;
-    padding:.55rem .75rem;background:var(--cream);
-    border-bottom:2px solid var(--cream-dark);
+    padding:.55rem .75rem;background:var(--surface2);
+    border-bottom:1.5px solid var(--border);
     cursor:grab; flex-shrink:0; user-select:none; gap:.5rem;
   }
   .sheet-head:active{cursor:grabbing}
-  .sheet-title{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;
+  .sheet-title{
+    font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;
     text-transform:uppercase;color:var(--text-mid);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;
+  }
   .sheet-controls{display:flex;align-items:center;gap:.3rem;flex-shrink:0}
   .sheet-btn{
-    background:var(--cream-dark);border:none;cursor:pointer;
+    background:var(--surface);border:1px solid var(--border);cursor:pointer;
     font-size:.8rem;font-weight:600;color:var(--text-mid);
     width:22px;height:22px;border-radius:4px;
     display:flex;align-items:center;justify-content:center;
     transition:all .15s;line-height:1;
   }
-  .sheet-btn:hover{background:var(--blue);color:white}
+  .sheet-btn:hover{background:var(--blue);color:white;border-color:var(--blue)}
   .sheet-close{
     background:none;border:none;cursor:pointer;font-size:1rem;
-    color:var(--text-light);padding:0 .15rem;line-height:1;transition:color .2s;
+    color:var(--text-dim);padding:0 .15rem;line-height:1;transition:color .2s;
   }
   .sheet-close:hover{color:var(--red)}
   .sheet-zoom-val{
-    font-family:'DM Mono',monospace;font-size:.6rem;color:var(--text-light);
+    font-family:'DM Mono',monospace;font-size:.6rem;color:var(--text-dim);
     min-width:2.8rem;text-align:center;
   }
   .sheet-body{flex:1;overflow:auto;position:relative;}
-  .sheet-content{
-    transform-origin:top left;
-    transition:transform .15s;
-    width:100%; /* scales with zoom */
-  }
+  .sheet-content{transform-origin:top left;transition:transform .15s;width:100%;}
   .sheet-body iframe{width:100%;height:100%;border:none;display:block;min-height:400px}
   .sheet-body img{width:100%;height:auto;display:block}
-  .sheet-body pre{padding:1rem;font-family:'DM Mono',monospace;font-size:.75rem;
-    line-height:1.6;white-space:pre-wrap;color:var(--text);}
+  .sheet-body pre{
+    padding:1rem;font-family:'DM Mono',monospace;font-size:.75rem;
+    line-height:1.6;white-space:pre-wrap;color:var(--text);
+  }
 
   .sheet-show-btn{
     display:none;align-items:center;gap:.4rem;
-    background:var(--white);border:2px solid var(--blue);
+    background:var(--surface);border:1.5px solid var(--blue);
     border-radius:8px;padding:.45rem .9rem;
     font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;
     color:var(--blue);cursor:pointer;transition:all .2s;margin-bottom:.75rem;
   }
   .sheet-show-btn.show{display:flex}
   .sheet-show-btn:hover{background:var(--blue);color:white}
-
-  /* ── site nav bar ── */
-  .site-nav{
-    width:100%; position:sticky; top:0; z-index:60;
-    display:flex; align-items:center; justify-content:space-between;
-    padding:.7rem 1.25rem; background:rgba(245,240,232,0.96);
-    backdrop-filter:blur(12px); border-bottom:2px solid var(--cream-dark);
-    margin-bottom:.75rem;
-  }
-  .site-nav .nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none}
-  .site-nav .logo-mark{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;line-height:1}
-  .site-nav .logo-mark .A{color:var(--red)} .site-nav .logo-mark .i{color:var(--blue)}
-  .site-nav .logo-name{font-family:'Playfair Display',serif;font-size:.85rem;font-weight:700;color:var(--text)}
-  .nav-links{display:flex;gap:.4rem;align-items:center}
-  .nav-link{
-    font-size:.75rem;font-weight:500;color:var(--text-mid);text-decoration:none;
-    padding:5px 11px;border-radius:6px;border:1.5px solid var(--cream-dark);
-    transition:all .2s;white-space:nowrap;
-  }
-  .nav-link:hover{border-color:var(--blue);color:var(--blue)}
-  .nav-link.active{border-color:var(--red);color:var(--red);background:rgba(217,64,37,0.06)}
 </style>
 </head>
 <body>
@@ -232,6 +203,7 @@
     </a>
     <div class="nav-links">
       <a href="index.html" class="nav-link">Home</a>
+      <a href="lessons.html" class="nav-link">Lessons</a>
     </div>
   </nav>
   <div class="tag">Hold to talk · Release to send</div>
@@ -246,23 +218,6 @@
 
   <button class="talk" id="talkBtn">Hold<br>to Talk</button>
   <div class="status" id="status">Ready</div>
-
-  <!-- Metronome — always visible, small strip -->
-  <div class="metro-strip">
-    <div class="metro-label">Metronome</div>
-    <div class="metro-controls">
-      <div class="metro-tap" id="metroTap" title="Tap tempo">👆</div>
-      <div class="metro-mid">
-        <div class="metro-bpm-row">
-          <span class="metro-bpm-val" id="metroBpmVal">80</span>
-          <span class="metro-bpm-label">BPM</span>
-          <span class="metro-ts" id="metroTs">4/4</span>
-        </div>
-        <input class="metro-slider" id="metroSlider" type="range" min="40" max="200" value="80">
-      </div>
-      <button class="metro-btn" id="metroBtn" title="Start/stop">▶</button>
-    </div>
-  </div>
 
   <button class="upload-btn" id="uploadBtn" style="display:none">🎵 Upload a Song</button>
   <div class="song-banner" id="songBanner"></div>
@@ -292,6 +247,9 @@
     </div>
   </div>
 
+<!-- Shared floating metronome widget -->
+<script src="metronome-widget.js"></script>
+
 <script>
   const RAILWAY_URL  = 'https://vizi-tts-proxy-production.up.railway.app';
   const TARGET_RATE  = 16000;
@@ -310,7 +268,6 @@
   let songPollTimer = null;
   let songLoaded    = false;
 
-  // Pending intro: stored when song is ready but audio context not yet unlocked
   let pendingIntroBlob = null;
   let pendingIntroText = null;
   let pendingIntroCmd  = null;
@@ -330,7 +287,15 @@
     document.getElementById(id).classList.add('show');
   }
 
-  // ─── Audio context — only created on first gesture ────────
+  // Route METRONOME:BPM commands to the shared floating widget
+  function applyMetronomeCommand(commandsStr){
+    if (!commandsStr) return;
+    const m = commandsStr.match(/METRONOME:(\d+)/i);
+    if (m && window.viziMetro) {
+      window.viziMetro.setBpm(parseInt(m[1], 10));
+    }
+  }
+
   async function ensureAudioCtx(){
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') await audioCtx.resume();
@@ -392,6 +357,7 @@
       bin += String.fromCharCode.apply(null, bytes.subarray(i,i+chunk));
     return btoa(bin);
   }
+  function dec(v){ try { return v ? decodeURIComponent(v) : ''; } catch(_){ return v||''; } }
 
   async function playBlob(blob){
     try {
@@ -416,7 +382,7 @@
       const ct = (res.headers.get('content-type') || '');
       if (ct.includes('application/json')){
         const j = await res.json();
-        setBtn(''); setStatus(j.empty ? 'Didn\'t catch that — try again' : 'Error: ' + (j.error||'unknown'));
+        setBtn(''); setStatus(j.empty ? "Didn't catch that — try again" : 'Error: ' + (j.error||'unknown'));
         return;
       }
       const transcript = dec(res.headers.get('X-Vizi-Transcript'));
@@ -429,22 +395,17 @@
       setBtn(''); setStatus('');
       await playBlob(blob);
       if (currentMode === 'song') currentMode = 'talk';
-      // Only reset to Ready if there is no pending exercise intro waiting
       if (!pendingIntroBlob) setStatus('Ready');
     } catch(e){ setBtn(''); setStatus('Could not reach Vizi — check connection'); }
   }
-  function dec(v){ try { return v ? decodeURIComponent(v) : ''; } catch(_){ return v||''; } }
 
-  // ─── Intro playback ───────────────────────────────────────
-  // The intro blob is fetched as soon as the session is ready,
-  // but played on the NEXT user gesture so audioCtx is unlocked.
   async function playPendingIntro(){
     if (!pendingIntroBlob) return;
     const blob = pendingIntroBlob;
     const text = pendingIntroText;
     const cmd  = pendingIntroCmd;
     pendingIntroBlob = null; pendingIntroText = null; pendingIntroCmd = null;
-    setBtn(''); // clear intro state
+    setBtn('');
     if (text) showPanel('pVizi','bVizi', text);
     if (cmd)  { showPanel('pCmd','bCmd', cmd); applyMetronomeCommand(cmd); }
     setStatus('');
@@ -453,7 +414,7 @@
     setStatus('Ready');
   }
 
-  // ─── Song upload flow ─────────────────────────────────────
+  // ── Song upload flow ──
   uploadBtn.addEventListener('click', async () => {
     if (songPollTimer) return;
     uploadBtn.textContent = '⏳ Creating session…';
@@ -494,7 +455,6 @@
         uploadBtn.textContent = '🎵 Upload Another Song';
         uploadBtn.disabled = false;
 
-        // Fetch the session prompt and get TTS from Claude
         const promptRes  = await fetch(`${RAILWAY_URL}/session-prompt/${songSessionId}`);
         const promptData = await promptRes.json();
 
@@ -507,11 +467,9 @@
           if (ttsRes.ok){
             const ct = ttsRes.headers.get('content-type') || '';
             if (!ct.includes('application/json')){
-              // Store the intro for the next user gesture
               pendingIntroText = dec(ttsRes.headers.get('X-Vizi-Text'));
               pendingIntroCmd  = dec(ttsRes.headers.get('X-Vizi-Commands'));
               pendingIntroBlob = await ttsRes.blob();
-              // Signal the user to tap to hear the intro
               setBtn('intro');
               btn.innerHTML = 'Tap to hear<br>Vizi intro';
               setStatus('Song ready — tap the button to hear Vizi');
@@ -529,10 +487,9 @@
     } catch(e){ /* poll quietly */ }
   }
 
-  // ─── Talk button press/release ────────────────────────────
+  // ── Talk button ──
   async function press(e){
     e.preventDefault();
-    // If there's a pending intro, play it on this gesture
     if (pendingIntroBlob){
       btn.innerHTML = 'Hold<br>to Talk';
       await playPendingIntro();
@@ -549,7 +506,7 @@
   }
   function release(e){
     e.preventDefault();
-    if (pendingIntroBlob) return; // handled in press
+    if (pendingIntroBlob) return;
     if (!recording) return;
     setListening(false);
     const b64 = stopCapture();
@@ -562,10 +519,9 @@
   btn.addEventListener('pointercancel', release);
   btn.addEventListener('pointerleave', e => { if (recording && !pendingIntroBlob) release(e); });
 
-  // ─── Song sheet — floating panel with zoom ────────────────
+  // ── Song sheet floating panel ──
   const sheetWrap    = document.getElementById('sheetWrap');
   const sheetTitle   = document.getElementById('sheetTitle');
-  const sheetBody    = document.getElementById('sheetBody');
   const sheetContent = document.getElementById('sheetContent');
   const sheetClose   = document.getElementById('sheetClose');
   const sheetShowBtn = document.getElementById('sheetShowBtn');
@@ -579,8 +535,6 @@
   const ZOOM_STEP = 0.15, ZOOM_MIN = 0.4, ZOOM_MAX = 3.0;
 
   function applyZoom(){
-    // For images and text, scale the content div
-    // For iframes, scale the iframe itself
     const iframe = sheetContent.querySelector('iframe');
     const img    = sheetContent.querySelector('img');
     const pre    = sheetContent.querySelector('pre');
@@ -641,13 +595,11 @@
     sheetWrap.classList.remove('show');
     if (sessionStorage.getItem('viziSongFile')) sheetShowBtn.classList.add('show');
   });
-
   sheetShowBtn.addEventListener('click', () => {
     sheetWrap.classList.add('show');
     sheetShowBtn.classList.remove('show');
   });
 
-  // drag
   let dragOffX=0, dragOffY=0, dragging=false;
   dragHandle.addEventListener('pointerdown', e => {
     const t = e.target;
@@ -665,7 +617,6 @@
   dragHandle.addEventListener('pointerup',    ()=>{ dragging=false; });
   dragHandle.addEventListener('pointercancel',()=>{ dragging=false; });
 
-  // Resume session poll after redirect from upload page
   const storedSession = sessionStorage.getItem('viziSongSession');
   if (storedSession && !songLoaded){
     songSessionId = storedSession;
@@ -675,24 +626,17 @@
     startSongPoll();
   }
 
-  // ─── Exercise hand-off from lessons.html ──────────────────
-  // lessons.html links here as vizi.html?stage=X&exercise=Y
-  // On arrival we build a context message and have Vizi open
-  // the session verbally — student doesn't have to say anything.
+  // ── Exercise hand-off from lessons.html ──
   ;(async function checkExerciseParams(){
-    const urlParams  = new URLSearchParams(window.location.search);
-    const stageId    = urlParams.get('stage');
+    const urlParams    = new URLSearchParams(window.location.search);
+    const stageId      = urlParams.get('stage');
     const exerciseName = urlParams.get('exercise');
     if (!stageId || !exerciseName) return;
 
-    // ── Immediate feedback — show this BEFORE the Railway call ──
-    // Student tapped a choice and navigated here — let them know instantly
     setBtn('thinking');
     btn.innerHTML = 'Vizi is<br>preparing…';
     setStatus('Getting your exercise ready…');
 
-    // Stage metadata map — mirrors lessons.html STAGES array
-    // Show Upload a Song button only for song stage
     if (stageId === 'song') {
       const ub = document.getElementById('uploadBtn');
       if (ub) ub.style.display = '';
@@ -710,12 +654,9 @@
     };
     const stageLabel = STAGE_LABELS[stageId] || stageId;
 
-    // Show a banner so the student knows Vizi knows the context
-    // Show exercise context banner — no Done button needed, student uses nav
     songBanner.textContent = `📚 ${stageLabel} — ${exerciseName}`;
     songBanner.classList.add('show');
 
-    // Auto-save progress when student navigates away (back to lessons via nav)
     window.addEventListener('beforeunload', () => {
       try {
         const p = JSON.parse(localStorage.getItem('viziProgress') || '{}');
@@ -727,11 +668,6 @@
       } catch(e){}
     }, { once: true });
 
-    // Build stage-specific context so Vizi knows exactly what the student chose
-    const choicePanelStages = ['chords','strumming'];
-    const isChoicePanel = choicePanelStages.includes(stageId);
-
-    // Stage-specific instructions for Vizi
     const stageInstructions = {
       'chords': (()=>{
         const isArpeggio = exerciseName.includes('Arpeggio');
@@ -740,21 +676,14 @@
         const isBarre = exerciseName.includes('Shape)');
 
         if(isProgression){
-          // Playing through a progression
           const progStr = exerciseName.replace('Progression:','').replace('Progression step:','').trim();
           const isSingleStep = exerciseName.startsWith('Progression step:');
           if(isSingleStep){
-            // Single chord in progression — just light it
             const chordPart = progStr.replace(' — Chord','').replace(' — Arpeggio','').trim();
             const cleanCmd = chordPart.replace(/ \(.*\)/,'').replace('/','').split('/')[0];
-            return 'Light the chord on the fretboard: CHORD '+cleanCmd+'. '
-              +'Say the chord name and one note — keep it to one sentence.';
+            return 'Light the chord on the fretboard: CHORD '+cleanCmd+'. Say the chord name and one note — keep it to one sentence.';
           }
-          return 'The student built this chord progression: '+progStr+'. '
-            +'Walk through each chord one at a time — light each with a CHORD command, '
-            +'name it, and give one tip about the transition to the next chord. '
-            +'Tell them which scale this progression comes from if you recognise it. '
-            +'Keep each chord description to one sentence.';
+          return 'The student built this chord progression: '+progStr+'. Walk through each chord one at a time — light each with a CHORD command, name it, and give one tip about the transition to the next chord. Tell them which scale this progression comes from if you recognise it. Keep each chord description to one sentence.';
         }
 
         if(isTriad){
@@ -767,16 +696,9 @@
           const quality = isMajor?'major':'minor';
           const qualityM = isMajor?'':'M';
           if(isArpTriad){
-            return 'The student wants to arpeggiate a '+root+' '+quality+' triad on the '+grp+' string group. '
-              +'Light the triad: TRIAD '+grp+' '+root+qualityM+'. '
-              +'Then pick through Root, 3rd, 5th one at a time using SF commands, naming each note. '
-              +'Keep to 2 sentences.';
+            return 'The student wants to arpeggiate a '+root+' '+quality+' triad on the '+grp+' string group. Light the triad: TRIAD '+grp+' '+root+qualityM+'. Then pick through Root, 3rd, 5th one at a time using SF commands, naming each note. Keep to 2 sentences.';
           }
-          return 'The student chose the '+root+' '+quality+' triad on the '+grp+' string group. '
-            +'Light it: TRIAD '+grp+' '+root+qualityM+'. '
-            +'Name the three notes (Root, '+(isMajor?'major third':'minor third')+', fifth) '
-            +'and tell them to slide the shape up two frets to hear a new root. '
-            +'Keep to 2 sentences.';
+          return 'The student chose the '+root+' '+quality+' triad on the '+grp+' string group. Light it: TRIAD '+grp+' '+root+qualityM+'. Name the three notes (Root, '+(isMajor?'major third':'minor third')+', fifth) and tell them to slide the shape up two frets to hear a new root. Keep to 2 sentences.';
         }
 
         if(isBarre){
@@ -786,41 +708,23 @@
           const isArpBarre = isArpeggio;
           const chordCmd = 'CHORD '+chordRoot;
           if(isArpBarre){
-            return 'The student wants to arpeggiate a '+chordRoot+' barre chord ('+shapeName+'). '
-              +'Light it: '+chordCmd+'. '
-              +'Pick through Root, 3rd, 5th using SF commands from low to high, naming each note. '
-              +'Remind them this is the best way to check every note in a barre chord rings clean. '
-              +'Keep to 2 sentences.';
+            return 'The student wants to arpeggiate a '+chordRoot+' barre chord ('+shapeName+'). Light it: '+chordCmd+'. Pick through Root, 3rd, 5th using SF commands from low to high, naming each note. Remind them this is the best way to check every note in a barre chord rings clean. Keep to 2 sentences.';
           }
-          return 'The student chose '+chordRoot+' ('+shapeName+'). '
-            +'Light it: '+chordCmd+'. '
-            +'Say the chord name and shape, then ask them to strum slowly and report any buzzing. '
-            +'Keep to one sentence — the fretboard already shows the fingering.';
+          return 'The student chose '+chordRoot+' ('+shapeName+'). Light it: '+chordCmd+'. Say the chord name and shape, then ask them to strum slowly and report any buzzing. Keep to one sentence — the fretboard already shows the fingering.';
         }
 
-        // Open chord — default
         const chordName = exerciseName.replace(' — Chord','').replace(' — Arpeggio','').trim();
         const chordCmd = 'CHORD '+chordName.replace('/','').split('/')[0];
         if(isArpeggio){
-          return 'The student wants to arpeggiate '+chordName+'. '
-            +'Light the shape: '+chordCmd+'. '
-            +'Pick through the chord tones low to high using SF commands, '
-            +'naming Root, 3rd, and 5th as you light each one. '
-            +'Tell them buzzing notes reveal exactly which finger needs adjusting. '
-            +'Keep to 3 sentences.';
+          return 'The student wants to arpeggiate '+chordName+'. Light the shape: '+chordCmd+'. Pick through the chord tones low to high using SF commands, naming Root, 3rd, and 5th as you light each one. Tell them buzzing notes reveal exactly which finger needs adjusting. Keep to 3 sentences.';
         }
-        return 'The student chose '+chordName+'. '
-          +'Light it immediately: '+chordCmd+'. '
-          +'Say the chord name and ask them to strum slowly and tell you if anything buzzes. '
-          +'Keep to one sentence — the fretboard already shows the fingering.';
+        return 'The student chose '+chordName+'. Light it immediately: '+chordCmd+'. Say the chord name and ask them to strum slowly and tell you if anything buzzes. Keep to one sentence — the fretboard already shows the fingering.';
       })(),
-      'strumming':    exerciseName.includes('Mixed')
+      'strumming': exerciseName.includes('Mixed')
         ? 'The student chose Mixed string groups. Give them a chord progression that moves between different string groups: G chord (6 strings), D chord (4 strings), C chord (5 strings). Show the string range for each chord using STRING commands, explain why the aim changes, and give a strumming exercise that practices the switch.'
         : 'The student chose "' + exerciseName + '". Explain which chords use this string range, show one example chord with a STRING command, then give a strumming pattern exercise at a suggested BPM using a METRONOME command.',
       'chord-theory': (()=>{
         if(exerciseName.includes('Chord Construction')){
-          // Student used the chord builder — they already saw the animation
-          // Parse "C Major — Chord Construction" format
           const parts = exerciseName.replace(' — Chord Construction','').split(' ');
           const root = parts[0] || 'C';
           const type = parts.slice(1).join(' ') || 'Major';
@@ -828,21 +732,8 @@
           const isMinor = type.includes('Minor') && !type.includes('7');
           const is7th   = type.includes('7');
           const isDim   = type.includes('Dim');
-          const isSus   = type.includes('Sus');
-          // Build formula description
-          let formulaDesc = '';
-          if(isMajor||type==='Dom 7th') formulaDesc = 'whole, whole, half, whole, whole, whole, half';
-          else if(isMinor) formulaDesc = 'whole, half, whole, whole, half, whole, whole';
-          else if(isDim)   formulaDesc = 'whole, half, whole, half, whole, half, whole, half';
-          else             formulaDesc = 'the major scale formula';
-          // Just light the chord — keep it simple
           const chordCmd = 'CHORD '+root+(isMajor?'':isMinor?'m':is7th&&!isMinor?'7':isDim?'dim':'');
-          return 'The student just built a '+root+' '+type+' chord using the chord builder. '
-            +'Light it on the fretboard now using '+chordCmd+'. '
-            +'Say only: "Here is your '+root+' '+type+' chord — Root is '+root+', '
-            +(isMajor?'Major 3rd':isMinor?'Minor 3rd':'3rd')+' is the '+(isDim||isMinor?'flat ':'')+'third, and the 5th completes it. '
-            +'Hold the talk button and ask me anything about it." '
-            +'Keep your entire response to 2 sentences plus the CHORD command. Do not explain further unless asked.';
+          return 'The student just built a '+root+' '+type+' chord using the chord builder. Light it on the fretboard now using '+chordCmd+'. Say only: "Here is your '+root+' '+type+' chord — Root is '+root+', '+(isMajor?'Major 3rd':isMinor?'Minor 3rd':'3rd')+' is the '+(isDim||isMinor?'flat ':'')+'third, and the 5th completes it. Hold the talk button and ask me anything about it." Keep your entire response to 2 sentences plus the CHORD command. Do not explain further unless asked.';
         } else if(exerciseName.includes('Construct')){
           return 'Pick a random chord (not C major — make it interesting) and walk the student through constructing it from scratch: name the root, then apply the scale formula step by step, then identify the chord tones. Light each chord tone individually using SF commands as you name it.';
         } else if(exerciseName.includes('Mixed')){
@@ -851,8 +742,8 @@
           return 'The student wants to identify the 1, 3, 5 of ' + exerciseName.replace('Identify 1, 3, 5 — ','') + ' chords. Pick a random chord of that type, name it, light it with a CHORD command, and ask the student to identify which note is the root, which is the third, and which is the fifth. Wait for their answer and confirm or correct it.';
         }
       })(),
-      'transitions':  'The student wants to practice a ' + exerciseName + '. Suggest a specific well-known chord progression of that length (e.g. for 4-chord: G D Em C), light the first chord with a CHORD command, set a slow tempo with a METRONOME command, and guide them through each change one at a time.',
-      'soloing':      'The student wants to solo over ' + exerciseName + '. Light up the scale on the fretboard using a SCALE command. Briefly explain which notes to target (especially the root and fifth), suggest a simple starting phrase, and invite them to start experimenting. Keep the instruction to 2-3 sentences.'
+      'transitions': 'The student wants to practice a ' + exerciseName + '. Suggest a specific well-known chord progression of that length (e.g. for 4-chord: G D Em C), light the first chord with a CHORD command, set a slow tempo with a METRONOME command, and guide them through each change one at a time.',
+      'soloing':     'The student wants to solo over ' + exerciseName + '. Light up the scale on the fretboard using a SCALE command. Briefly explain which notes to target (especially the root and fifth), suggest a simple starting phrase, and invite them to start experimenting. Keep the instruction to 2-3 sentences.'
     };
 
     const specificInstruction = stageInstructions[stageId] ||
@@ -871,11 +762,7 @@
       `End by inviting them to hold the talk button when they have a question or are ready for the next step.`
     ].join(' ');
 
-    // Wait for the page to finish rendering before speaking
-    // (ensures audioCtx is ready for the first gesture unlock pattern)
-    // We store the context and play it on first button press —
-    // same pattern as the song intro, avoids autoplay block.
-    pendingIntroBlob = null; // clear any existing
+    pendingIntroBlob = null;
     pendingIntroText = null;
     pendingIntroCmd  = null;
 
@@ -902,105 +789,9 @@
       setStatus('Ready — ask Vizi about this exercise');
     }
 
-    // Clean the URL so reloading doesn't re-trigger the exercise
     const cleanUrl = window.location.pathname;
     window.history.replaceState({}, '', cleanUrl);
   })();
-
-  // ════════════════════════════════════════════════════════
-  // METRONOME — compact strip, driven by UI or by Vizi's
-  // METRONOME:BPM command (colon-delimited, same as firmware)
-  // ════════════════════════════════════════════════════════
-  const metroTap    = document.getElementById('metroTap');
-  const metroBtn    = document.getElementById('metroBtn');
-  const metroSlider = document.getElementById('metroSlider');
-  const metroBpmVal = document.getElementById('metroBpmVal');
-  const metroTs     = document.getElementById('metroTs');
-
-  let metroCtx = null, metroTimer = null, metroRunning = false;
-  let metroBpm = 80, metroBeats = 4, metroBeat = 0;
-  const TS_CYCLE = [4, 3, 2, 6, 5];
-
-  function metroClick(accent){
-    if (!metroCtx) metroCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const o = metroCtx.createOscillator(), g = metroCtx.createGain(), t = metroCtx.currentTime;
-    o.frequency.value = accent ? 1000 : 700;
-    g.gain.setValueAtTime(accent ? 0.7 : 0.4, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
-    o.connect(g); g.connect(metroCtx.destination);
-    o.start(t); o.stop(t + 0.07);
-  }
-  function metroPulse(){
-    metroTap.classList.add('pulse');
-    setTimeout(() => metroTap.classList.remove('pulse'), 80);
-  }
-  function metroLoop(){
-    const ms = 60000 / metroBpm;
-    metroTimer = setInterval(() => {
-      metroBeat = (metroBeat + 1) % metroBeats;
-      const accent = metroBeat === 0;
-      metroClick(accent);
-      metroPulse();
-    }, ms);
-  }
-  function metroStart(){
-    if (metroRunning) return;
-    metroRunning = true; metroBeat = -1;
-    metroBtn.textContent = '■'; metroBtn.classList.add('playing');
-    metroLoop();
-  }
-  function metroStop(){
-    metroRunning = false;
-    if (metroTimer){ clearInterval(metroTimer); metroTimer = null; }
-    metroBtn.textContent = '▶'; metroBtn.classList.remove('playing');
-    metroBeat = 0;
-  }
-  function metroRestart(){ if (metroRunning){ metroStop(); metroStart(); } }
-  function setMetroBpm(v){
-    metroBpm = Math.max(40, Math.min(220, parseInt(v,10) || 80));
-    metroSlider.value = metroBpm;
-    metroBpmVal.textContent = metroBpm;
-    metroRestart();
-  }
-
-  metroBtn.addEventListener('click', () => { metroRunning ? metroStop() : metroStart(); });
-  metroSlider.addEventListener('input', () => setMetroBpm(metroSlider.value));
-  metroTs.addEventListener('click', () => {
-    const idx = TS_CYCLE.indexOf(metroBeats);
-    metroBeats = TS_CYCLE[(idx + 1) % TS_CYCLE.length];
-    metroTs.textContent = metroBeats === 6 ? '6/8' : metroBeats + '/4';
-    metroBeat = 0;
-    metroRestart();
-  });
-
-  // Tap tempo — average the last few taps
-  let tapTimes = [];
-  metroTap.addEventListener('click', () => {
-    const now = performance.now();
-    tapTimes.push(now);
-    if (tapTimes.length > 5) tapTimes.shift();
-    if (tapTimes.length >= 2){
-      const intervals = [];
-      for (let i=1; i<tapTimes.length; i++) intervals.push(tapTimes[i]-tapTimes[i-1]);
-      const avgMs = intervals.reduce((a,b)=>a+b,0) / intervals.length;
-      const bpm = Math.round(60000 / avgMs);
-      if (bpm >= 40 && bpm <= 220) setMetroBpm(bpm);
-    }
-    metroPulse();
-    // reset tap memory if they pause too long
-    clearTimeout(metroTap._resetT);
-    metroTap._resetT = setTimeout(() => { tapTimes = []; }, 2000);
-  });
-
-  // Parse "METRONOME:120" out of Vizi's pipe commands and apply + auto-start
-  function applyMetronomeCommand(commandsStr){
-    if (!commandsStr) return;
-    const m = commandsStr.match(/METRONOME:(\d+)/i);
-    if (m){
-      setMetroBpm(parseInt(m[1], 10));
-      metroStart();
-    }
-  }
 
   loadSongSheet();
 </script>
