@@ -16,15 +16,15 @@
   right: 24px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
   background: #1a1a2e;
   border: 1.5px solid rgba(255,255,255,0.13);
-  border-radius: 40px;
-  padding: 8px 14px 8px 10px;
+  border-radius: 50px;
+  padding: 12px 20px 12px 14px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
   user-select: none;
   touch-action: none;
-  min-width: 260px;
+  min-width: 360px;
   cursor: default;
   font-family: 'DM Sans', sans-serif;
   backdrop-filter: blur(8px);
@@ -50,16 +50,16 @@
 
 #vm-bpm-display {
   font-family: 'DM Mono', monospace;
-  font-size: 1rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #fff;
-  min-width: 2.6rem;
+  min-width: 3.4rem;
   text-align: center;
   flex-shrink: 0;
 }
 #vm-bpm-label {
   font-family: 'DM Mono', monospace;
-  font-size: .52rem;
+  font-size: .62rem;
   letter-spacing: .12em;
   text-transform: uppercase;
   color: rgba(255,255,255,.38);
@@ -79,7 +79,7 @@
 }
 #vm-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 14px; height: 14px;
+  width: 18px; height: 18px;
   border-radius: 50%;
   background: #4f8ef7;
   cursor: pointer;
@@ -87,7 +87,7 @@
 }
 #vm-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
 #vm-slider::-moz-range-thumb {
-  width: 14px; height: 14px;
+  width: 18px; height: 18px;
   border-radius: 50%;
   background: #4f8ef7;
   cursor: pointer;
@@ -98,10 +98,10 @@
   background: rgba(255,255,255,.08);
   border: 1.5px solid rgba(255,255,255,.12);
   border-radius: 50%;
-  width: 30px; height: 30px;
+  width: 42px; height: 42px;
   flex-shrink: 0;
   cursor: pointer;
-  font-size: .7rem;
+  font-size: .85rem;
   color: rgba(255,255,255,.7);
   display: flex; align-items: center; justify-content: center;
   transition: all .07s;
@@ -111,12 +111,12 @@
 
 #vm-ts {
   font-family: 'DM Mono', monospace;
-  font-size: .62rem;
+  font-size: .72rem;
   color: rgba(255,255,255,.5);
   background: rgba(255,255,255,.07);
   border: 1px solid rgba(255,255,255,.1);
-  border-radius: 5px;
-  padding: 2px 6px;
+  border-radius: 6px;
+  padding: 4px 9px;
   cursor: pointer;
   flex-shrink: 0;
   transition: background .15s;
@@ -125,12 +125,12 @@
 #vm-ts:hover { background: rgba(255,255,255,.13); color: #fff; }
 
 #vm-play {
-  width: 34px; height: 34px;
+  width: 46px; height: 46px;
   border-radius: 50%;
   border: none;
   background: #2e7d52;
   color: #fff;
-  font-size: .85rem;
+  font-size: 1rem;
   flex-shrink: 0;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
@@ -148,7 +148,7 @@
   flex-shrink: 0;
 }
 .vm-dot {
-  width: 7px; height: 7px;
+  width: 10px; height: 10px;
   border-radius: 50%;
   background: rgba(255,255,255,.15);
   transition: background .06s, box-shadow .06s;
@@ -209,18 +209,30 @@
     dots:    document.querySelectorAll('.vm-dot'),
   };
 
-  // ── Position restore ─────────────────────────────────────────
+  // ── Position restore (left/top coords) ──────────────────────
+  function applyPos(left, top) {
+    el.root.style.left   = left + 'px';
+    el.root.style.top    = top  + 'px';
+    el.root.style.right  = '';
+    el.root.style.bottom = '';
+  }
+  function defaultPos() {
+    // Default: bottom-right corner
+    const w = el.root.offsetWidth  || 360;
+    const h = el.root.offsetHeight || 60;
+    applyPos(window.innerWidth - w - 24, window.innerHeight - h - 24);
+  }
   try {
     const saved = JSON.parse(localStorage.getItem('viziMetroPos') || 'null');
-    if (saved && typeof saved.right === 'number') {
-      el.root.style.right  = saved.right  + 'px';
-      el.root.style.bottom = saved.bottom + 'px';
-      el.root.style.left   = '';
-      el.root.style.top    = '';
+    if (saved && typeof saved.left === 'number') {
+      applyPos(saved.left, saved.top);
+    } else {
+      // slight delay so offsetWidth is known
+      setTimeout(defaultPos, 0);
     }
     const savedBpm = parseInt(localStorage.getItem('viziMetroBpm') || '80', 10);
     if (savedBpm >= 40 && savedBpm <= 220) { bpm = savedBpm; }
-  } catch(e){}
+  } catch(e){ setTimeout(defaultPos, 0); }
 
   el.bpmDisp.textContent = bpm;
   el.slider.value = bpm;
@@ -323,15 +335,16 @@
   });
 
   // ── Drag ─────────────────────────────────────────────────────
-  let dragActive = false, startX, startY, startRight, startBottom;
+  let dragActive = false, startX, startY, startLeft, startTop;
 
   function onDragStart(e) {
     dragActive = true;
     const touch = e.touches ? e.touches[0] : e;
-    startX = touch.clientX; startY = touch.clientY;
+    startX = touch.clientX;
+    startY = touch.clientY;
     const rect = el.root.getBoundingClientRect();
-    startRight  = window.innerWidth  - rect.right;
-    startBottom = window.innerHeight - rect.bottom;
+    startLeft = rect.left;
+    startTop  = rect.top;
     e.preventDefault();
   }
 
@@ -340,12 +353,11 @@
     const touch = e.touches ? e.touches[0] : e;
     const dx = touch.clientX - startX;
     const dy = touch.clientY - startY;
-    const newRight  = Math.max(0, startRight  - dx);
-    const newBottom = Math.max(0, startBottom + dy);
-    el.root.style.right  = newRight  + 'px';
-    el.root.style.bottom = newBottom + 'px';
-    el.root.style.left   = '';
-    el.root.style.top    = '';
+    const maxLeft = window.innerWidth  - el.root.offsetWidth;
+    const maxTop  = window.innerHeight - el.root.offsetHeight;
+    const newLeft = Math.max(0, Math.min(maxLeft, startLeft + dx));
+    const newTop  = Math.max(0, Math.min(maxTop,  startTop  + dy));
+    applyPos(newLeft, newTop);
     e.preventDefault();
   }
 
@@ -354,8 +366,8 @@
     dragActive = false;
     try {
       localStorage.setItem('viziMetroPos', JSON.stringify({
-        right:  parseFloat(el.root.style.right)  || 24,
-        bottom: parseFloat(el.root.style.bottom) || 24,
+        left: parseFloat(el.root.style.left) || 0,
+        top:  parseFloat(el.root.style.top)  || 0,
       }));
     } catch(e){}
   }

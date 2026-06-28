@@ -1075,6 +1075,26 @@
 
   /* Metronome moved to shared floating widget — metronome-widget.js */
 
+
+  /* ── stage selector bar ── */
+  .stage-bar{
+    display:flex; flex-wrap:wrap; gap:.4rem;
+    padding:.75rem 1.5rem; border-bottom:1.5px solid var(--border);
+    background:rgba(15,17,23,0.6);
+  }
+  .stage-pill{
+    font-family:'DM Mono',monospace; font-size:.62rem; font-weight:500;
+    letter-spacing:.06em; text-transform:uppercase;
+    padding:.4rem .85rem; border-radius:20px;
+    border:1.5px solid var(--border); background:transparent;
+    color:var(--text-mid); cursor:pointer; transition:all .18s;
+    white-space:nowrap;
+  }
+  .stage-pill:hover{ border-color:var(--blue); color:var(--blue); background:rgba(79,142,247,0.08); }
+  .stage-pill.active{ border-color:var(--gold); color:var(--gold); background:rgba(232,160,32,0.10); }
+  .stage-pill-song{ border-color:rgba(45,212,191,0.3); color:var(--teal); }
+  .stage-pill-song:hover{ border-color:var(--teal); background:rgba(45,212,191,0.08); }
+
 </style>
 </head>
 <body>
@@ -1088,6 +1108,17 @@
     <a href="index.html" class="nav-link">Home</a>
   </div>
 </nav>
+
+<!-- Stage selector bar -->
+<div class="stage-bar">
+  <button class="stage-pill" data-id="tuning">01 · Tuning &amp; Setup</button>
+  <button class="stage-pill" data-id="warmup">02 · Warmup with Scales</button>
+  <button class="stage-pill" data-id="chord-theory">03 · How Chords Are Built</button>
+  <button class="stage-pill" data-id="chords">04 · Chords</button>
+  <button class="stage-pill" data-id="strumming">05 · Strumming</button>
+  <button class="stage-pill" data-id="soloing">06 · Soloing &amp; Scales</button>
+  <button class="stage-pill stage-pill-song" data-id="song">07 · Play a Song</button>
+</div>
 
 <!-- Stage intro YouTube video window -->
 <div class="yt-video-wrap" id="ytVideoWrap">
@@ -2895,11 +2926,31 @@
 
   document.getElementById('catClose').addEventListener('click', () => {
     stopTuner();
-    window.location.href = 'index.html';
+    catPanel.classList.remove('show');
+    document.querySelectorAll('.stage-pill').forEach(p => p.classList.remove('active'));
   });
 
   // Auto-open from sessionStorage or hash
-  function arriveAtStage(stageId){ setTimeout(() => openStage(stageId), 80); }
+
+  // ── Stage bar nav ──────────────────────────────────────────
+  document.querySelectorAll('.stage-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const id = pill.dataset.id;
+      if (id === 'song') { window.location.href = 'songs.html'; return; }
+      document.querySelectorAll('.stage-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      openStage(id);
+    });
+  });
+
+  function arriveAtStage(stageId){
+    setTimeout(() => {
+      openStage(stageId);
+      document.querySelectorAll('.stage-pill').forEach(p => {
+        p.classList.toggle('active', p.dataset.id === stageId);
+      });
+    }, 80);
+  }
   try {
     const returnStage = sessionStorage.getItem('viziReturnStage');
     if (returnStage && STAGES.find(s => s.id === returnStage)){
@@ -3790,7 +3841,7 @@ renderAll();
 
   // Metronome handled by shared floating widget — see metronome-widget.js
 
-
+})(); // end IIFE
 </script>
 <script src="metronome-widget.js"></script>
 </body>
