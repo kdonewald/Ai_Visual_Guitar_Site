@@ -37,7 +37,7 @@
   .logo-name{font-family:'Playfair Display',serif;font-size:.88rem;font-weight:700;color:var(--text)}
   .nav-links{display:flex;gap:.4rem;align-items:center}
   .nav-link{
-    font-size:.78rem;font-weight:500;color:var(--text-mid);text-decoration:none;
+    font-size:.86rem;font-weight:500;color:var(--text-mid);text-decoration:none;
     padding:5px 12px;border-radius:6px;border:1.5px solid var(--border);transition:all .2s;
   }
   .nav-link:hover{border-color:var(--blue);color:var(--blue)}
@@ -77,8 +77,8 @@
   @keyframes intro-pulse{0%,100%{box-shadow:0 0 0 0 rgba(79,142,247,0.5)}60%{box-shadow:0 0 0 18px rgba(79,142,247,0)}}
 
   .status{
-    font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.08em;
-    text-transform:uppercase;color:var(--text-dim);min-height:1.1em;font-weight:500;
+    font-family:'DM Mono',monospace;font-size:.87rem;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--text-mid);min-height:1.1em;font-weight:600;
     margin-bottom:1rem;text-align:center;
   }
 
@@ -114,7 +114,7 @@
     position:absolute;top:6px;right:6px;z-index:10;
     width:26px;height:26px;border-radius:50%;
     background:rgba(0,0,0,0.7);border:1px solid var(--border);color:var(--text-mid);
-    font-size:.75rem;cursor:pointer;display:flex;
+    font-size:.85rem;cursor:pointer;display:flex;
     align-items:center;justify-content:center;
     transition:background .15s;
   }
@@ -126,8 +126,8 @@
     margin-top:1.2rem;
   }
   .fretboard-label{
-    font-family:'DM Mono',monospace;font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--text-mid);text-align:center;margin-bottom:.65rem;font-weight:500;
+    font-family:'DM Mono',monospace;font-size:.86rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--text-mid);text-align:center;margin-bottom:.65rem;font-weight:600;font-size:.80rem;letter-spacing:.12em;
   }
   .fretboard{
     background:linear-gradient(180deg,#2a1f14,#1a1208);
@@ -147,13 +147,13 @@
     background:rgba(232,160,32,0.16);border-color:var(--gold);
     box-shadow:0 0 0 1px var(--gold),0 0 18px rgba(232,160,32,0.30);
   }
-  .fret-num{font-family:'DM Mono',monospace;font-size:.58rem;color:rgba(255,255,255,0.28);margin-bottom:.3rem;letter-spacing:.06em}
+  .fret-num{font-family:'DM Mono',monospace;font-size:.82rem;color:var(--gold);margin-bottom:.3rem;letter-spacing:.06em;font-weight:800}
   .fret-led{width:9px;height:9px;border-radius:50%;margin:0 auto .38rem;background:rgba(255,255,255,0.12);transition:all .2s}
   .fret-stage.active .fret-led{background:var(--gold);box-shadow:0 0 10px var(--gold)}
   .fret-stage.song-stage .fret-led{background:var(--teal);box-shadow:0 0 8px var(--teal)}
   .fret-stage.song-stage{border-color:rgba(45,212,191,0.30)}
   .fret-stage.song-stage .fret-label{color:var(--teal)}
-  .fret-label{font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:600;color:rgba(255,255,255,0.92);line-height:1.2}
+  .fret-label{font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:700;color:#ffffff;line-height:1.25}
   .fret-stage.active .fret-label{color:#fff}
 
   /* response panels */
@@ -161,8 +161,8 @@
   .panel{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;
          padding:.85rem 1.1rem;opacity:0;transform:translateY(8px);transition:all .3s}
   .panel.show{opacity:1;transform:none}
-  .panel .label{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.14em;
-                text-transform:uppercase;color:var(--text-dim);margin-bottom:.3rem}
+  .panel .label{font-family:'DM Mono',monospace;font-size:.85rem;letter-spacing:.14em;
+                text-transform:uppercase;color:var(--text-mid);margin-bottom:.3rem}
   .panel.you{border-left:3px solid var(--blue)}
   .panel.vizi-p{border-left:3px solid var(--red)}
   .panel .body{font-size:.95rem;line-height:1.55;color:var(--text);font-weight:400}
@@ -179,9 +179,6 @@
   </a>
   <div class="nav-links">
     <a href="index.html" class="nav-link active">Home</a>
-    <a href="lessons.html" class="nav-link">Lessons</a>
-    <a href="songs.html" class="nav-link">Songs</a>
-    <a href="vizi.html" class="nav-link">Vizi</a>
   </div>
 </nav>
 
@@ -242,15 +239,16 @@
     { id:'chord-theory', num:'03', label:'How Chords Are Built', song:false },
     { id:'chords',       num:'04', label:'Chords',               song:false },
     { id:'strumming',    num:'05', label:'Strumming Patterns',   song:false },
-    { id:'soloing',      num:'06', label:'Soloing & Scales',     song:false },
+    { id:'soloing',      num:'06', label:'Soloing',     song:false },
     { id:'song',         num:'07', label:'Play a Song',          song:true  },
+    { id:'tab',          num:'08', label:'Read & Play Tab',      song:false },
   ];
 
   const fretsRow = document.getElementById('fretsRow');
   STAGES.forEach(s => {
     const el = document.createElement('div');
     el.className = 'fret-stage' + (s.song ? ' song-stage' : '');
-    el.innerHTML = `<div class="fret-num">${s.num}</div><div class="fret-led"></div><div class="fret-label">${s.label}</div>`;
+    el.innerHTML = `<div class="fret-num" style="color:var(--gold);font-weight:800">${s.num}</div><div class="fret-led"></div><div class="fret-label">${s.label}</div>`;
     el.addEventListener('click', () => {
       if (s.song) { window.location.href = 'songs.html'; return; }
       window.location.href = `lessons.html#${s.id}`;

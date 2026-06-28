@@ -1094,6 +1094,9 @@
   .stage-pill.active{ border-color:var(--gold); color:var(--gold); background:rgba(232,160,32,0.10); }
   .stage-pill-song{ border-color:rgba(45,212,191,0.3); color:var(--teal); }
   .stage-pill-song:hover{ border-color:var(--teal); background:rgba(45,212,191,0.08); }
+  .stage-pill-tab{ border-color:rgba(79,142,247,0.3); color:var(--blue); }
+  .stage-pill-tab:hover{ border-color:var(--blue); background:rgba(79,142,247,0.08); }
+  .pill-num{ color:var(--gold);font-weight:800;font-size:.84rem; }
 
 </style>
 </head>
@@ -1111,13 +1114,14 @@
 
 <!-- Stage selector bar -->
 <div class="stage-bar">
-  <button class="stage-pill" data-id="tuning">01 · Tuning &amp; Setup</button>
-  <button class="stage-pill" data-id="warmup">02 · Warmup with Scales</button>
-  <button class="stage-pill" data-id="chord-theory">03 · How Chords Are Built</button>
-  <button class="stage-pill" data-id="chords">04 · Chords</button>
-  <button class="stage-pill" data-id="strumming">05 · Strumming</button>
-  <button class="stage-pill" data-id="soloing">06 · Soloing &amp; Scales</button>
-  <button class="stage-pill stage-pill-song" data-id="song">07 · Play a Song</button>
+  <button class="stage-pill" data-id="tuning"><span class="pill-num">01</span> · Tuning &amp; Setup</button>
+  <button class="stage-pill" data-id="warmup"><span class="pill-num">02</span> · Warmup with Scales</button>
+  <button class="stage-pill" data-id="chord-theory"><span class="pill-num">03</span> · How Chords Are Built</button>
+  <button class="stage-pill" data-id="chords"><span class="pill-num">04</span> · Chords</button>
+  <button class="stage-pill" data-id="strumming"><span class="pill-num">05</span> · Strumming</button>
+  <button class="stage-pill" data-id="soloing"><span class="pill-num">06</span> · Soloing</button>
+  <button class="stage-pill stage-pill-song" data-id="song"><span class="pill-num">07</span> · Play a Song</button>
+  <button class="stage-pill stage-pill-tab" data-id="tab"><span class="pill-num">08</span> · Read &amp; Play Tab</button>
 </div>
 
 <!-- Stage intro YouTube video window -->
@@ -1289,7 +1293,7 @@
       exercises:[]
     },
     {
-      id:'soloing', num:6, label:'Soloing & Scales',
+      id:'soloing', num:6, label:'Soloing',
       desc:'Warm up with scales and start playing single-note lines and simple solos.',
       videoUrl:'', // add YouTube link when ready — stage soloing
       tips:[
@@ -1329,6 +1333,13 @@
         'Play through the full song with the metronome'
       ],
       isSong:true
+    },
+    {
+      id:'tab', num:8, label:'Read & Play Tab',
+      desc:'Paste any guitar tab and Vizi will light up each note on your fretboard as you play through it.',
+      videoUrl:'', isTab:true,
+      tips:['Tab shows fret numbers on each string — 0 means open string.','Read tab left to right, top string to bottom string.'],
+      exercises:[]
     }
   ];
 
@@ -1561,6 +1572,7 @@
     const stage = STAGES.find(s => s.id === id);
     if (!stage) return;
     if (stage.isSong){ window.location.href = 'songs.html'; return; }
+    if (stage.isTab){ renderTabPanel(); activeStage=stage; catStageTag.textContent='Stage 8'; catTitle.textContent='Read & Play Tab'; catDesc.textContent=stage.desc; catPanel.classList.add('show'); catPanel.scrollIntoView({behavior:'smooth',block:'start'}); return; }
     activeStage = stage;
 
     // Tuning stage: auto-open tuner, show tip
@@ -3135,6 +3147,12 @@
     mount.id='strumPlayerMount';
     exList.appendChild(mount);
     setTimeout(()=>initStrumPlayer('strumPlayerMount'),10);
+  }
+
+  // ── Tab stage panel ──────────────────────────────────────────
+  function renderTabPanel(){
+    exList.innerHTML = '';
+    buildTabReader(exList);
   }
 
   // ── Soloing panel ────────────────────────────────────────────
