@@ -1888,6 +1888,11 @@
   // ── CHORD BUILDER (Stage 3) ─────────────────────────────────
   const CHROMATIC = ['C','C#/Db','D','D#/Eb','E','F','F#/Gb','G','G#/Ab','A','A#/Bb','B'];
   const CHROM12   = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  // Display names for pills — show both sharp and flat so students recognise either name
+  const ENHARMONIC = {
+    'C#':'C#/Db','D#':'D#/Eb','F#':'F#/Gb','G#':'G#/Ab','A#':'A#/Bb'
+  };
+  function displayNote(n){ return ENHARMONIC[n] || n; }
 
   const CHORD_TYPES = {
     'Major':      { intervals:[2,2,1,2,2,2,1], formula:'W W H W W W H', degrees:[0,2,4], labels:['Root','Major 3rd','5th'],         pillClass:['root-note','third-note','fifth-note'],    desc:'Major scale → take Root, 3rd, 5th' },
@@ -2104,7 +2109,7 @@
         const info = getPillInfo(num);
         info.forEach(p=>{
           const pill=document.createElement('span'); pill.className='cb-pill '+p.cls;
-          pill.textContent=p.note; pillRow.appendChild(pill);
+          pill.textContent=displayNote(p.note); pillRow.appendChild(pill);
         });
         resolve();
       }, delay);
