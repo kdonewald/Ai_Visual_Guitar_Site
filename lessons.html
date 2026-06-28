@@ -3530,26 +3530,49 @@ function scheduleNotes(){
     if (val==='D'||val==='U') playStrum(nextNoteTime, val, isDownbeat);
     const cap = idx, capT = nextNoteTime;
     const delay = Math.max(0,(capT-ctx.currentTime)*1000);
-    // Schedule beat ticks within this slot so foot always taps every quarter note
     const beats = TIME_SIGS[currentTS] ? TIME_SIGS[currentTS].beats : 4;
+    const quarterSec = 60/bpm; // always one quarter note in seconds
+
+    // How many quarter-note beats does this slot span?
     const beatsThisSlot = currentTS==='68' ? 1
-      : subdivisions===0  ? beats        // whole: all beats in one slot
-      : subdivisions===-1 ? beats/2      // half:  2 beats per slot in 4/4
-      : subdivisions===1  ? 1            // quarter: 1 beat per slot
-      : 0.5;                             // eighth: half a beat per slot
-    const beatDur = secPerSlot() / beatsThisSlot;
-    const slotsPerBeat = currentTS==='68' ? 1 : subdivisions===2 ? 2 : 1;
-    const totalBeats = beats;
-    for (let b=0; b<Math.round(beatsThisSlot); b++){
-      const beatDelay = delay + b * beatDur * 1000;
+      : subdivisions===0  ? beats      // whole = full measure
+      : subdivisions===-1 ? beats/2    // half  = half measure (2 in 4/4, 1.5 in 3/4)
+      : subdivisions===1  ? 1          // quarter = 1 beat
+      : 0.5;                           // eighth = half a beat (2 slots per beat)
+
+    // Beat number of the FIRST beat in this slot, derived from slot index — never drifts
+    // For eighth notes 2 slots = 1 beat, so beatOffset advances every 2 slots
+    const slotsBeatRatio = subdivisions===2 ? 0.5 : beatsThisSlot; // beats per slot
+    const firstBeatOfSlot = Math.round(currentSlotIndex * slotsBeatRatio) % beats;
+
+    // For eighth notes: 2 slots per beat, only fire foot tap on first slot of each beat pair
+    const isEighth = (subdivisions===2);
+    const shouldTickFoot = !isEighth || (currentSlotIndex % 2 === 0);
+    const beatAtThisSlot = isEighth ? Math.floor(currentSlotIndex/2) % beats : firstBeatOfSlot;
+
+    if (isEighth){
+      // Eighth: one slot = one strum, foot only taps every other slot
+      const capSlot = cap, capBeat = beatAtThisSlot;
       setTimeout(()=>{
         if (!isPlaying) return;
-        currentBeat = (currentBeat+1) % totalBeats;
+        currentSlot = capSlot;
+        if (shouldTickFoot) currentBeat = capBeat;
         updateHighlights();
-      }, beatDelay);
+      }, delay);
+    } else {
+      // Whole/half/quarter: fire one tick per beat within the slot
+      for (let b=0; b<Math.round(beatsThisSlot); b++){
+        const beatNum = (firstBeatOfSlot + b) % beats;
+        const beatDelay = delay + b * quarterSec * 1000;
+        const capSlot = cap, capBeat = beatNum;
+        setTimeout(()=>{
+          if (!isPlaying) return;
+          currentSlot = capSlot;
+          currentBeat = capBeat;
+          updateHighlights();
+        }, beatDelay);
+      }
     }
-    // Also update currentSlot at the start of the slot
-    setTimeout(()=>{ if (!isPlaying) return; currentSlot=cap; }, delay);
     nextNoteTime += secPerSlot();
     currentSlotIndex++;
   }
