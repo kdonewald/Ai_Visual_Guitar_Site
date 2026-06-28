@@ -380,6 +380,6 @@
   document.addEventListener('touchend', onDragEnd);
 
   // ── Public API ────────────────────────────────────────────────
-  window.viziMetro = { setBpm, start, stop, setBeats };
+  window.viziMetro = { setBpm, getBpm: () => bpm, start, stop, setBeats };
 
 })();

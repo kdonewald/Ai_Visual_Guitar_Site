@@ -3192,40 +3192,364 @@
   let tabGroups=[],tabStepIdx=0,tabAutoTimer=null,tabAutoPlaying=false,tabSpeedMs=800;
 
   function buildTabReader(container){
-    const sec=document.createElement('div'); sec.className='tab-reader-section';
-    sec.innerHTML='<div class="tab-reader-header"><span class="tab-reader-icon">&#127928;</span><div><div class="tab-reader-title">Tab Reader</div><div class="tab-reader-sub">Paste ASCII tab — Vizi lights each note on your fretboard</div></div></div>';
-    const ta=document.createElement('textarea'); ta.className='tab-input'; ta.rows=6;
-    ta.placeholder='Paste 6-line ASCII tab here...\ne|--0---2-|\nB|--1---3-|\nG|--0---2-|\nD|--------|\nA|--------|\nE|--------|';
-    sec.appendChild(ta);
-    const acts=document.createElement('div'); acts.className='tab-actions';
-    const pBtn=document.createElement('button'); pBtn.className='tab-btn primary'; pBtn.textContent='Parse Tab';
-    const cBtn=document.createElement('button'); cBtn.className='tab-btn'; cBtn.textContent='Clear';
-    acts.appendChild(pBtn); acts.appendChild(cBtn); sec.appendChild(acts);
-    const nr=document.createElement('div'); nr.className='tab-notes-row';
-    nr.innerHTML='<div class="tab-notes-box"><div class="tab-notes-label">Fret tokens</div><div class="tab-notes-content" id="tabTokensOut">—</div></div><div class="tab-notes-box"><div class="tab-notes-label">Note names</div><div class="tab-notes-content" id="tabNotesOut">—</div></div>';
-    sec.appendChild(nr);
-    const sw=document.createElement('div'); sw.id='tabStepperWrap'; sw.style.display='none';
-    sw.innerHTML='<div class="tab-stepper"><button class="tab-step-btn" id="tabPrevBtn">&#8249;</button><div class="tab-step-info"><span class="tab-step-note" id="tabStepNote">—</span><span class="tab-step-pos" id="tabStepPos">step 0 of 0</span></div><button class="tab-step-btn" id="tabNextBtn">&#8250;</button></div><div class="tab-auto-row"><button class="tab-auto-btn" id="tabAutoBtn">&#9654; Auto-play</button></div><div class="tab-speed-row"><span class="tab-speed-label">Speed</span><input type="range" class="tab-speed-slider" id="tabSpeedSlider" min="200" max="2000" value="800" step="100"/><span class="tab-speed-val" id="tabSpeedVal">800ms</span></div><div class="tab-fret-status" id="tabFretStatus">Parse a tab to begin</div>';
-    sec.appendChild(sw); container.appendChild(sec);
+    // ── Tab Builder: visual 6-string grid, 2 measures × 4 beats ──
+    const STRINGS = ['e','B','G','D','A','E']; // high to low
+    const STR_CODES = ['He','B','G','D','A','Le'];
+    const OPEN_SEMI_TB = {He:4,B:11,G:7,D:2,A:9,Le:4};
+    const NOTE_NAMES_TB = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+    function fretToNote(code,fret){ return NOTE_NAMES_TB[(OPEN_SEMI_TB[code]+fret)%12]; }
 
-    pBtn.addEventListener('click',()=>{
-      const raw=ta.value.trim(); if(!raw)return;
-      tabGroups=parseAsciiTab(raw);
-      if(!tabGroups.length){document.getElementById('tabTokensOut').textContent='No notes found';return;}
-      document.getElementById('tabTokensOut').textContent=tabGroups.map(a=>a.length===1?a[0]:'('+a.join(',')+')').join('  ');
-      document.getElementById('tabNotesOut').textContent=tabGroups.map(a=>a.map(tokenToNote).join('+')).join('  ');
-      tabStepIdx=0; stopTabAuto(); sw.style.display='block'; updateTabStepper(); sendTabStep();
+    // Grid state: grid[measure][beat][string] = fret number or null
+    const grid = [[],[]];;
+    for(let m=0;m<2;m++) for(let b=0;b<4;b++) grid[m].push(Array(6).fill(null));
+
+    // Track playback
+    let tbPlaying=false, tbStep=0, tbTimer=null, tbTotalSteps=8;
+    let tbSelectedCell=null; // {m,b,s}
+
+    // ── Presets ──────────────────────────────────────────────────
+    const PRESETS = [
+      { label:'Open E String', desc:'One note — just the open low E',
+        data:[ [[null,null,null,null,null,0],[null,null,null,null,null,null],[null,null,null,null,null,null],[null,null,null,null,null,null]],
+               [[null,null,null,null,null,null],[null,null,null,null,null,null],[null,null,null,null,null,null],[null,null,null,null,null,null]] ] },
+      { label:'Low E Climb', desc:'Single notes climbing up low E string',
+        data:[ [[null,null,null,null,null,0],[null,null,null,null,null,2],[null,null,null,null,null,3],[null,null,null,null,null,5]],
+               [[null,null,null,null,null,7],[null,null,null,null,null,9],[null,null,null,null,null,10],[null,null,null,null,null,12]] ] },
+      { label:'G Major Scale', desc:'G major scale across strings',
+        data:[ [[null,null,null,null,null,3],[null,null,null,null,null,5],[null,null,null,null,0,null],[null,null,null,null,2,null]],
+               [[null,null,null,0,null,null],[null,null,null,2,null,null],[null,null,0,null,null,null],[null,null,2,null,null,null]] ] },
+      { label:'Power Chords', desc:'E5 and A5 power chords (2 strings)',
+        data:[ [[null,null,null,null,2,0],[null,null,null,null,2,0],[null,null,null,null,2,0],[null,null,null,null,2,0]],
+               [[null,null,null,2,0,null],[null,null,null,2,0,null],[null,null,null,2,0,null],[null,null,null,2,0,null]] ] },
+      { label:'Open G Chord', desc:'Full open G chord held across beats',
+        data:[ [[3,null,0,0,2,3],[3,null,0,0,2,3],[3,null,0,0,2,3],[3,null,0,0,2,3]],
+               [[3,null,0,0,2,3],[3,null,0,0,2,3],[3,null,0,0,2,3],[3,null,0,0,2,3]] ] },
+      { label:'Melody + Chord', desc:'Melody on high strings over chord bass',
+        data:[ [[3,3,null,null,null,3],[1,1,null,null,null,3],[0,0,null,null,null,3],[1,3,null,null,null,3]],
+               [[3,null,0,0,2,3],[3,null,0,0,2,3],[3,null,0,0,2,3],[3,null,0,0,2,3]] ] },
+    ];
+
+    // ── Build CSS ─────────────────────────────────────────────────
+    if (!document.getElementById('tbCSS')){
+      const style = document.createElement('style');
+      style.id = 'tbCSS';
+      style.textContent = `
+        .tb-wrap{ font-family:'DM Mono',monospace; }
+        .tb-top-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:.75rem; gap:.5rem; flex-wrap:wrap; }
+        .tb-title{ font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:700; color:#fff; }
+        .tb-preset-row{ display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.75rem; }
+        .tb-preset-btn{ font-family:'DM Mono',monospace; font-size:.72rem; font-weight:600; letter-spacing:.04em;
+          padding:.3rem .7rem; border-radius:20px; border:1.5px solid rgba(255,255,255,0.15);
+          background:transparent; color:rgba(255,255,255,0.65); cursor:pointer; transition:all .18s; white-space:nowrap; }
+        .tb-preset-btn:hover{ border-color:var(--blue); color:var(--blue); }
+        .tb-grid-wrap{ display:flex; gap:0; align-items:stretch; margin-bottom:.85rem; overflow-x:auto; }
+        .tb-string-labels{ display:flex; flex-direction:column; justify-content:space-around;
+          padding-right:.5rem; padding-top:1.6rem; }
+        .tb-str-label{ font-size:.85rem; font-weight:700; color:var(--gold); line-height:1;
+          height:2.6rem; display:flex; align-items:center; }
+        .tb-measure{ display:flex; flex-direction:column; }
+        .tb-measure-head{ font-size:.72rem; letter-spacing:.1em; text-transform:uppercase;
+          color:rgba(255,255,255,.5); text-align:center; margin-bottom:.4rem; font-weight:600;
+          display:flex; gap:0; }
+        .tb-beat-head{ width:2.8rem; text-align:center; font-size:.70rem; color:rgba(255,255,255,.45); }
+        .tb-row{ display:flex; position:relative; }
+        .tb-row::after{ content:''; position:absolute; bottom:0; left:0; right:0;
+          height:1px; background:rgba(255,255,255,.08); }
+        .tb-cell{ width:2.8rem; height:2.6rem; display:flex; align-items:center; justify-content:center;
+          border:1.5px solid rgba(255,255,255,.10); border-radius:6px; margin:2px;
+          cursor:pointer; transition:all .15s; background:rgba(255,255,255,.04);
+          font-size:.88rem; font-weight:700; color:rgba(255,255,255,.85); position:relative; }
+        .tb-cell:hover{ border-color:var(--blue); background:rgba(79,142,247,.12); }
+        .tb-cell.selected{ border-color:var(--gold); background:rgba(232,160,32,.18); color:var(--gold); }
+        .tb-cell.filled{ border-color:rgba(79,142,247,.5); background:rgba(79,142,247,.10); color:#8ec8ff; }
+        .tb-cell.playing{ border-color:var(--gold); background:rgba(232,160,32,.25); color:var(--gold);
+          box-shadow:0 0 10px rgba(232,160,32,.4); }
+        .tb-cell.empty-display::after{ content:'·'; color:rgba(255,255,255,.2); font-size:1rem; }
+        .tb-divider{ width:3px; background:rgba(255,255,255,.25); margin:0 .5rem; border-radius:2px; align-self:stretch; margin-top:1.6rem; }
+        .tb-numpad-wrap{ display:flex; flex-direction:column; align-items:center; margin-bottom:.75rem; }
+        .tb-numpad-label{ font-size:.72rem; color:rgba(255,255,255,.5); margin-bottom:.4rem; letter-spacing:.08em; text-transform:uppercase; }
+        .tb-numpad{ display:grid; grid-template-columns:repeat(5,1fr); gap:.3rem; max-width:220px; }
+        .tb-num-btn{ padding:.5rem 0; border-radius:7px; border:1.5px solid rgba(255,255,255,.15);
+          background:var(--surface2); color:#fff; font-family:'DM Mono',monospace;
+          font-size:.88rem; font-weight:700; cursor:pointer; transition:all .15s; text-align:center; }
+        .tb-num-btn:hover{ border-color:var(--blue); background:rgba(79,142,247,.15); color:var(--blue); }
+        .tb-num-btn.clear-btn{ border-color:rgba(224,85,64,.4); color:var(--red); }
+        .tb-num-btn.clear-btn:hover{ background:rgba(224,85,64,.15); }
+        .tb-actions{ display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:.75rem; }
+        .tb-action-btn{ flex:1; min-width:120px; padding:.65rem 1rem; border-radius:9px;
+          border:none; font-family:'DM Sans',sans-serif; font-size:.9rem; font-weight:600;
+          cursor:pointer; transition:all .18s; display:flex; align-items:center; justify-content:center; gap:.4rem; }
+        .tb-action-btn.play{ background:var(--green); color:#fff; box-shadow:0 3px 10px rgba(61,186,114,.3); }
+        .tb-action-btn.play:hover{ background:#2ea860; }
+        .tb-action-btn.play.playing{ background:var(--red); box-shadow:0 3px 10px rgba(224,85,64,.3); }
+        .tb-action-btn.send{ background:var(--blue); color:#fff; box-shadow:0 3px 10px rgba(79,142,247,.25); }
+        .tb-action-btn.send:hover{ background:#3a7ee0; }
+        .tb-action-btn.clr{ background:transparent; color:var(--text-mid); border:1.5px solid var(--border); }
+        .tb-action-btn.clr:hover{ border-color:var(--red); color:var(--red); }
+        .tb-status{ font-size:.80rem; color:var(--text-mid); text-align:center; min-height:1.2rem; margin-bottom:.5rem; }
+        .tb-note-display{ display:flex; gap:.3rem; flex-wrap:wrap; margin-bottom:.5rem; min-height:1.6rem; justify-content:center; }
+        .tb-note-pill{ font-size:.78rem; font-weight:700; padding:.2rem .55rem; border-radius:12px;
+          background:rgba(79,142,247,.15); border:1px solid rgba(79,142,247,.35); color:#8ec8ff; }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // ── Build HTML ────────────────────────────────────────────────
+    const wrap = document.createElement('div'); wrap.className='tb-wrap';
+
+    // Title + clear all
+    const topRow = document.createElement('div'); topRow.className='tb-top-row';
+    topRow.innerHTML='<span class="tb-title">Tab Builder</span>';
+    const clrAll = document.createElement('button'); clrAll.className='tb-action-btn clr'; clrAll.style.flex='0';
+    clrAll.textContent='Clear All'; clrAll.style.fontSize='.78rem'; clrAll.style.padding='.35rem .75rem';
+    topRow.appendChild(clrAll); wrap.appendChild(topRow);
+
+    // Presets
+    const presetRow = document.createElement('div'); presetRow.className='tb-preset-row';
+    PRESETS.forEach((p,pi)=>{
+      const btn=document.createElement('button'); btn.className='tb-preset-btn';
+      btn.textContent=p.label; btn.title=p.desc;
+      btn.addEventListener('click',()=>loadPreset(pi));
+      presetRow.appendChild(btn);
     });
-    cBtn.addEventListener('click',()=>{
-      ta.value=''; tabGroups=[]; tabStepIdx=0; stopTabAuto();
-      document.getElementById('tabTokensOut').textContent='—';
-      document.getElementById('tabNotesOut').textContent='—';
-      sw.style.display='none';
+    wrap.appendChild(presetRow);
+
+    // Grid
+    const gridWrap=document.createElement('div'); gridWrap.className='tb-grid-wrap';
+
+    // String labels
+    const lblCol=document.createElement('div'); lblCol.className='tb-string-labels';
+    STRINGS.forEach(s=>{ const l=document.createElement('div'); l.className='tb-str-label'; l.textContent=s; lblCol.appendChild(l); });
+    gridWrap.appendChild(lblCol);
+
+    // Cell elements: cells[m][b][s]
+    const cells=[[[],[],[],[]], [[],[],[],[]]];
+
+    for(let m=0;m<2;m++){
+      const mDiv=document.createElement('div'); mDiv.className='tb-measure';
+      // Beat headers
+      const mHead=document.createElement('div'); mHead.className='tb-measure-head';
+      const mLabel=document.createElement('span');
+      mLabel.style.cssText='font-size:.72rem;letter-spacing:.1em;color:var(--gold);font-weight:700;margin-right:.3rem;';
+      mLabel.textContent='M'+(m+1);
+      mHead.appendChild(mLabel);
+      for(let b=0;b<4;b++){ const bh=document.createElement('div'); bh.className='tb-beat-head'; bh.textContent=b+1; mHead.appendChild(bh); }
+      mDiv.appendChild(mHead);
+
+      // String rows
+      for(let s=0;s<6;s++){
+        const row=document.createElement('div'); row.className='tb-row';
+        for(let b=0;b<4;b++){
+          const cell=document.createElement('div');
+          cell.className='tb-cell empty-display';
+          cell.dataset.m=m; cell.dataset.b=b; cell.dataset.s=s;
+          cell.addEventListener('click',()=>selectCell(m,b,s));
+          cells[m][b].push(cell);
+          row.appendChild(cell);
+        }
+        mDiv.appendChild(row);
+      }
+
+      // Clear measure button
+      const clrM=document.createElement('button');
+      clrM.className='tb-action-btn clr'; clrM.style.cssText='font-size:.72rem;padding:.3rem;margin-top:.35rem;';
+      clrM.textContent='Clear M'+(m+1);
+      clrM.addEventListener('click',()=>clearMeasure(m));
+      mDiv.appendChild(clrM);
+      gridWrap.appendChild(mDiv);
+
+      if(m===0){ const div=document.createElement('div'); div.className='tb-divider'; gridWrap.appendChild(div); }
+    }
+    wrap.appendChild(gridWrap);
+
+    // Numpad
+    const numWrap=document.createElement('div'); numWrap.className='tb-numpad-wrap';
+    const numLabel=document.createElement('div'); numLabel.className='tb-numpad-label';
+    numLabel.textContent='Tap a cell, then enter fret (0–13) — adjust metronome to change playback speed';
+    numWrap.appendChild(numLabel);
+    const numpad=document.createElement('div'); numpad.className='tb-numpad';
+    for(let n=0;n<=13;n++){
+      const nb=document.createElement('button'); nb.className='tb-num-btn'; nb.textContent=n;
+      nb.addEventListener('click',()=>enterFret(n)); numpad.appendChild(nb);
+    }
+    const clrBtn=document.createElement('button'); clrBtn.className='tb-num-btn clear-btn';
+    clrBtn.textContent='✕'; clrBtn.addEventListener('click',()=>clearCell()); numpad.appendChild(clrBtn);
+    numWrap.appendChild(numpad); wrap.appendChild(numWrap);
+
+    // Note display
+    const noteDisplay=document.createElement('div'); noteDisplay.className='tb-note-display';
+    wrap.appendChild(noteDisplay);
+
+    // Status
+    const status=document.createElement('div'); status.className='tb-status';
+    status.textContent='Tap a cell to enter a fret number';
+    wrap.appendChild(status);
+
+    // Action buttons
+    const actions=document.createElement('div'); actions.className='tb-actions';
+    const playBtn=document.createElement('button'); playBtn.className='tb-action-btn play';
+    playBtn.innerHTML='&#9654; Play'; actions.appendChild(playBtn);
+    const sendBtn=document.createElement('button'); sendBtn.className='tb-action-btn send';
+    sendBtn.innerHTML='&#127925; Send to Vizi'; actions.appendChild(sendBtn);
+    wrap.appendChild(actions);
+    container.appendChild(wrap);
+
+    // ── Logic ─────────────────────────────────────────────────────
+    function updateCellDisplay(m,b,s){
+      const cell=cells[m][b][s];
+      const val=grid[m][b][s];
+      cell.classList.remove('filled','empty-display');
+      if(val===null){ cell.textContent=''; cell.classList.add('empty-display'); }
+      else { cell.textContent=val; cell.classList.add('filled'); }
+    }
+
+    function selectCell(m,b,s){
+      // Deselect previous
+      if(tbSelectedCell){
+        const {m:pm,b:pb,s:ps}=tbSelectedCell;
+        cells[pm][pb][ps].classList.remove('selected');
+      }
+      tbSelectedCell={m,b,s};
+      cells[m][b][s].classList.add('selected');
+      numLabel.textContent=`String ${STRINGS[s]}, Beat ${b+1} of Measure ${m+1} — enter fret (0–13)`;
+      // Show note name if filled
+      showColumnNotes(m,b);
+    }
+
+    function enterFret(n){
+      if(!tbSelectedCell)return;
+      const {m,b,s}=tbSelectedCell;
+      grid[m][b][s]=n;
+      updateCellDisplay(m,b,s);
+      cells[m][b][s].classList.add('selected');
+      showColumnNotes(m,b);
+      status.textContent=`${STRINGS[s]} string, fret ${n} = ${fretToNote(STR_CODES[s],n)}`;
+      // Auto-advance to next string in same column
+      if(s<5) selectCell(m,b,s+1);
+    }
+
+    function clearCell(){
+      if(!tbSelectedCell)return;
+      const {m,b,s}=tbSelectedCell;
+      grid[m][b][s]=null;
+      updateCellDisplay(m,b,s);
+      showColumnNotes(m,b);
+    }
+
+    function clearMeasure(m){
+      for(let b=0;b<4;b++) for(let s=0;s<6;s++){
+        grid[m][b][s]=null; updateCellDisplay(m,b,s);
+      }
+      noteDisplay.innerHTML=''; status.textContent='Measure '+(m+1)+' cleared';
+    }
+
+    clrAll.addEventListener('click',()=>{
+      for(let m=0;m<2;m++) clearMeasure(m);
+      tbSelectedCell=null; status.textContent='All cleared';
     });
-    sw.querySelector('#tabPrevBtn').addEventListener('click',()=>{if(tabStepIdx>0){tabStepIdx--;updateTabStepper();sendTabStep();}});
-    sw.querySelector('#tabNextBtn').addEventListener('click',()=>{if(tabStepIdx<tabGroups.length-1){tabStepIdx++;updateTabStepper();sendTabStep();}});
-    sw.querySelector('#tabAutoBtn').addEventListener('click',()=>{tabAutoPlaying?stopTabAuto():startTabAuto();});
-    sw.querySelector('#tabSpeedSlider').addEventListener('input',e=>{tabSpeedMs=parseInt(e.target.value);sw.querySelector('#tabSpeedVal').textContent=tabSpeedMs+'ms';if(tabAutoPlaying){stopTabAuto();startTabAuto();}});
+
+    function showColumnNotes(m,b){
+      noteDisplay.innerHTML='';
+      for(let s=0;s<6;s++){
+        const val=grid[m][b][s];
+        if(val===null)continue;
+        const pill=document.createElement('span'); pill.className='tb-note-pill';
+        pill.textContent=`${STRINGS[s]}:${val} = ${fretToNote(STR_CODES[s],val)}`;
+        noteDisplay.appendChild(pill);
+      }
+    }
+
+    function loadPreset(pi){
+      const p=PRESETS[pi];
+      for(let m=0;m<2;m++) for(let b=0;b<4;b++) for(let s=0;s<6;s++){
+        grid[m][b][s]=p.data[m][b][s];
+        updateCellDisplay(m,b,s);
+      }
+      status.textContent='Loaded: '+p.label+' — '+p.desc;
+      noteDisplay.innerHTML='';
+    }
+
+    // Build SF command for one beat column
+    function beatToSF(m,b){
+      const notes=[];
+      for(let s=0;s<6;s++){
+        const val=grid[m][b][s];
+        if(val!==null) notes.push({code:STR_CODES[s],fret:val,str:STRINGS[s]});
+      }
+      if(!notes.length)return null;
+      if(notes.length===1) return 'SF '+notes[0].code+' '+notes[0].fret;
+      return 'SF '+ notes.map(n=>'('+n.code+' '+n.fret+')').join('');
+    }
+
+    // Send one beat column to fretboard
+    async function sendBeat(m,b){
+      const cmd=beatToSF(m,b); if(!cmd)return;
+      try{
+        await fetch(RAILWAY_URL+'/fretboard-command',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({command:cmd})
+        });
+      }catch(e){}
+    }
+
+    // Playback — driven by metronome BPM
+    function getBeatMs(){
+      const bpm=(window.viziMetro&&window.viziMetro.getBpm&&window.viziMetro.getBpm())||80;
+      return Math.round(60000/bpm);
+    }
+
+    function highlightBeat(m,b){
+      // Remove all playing highlights
+      for(let pm=0;pm<2;pm++) for(let pb=0;pb<4;pb++) for(let ps=0;ps<6;ps++)
+        cells[pm][pb][ps].classList.remove('playing');
+      // Highlight current column
+      for(let s=0;s<6;s++) if(grid[m][b][s]!==null) cells[m][b][s].classList.add('playing');
+      showColumnNotes(m,b);
+      status.textContent=`Measure ${m+1}, Beat ${b+1}`;
+    }
+
+    function playStep(){
+      if(!tbPlaying)return;
+      const m=Math.floor(tbStep/4), b=tbStep%4;
+      highlightBeat(m,b); sendBeat(m,b);
+      tbStep++;
+      if(tbStep>=8){ stopPlay(); return; }
+      tbTimer=setTimeout(playStep, getBeatMs());
+    }
+
+    function stopPlay(){
+      tbPlaying=false; clearTimeout(tbTimer);
+      for(let m=0;m<2;m++) for(let b=0;b<4;b++) for(let s=0;s<6;s++)
+        cells[m][b][s].classList.remove('playing');
+      playBtn.innerHTML='&#9654; Play'; playBtn.classList.remove('playing');
+      status.textContent='Done — use the metronome BPM to go faster or slower, then hit Play again';
+    }
+
+    playBtn.addEventListener('click',()=>{
+      if(tbPlaying){ stopPlay(); return; }
+      tbPlaying=true; tbStep=0;
+      playBtn.innerHTML='&#9632; Stop'; playBtn.classList.add('playing');
+      playStep();
+    });
+
+    // Send both measures to Vizi as a lesson
+    sendBtn.addEventListener('click',async()=>{
+      const m1cmds=[],m2cmds=[];
+      for(let b=0;b<4;b++){const sf=beatToSF(0,b);if(sf)m1cmds.push(sf);}
+      for(let b=0;b<4;b++){const sf=beatToSF(1,b);if(sf)m2cmds.push(sf);}
+      if(!m1cmds.length&&!m2cmds.length){status.textContent='Nothing entered yet — fill in some fret numbers first';return;}
+      const allCmds=[...m1cmds,...m2cmds];
+      const msg='The student has built a 2-measure tab exercise. Here are the fretboard commands for each beat in order: '+allCmds.join(', ')+'. Measure 1: '+m1cmds.join(', ')+'. Measure 2: '+m2cmds.join(', ')+'. Please teach this as a tab exercise — start with Measure 1, light each beat one at a time using the SF commands, name the notes or chord, and help the student play it in time. Then move to Measure 2. Keep each instruction to 1-2 sentences. End by asking if they want to play it again or try something new.';
+      status.textContent='Sending to Vizi…';
+      try{
+        const res=await fetch(RAILWAY_URL+'/claude-tts',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({message:msg,mode:'talk'})
+        });
+        if(res.ok) status.textContent='Vizi is ready — hold the talk button to respond';
+        else status.textContent='Could not reach Vizi';
+      }catch(e){status.textContent='Could not reach Vizi — check connection';}
+    });
   }
 
   function updateTabStepper(){
