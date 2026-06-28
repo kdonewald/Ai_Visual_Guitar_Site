@@ -3546,7 +3546,7 @@
           method:'POST',headers:{'Content-Type':'application/json'},
           body:JSON.stringify({message:msg,mode:'talk'})
         });
-        if(res.ok) status.textContent='Vizi is ready — hold the talk button to respond';
+        if(res.ok){ status.textContent='Vizi is ready — going to Vizi…'; setTimeout(()=>{ window.location.href='index.html'; },800); }
         else status.textContent='Could not reach Vizi';
       }catch(e){status.textContent='Could not reach Vizi — check connection';}
     });
