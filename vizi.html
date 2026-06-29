@@ -721,7 +721,7 @@
       })(),
       'strumming': exerciseName.includes('Mixed')
         ? 'The student chose Mixed string groups. Give them a chord progression that moves between different string groups: G chord (6 strings), D chord (4 strings), C chord (5 strings). Show the string range for each chord using STRING commands, explain why the aim changes, and give a strumming exercise that practices the switch.'
-        : 'The student chose "' + exerciseName + '". Explain which chords use this string range, show one example chord with a STRING command, then give a strumming pattern exercise at a suggested BPM using a METRONOME command.',
+        : 'The student chose "' + exerciseName + '". Explain which chords use this string range, show one example chord with a STRING command, then verbally suggest a BPM for the strumming exercise — do not send a METRONOME command.',
       'chord-theory': (()=>{
         if(exerciseName.includes('Chord Construction')){
           const parts = exerciseName.replace(' — Chord Construction','').split(' ');
@@ -741,7 +741,7 @@
           return 'The student wants to identify the 1, 3, 5 of ' + exerciseName.replace('Identify 1, 3, 5 — ','') + ' chords. Pick a random chord of that type, name it, light it with a CHORD command, and ask the student to identify which note is the root, which is the third, and which is the fifth. Wait for their answer and confirm or correct it.';
         }
       })(),
-      'transitions': 'The student wants to practice a ' + exerciseName + '. Suggest a specific well-known chord progression of that length (e.g. for 4-chord: G D Em C), light the first chord with a CHORD command, set a slow tempo with a METRONOME command, and guide them through each change one at a time.',
+      'transitions': 'The student wants to practice a ' + exerciseName + '. Suggest a specific well-known chord progression of that length (e.g. for 4-chord: G D Em C), light the first chord with a CHORD command, verbally suggest a slow tempo BPM — do not send a METRONOME command — and guide them through each change one at a time.',
       'warmup': (()=>{
         // exerciseName is e.g. "G Major" or "A Minor"
         const parts = exerciseName.trim().split(' ');
@@ -772,7 +772,7 @@
       `Student's choice: "${exerciseName}".`,
       specificInstruction,
       `Greet the student warmly and keep your spoken response to 2–3 sentences.`,
-      `Always include the relevant fretboard command (CHORD, CHORDS, SCALE, METRONOME, etc.)`,
+      `Always include the relevant fretboard command (CHORD, CHORDS, SCALE, etc.) — do not send METRONOME commands, suggest BPM verbally instead.`,
       `as a pipe command at the end of your response in the standard format.`,
       `End by inviting them to hold the talk button when they have a question or are ready for the next step.`
     ].join(' ');
