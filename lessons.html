@@ -3597,7 +3597,7 @@
     });
 
     // ── Send to Vizi ─────────────────────────────────────────────
-    sendBtn.addEventListener('click',async()=>{
+    sendBtn.addEventListener('click',()=>{
       const m1cmd=measureToCmd(0), m2cmd=measureToCmd(1);
       const m1desc=measureDesc(0), m2desc=measureDesc(1);
       const hasAny=allBeats().some(bt=>bt.notes.length>0);
@@ -3611,23 +3611,17 @@
         (m2cmd?'Measure 2 fretboard command: '+m2cmd+'. ':'')+
         'Please teach this as follows: '+
         'Start your response with "OK, here is Measure 1." then name each beat including any rests. '+
-        'Then say "I will play it twice — follow along." and send the Measure 1 fretboard command as your pipe command. '+
+        'Then say "I will play it twice, follow along" and send the Measure 1 fretboard command as your pipe command. '+
         'End by saying "Let me know when you are ready for Measure 2, or say repeat to hear Measure 1 again." '+
         'When the student says ready or next, teach Measure 2 the same way using its fretboard command. '+
         'When they say repeat, resend the same measure command. '+
         'Keep spoken responses concise — one sentence per beat.';
 
+      try{ sessionStorage.setItem('viziTabMsg', msg); }
+      catch(e){ status.textContent='Storage error — try again'; return; }
+
       status.textContent='Sending to Vizi…';
-      sendBtn.disabled=true;
-      try{
-        const res=await fetch(RAILWAY_URL+'/claude-tts',{
-          method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({message:msg,mode:'talk'})
-        });
-        if(res.ok){ status.textContent='Vizi is ready — hold the talk button to respond'; }
-        else{ status.textContent='Could not reach Vizi'; }
-      }catch(e){ status.textContent='Could not reach Vizi — check connection'; }
-      sendBtn.disabled=false;
+      window.location.href='vizi.html';
     });
   }
 
