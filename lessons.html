@@ -483,11 +483,7 @@
   }
 
   /* ── TAB READER ── */
-  .tab-reader-section{margin-bottom:1rem}
-  .tab-reader-header{display:flex;align-items:center;gap:.6rem;padding:.7rem .9rem;border-radius:10px;background:rgba(42,172,184,0.07);border:2px solid rgba(42,172,184,0.22);margin-bottom:.75rem}
-  .tab-reader-icon{font-size:1.2rem;flex-shrink:0}
-  .tab-reader-title{font-size:.88rem;font-weight:600;color:var(--text)}
-  .tab-reader-sub{font-size:.82rem;color:var(--text-light);margin-top:.1rem}
+
   .tab-input{width:100%;min-height:90px;border-radius:10px;border:2px solid var(--cream-dark);background:var(--cream);color:var(--text);padding:.7rem .85rem;font-family:'DM Mono',monospace;font-size:.82rem;line-height:1.6;resize:vertical;outline:none;transition:border-color .18s}
   .tab-input:focus{border-color:var(--teal)}
   .tab-input::placeholder{color:var(--text-light)}
@@ -3144,8 +3140,6 @@
     const vl=document.createElement('div'); vl.style.cssText='text-align:center;margin-top:1rem;';
     vl.innerHTML='<a href="vizi.html" style="font-family:DM Mono,monospace;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);text-decoration:none">Ask Vizi for guidance →</a>';
     exList.appendChild(vl);
-    const hr=document.createElement('hr'); hr.className='tab-divider'; exList.appendChild(hr);
-    buildTabReader(exList);
   }
 
   // ── Tab reader ───────────────────────────────────────────────
