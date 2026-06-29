@@ -192,8 +192,6 @@
   }
   .sheet-show-btn.show{display:flex}
   .sheet-show-btn:hover{background:var(--blue);color:white}
-  /* Hide floating metronome on this page */
-  #vizi-metro, #vizi-metro-widget, .vizi-metro-widget{ display:none !important; }
 </style>
 </head>
 <body>
@@ -249,7 +247,7 @@
   </div>
 
 <!-- Shared floating metronome widget -->
-<script src="metronome-widget.js"></script>
+<script src="metronome-widget.js?v=1782766283"></script>
 
 <script>
   const RAILWAY_URL  = 'https://vizi-tts-proxy-production.up.railway.app';
@@ -626,44 +624,6 @@
     setStatus('Checking for uploaded song…');
     startSongPoll();
   }
-
-  // ── Tab Builder hand-off from lessons.html ──
-  ;(async function checkTabMsg(){
-    const tabMsg = sessionStorage.getItem('viziTabMsg');
-    if (!tabMsg) return;
-    sessionStorage.removeItem('viziTabMsg');
-
-    setBtn('thinking');
-    btn.innerHTML = 'Vizi is<br>thinking…';
-    setStatus('Vizi is reading your tab…');
-    songBanner.textContent = '🎸 Tab Exercise — tap button to hear Vizi';
-    songBanner.classList.add('show');
-
-    try {
-      const ttsRes = await fetch(RAILWAY_URL + '/claude-tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: tabMsg, mode: 'talk' })
-      });
-      if (ttsRes.ok) {
-        const ct = ttsRes.headers.get('content-type') || '';
-        if (!ct.includes('application/json')) {
-          pendingIntroText = dec(ttsRes.headers.get('X-Vizi-Text'));
-          pendingIntroCmd  = dec(ttsRes.headers.get('X-Vizi-Commands'));
-          pendingIntroBlob = await ttsRes.blob();
-          btn.innerHTML = 'Tap to hear<br>Vizi';
-          setBtn('intro');
-          setStatus('TAB READY — TAP THE BUTTON TO HEAR VIZI');
-        } else {
-          setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Could not reach Vizi');
-        }
-      } else {
-        setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Could not reach Vizi');
-      }
-    } catch(e) {
-      setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Could not reach Vizi — check connection');
-    }
-  })();
 
   // ── Exercise hand-off from lessons.html ──
   ;(async function checkExerciseParams(){

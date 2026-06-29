@@ -1207,7 +1207,7 @@
     {
       id:'tuning', num:1, label:'Tuning & Setup',
       desc:'Get your guitar in tune and learn how to hold it comfortably before anything else.',
-      videoUrl:'', // add YouTube link when ready — stage tuning autoTuner:true,
+      videoUrl:'', autoTuner:true, // add YouTube link when ready
       tips:[
         "Hold the neck with your thumb low and behind it — not wrapped over the top.",
         "Rest the guitar waist on your right leg and tilt the neck slightly upward — not flat across your lap.",
@@ -1587,6 +1587,12 @@
       vidWrap.classList.remove('show');
       tunerWrap.classList.add('show');
       exList.innerHTML = '';
+      // Show tuning-specific buttons
+      tunerChoice.style.display = '';
+      const tf = document.getElementById('testFretboardChoice');
+      if(tf) tf.style.display = '';
+      const pr = document.getElementById('powerReminder');
+      if(pr) pr.style.display = '';
       catPanel.classList.add('show');
       catPanel.scrollIntoView({behavior:'smooth',block:'start'});
       showRandomTip();
@@ -4228,6 +4234,6 @@ renderAll();
 
 })(); // end IIFE
 </script>
-<script src="metronome-widget.js"></script>
+<script src="metronome-widget.js?v=1782766283"></script>
 </body>
 </html>
