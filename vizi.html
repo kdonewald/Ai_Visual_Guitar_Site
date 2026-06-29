@@ -634,25 +634,33 @@
     setBtn('thinking');
     btn.innerHTML = 'Vizi is<br>thinking…';
     setStatus('Vizi is reading your tab…');
-    songBanner.textContent = '🎸 Tab Exercise loaded — tap button to hear Vizi';
+    songBanner.textContent = '🎸 Tab Exercise — tap button to hear Vizi';
     songBanner.classList.add('show');
 
     try {
-      const ttsRes = await fetch(RAILWAY_URL + '/claude-tts', {
+      // Step 1: get Claude text response
+      const claudeRes = await fetch(RAILWAY_URL + '/claude-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: tabMsg, mode: 'talk' })
       });
-      if (ttsRes.ok) {
-        pendingIntroText = dec(ttsRes.headers.get('X-Vizi-Text'));
-        pendingIntroCmd  = dec(ttsRes.headers.get('X-Vizi-Commands'));
-        pendingIntroBlob = await ttsRes.blob();
-        btn.innerHTML = 'Tap to hear<br>Vizi';
-        setBtn('');
-        setStatus('TAB READY — TAP THE BUTTON TO HEAR VIZI');
-      } else {
-        setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Could not reach Vizi');
-      }
+      if (!claudeRes.ok) { setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Could not reach Vizi'); return; }
+      const claudeJson = await claudeRes.json();
+      const fullText = claudeJson.text || '';
+      const parts = fullText.split('|');
+      const spokenText = parts[0].trim();
+      const commands = parts.slice(1).map(p=>p.trim()).join(' | ');
+
+      // Step 2: convert spoken text to audio
+      const ttsRes = await fetch(RAILWAY_URL + '/tts?text=' + encodeURIComponent(spokenText));
+      if (!ttsRes.ok) { setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Could not reach Vizi'); return; }
+
+      pendingIntroText = spokenText;
+      pendingIntroCmd  = commands;
+      pendingIntroBlob = await ttsRes.blob();
+      btn.innerHTML = 'Tap to hear<br>Vizi';
+      setBtn('');
+      setStatus('TAB READY — TAP THE BUTTON TO HEAR VIZI');
     } catch(e) {
       setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Could not reach Vizi — check connection');
     }
