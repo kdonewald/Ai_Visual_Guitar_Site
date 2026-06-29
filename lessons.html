@@ -1555,7 +1555,7 @@
       catTitle.textContent = stage.label;
       catDesc.textContent = stage.desc;
       vidWrap.classList.remove('show');
-      tunerWrap.classList.add('show');
+      tunerWrap.classList.remove('show');
       exList.innerHTML = '';
       // Show tuning-specific buttons
       tunerChoice.style.display = '';
@@ -1629,11 +1629,16 @@
   });
 
   tunerChoice.addEventListener('click', () => {
-    vidWrap.classList.remove('show');
-    tipCard.classList.remove('show');
-    introVideo.pause();
-    tunerWrap.classList.add('show');
-    tunerWrap.scrollIntoView({behavior:'smooth',block:'nearest'});
+    if (tunerWrap.classList.contains('show')) {
+      tunerWrap.classList.remove('show');
+      stopTuner();
+    } else {
+      vidWrap.classList.remove('show');
+      tipCard.classList.remove('show');
+      introVideo.pause();
+      tunerWrap.classList.add('show');
+      tunerWrap.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }
   });
 
   document.getElementById('testFretboardChoice').addEventListener('click', async () => {
