@@ -3175,7 +3175,6 @@
 
     let tbPlaying=false, tbStep=0, tbTimer=null;
     let tbSelectedCell=null;
-    let currentKey='G';
 
     // ── CSS ──────────────────────────────────────────────────
     if(!document.getElementById('tbCSS')){
@@ -3184,13 +3183,7 @@
         .tb-wrap{font-family:'DM Mono',monospace;}
         .tb-top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;gap:.5rem;flex-wrap:wrap;}
         .tb-title{font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;color:#fff;}
-        .tb-key-row{display:flex;align-items:center;gap:.4rem;margin-bottom:.6rem;flex-wrap:wrap;}
-        .tb-key-label{font-size:.75rem;color:rgba(255,255,255,.5);letter-spacing:.08em;text-transform:uppercase;margin-right:.2rem;}
-        .tb-key-btn{font-family:'DM Mono',monospace;font-size:.80rem;font-weight:700;
-          padding:.3rem .7rem;border-radius:20px;border:1.5px solid rgba(255,255,255,.15);
-          background:transparent;color:rgba(255,255,255,.65);cursor:pointer;transition:all .18s;}
-        .tb-key-btn:hover{border-color:var(--gold);color:var(--gold);}
-        .tb-key-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(232,160,32,.15);font-weight:800;}
+
         .tb-preset-row{display:flex;gap:.4rem;margin-bottom:.75rem;flex-wrap:wrap;}
         .tb-preset-btn{font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;
           padding:.4rem .9rem;border-radius:20px;border:1.5px solid rgba(255,255,255,.15);
@@ -3253,21 +3246,7 @@
     topRow.innerHTML='<span class="tb-title">Tab Builder</span>';
     wrap.appendChild(topRow);
 
-    // Key selector
-    const keyRow=document.createElement('div'); keyRow.className='tb-key-row';
-    keyRow.innerHTML='<span class="tb-key-label">Key</span>';
-    ['G','A','C','D','E'].forEach(k=>{
-      const kb=document.createElement('button'); kb.className='tb-key-btn'+(k==='G'?' active':'');
-      kb.textContent=k+' min penta';
-      kb.addEventListener('click',()=>{
-        currentKey=k;
-        document.querySelectorAll('.tb-key-btn').forEach(b=>b.classList.remove('active'));
-        kb.classList.add('active');
-        status.textContent='Key: '+k+' minor pentatonic';
-      });
-      keyRow.appendChild(kb);
-    });
-    wrap.appendChild(keyRow);
+
 
     // Preset buttons
     const presetRow=document.createElement('div'); presetRow.className='tb-preset-row';
@@ -3390,7 +3369,7 @@
 
     // ── Random presets ─────────────────────────────────────
     function randFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-    function randomNote(sIdx){ return randFrom(PENTA[currentKey][STR_CODES[sIdx]]); }
+    function randomNote(sIdx){ return randFrom(PENTA['G'][STR_CODES[sIdx]]); }
 
     function generatePreset(type){
       clearAll();
@@ -3408,7 +3387,7 @@
           for(let s=0;s<6;s++) updateCell(m,b,s);
         }
       }
-      status.textContent=['Single','Double','Triple'][type]+' pattern in '+currentKey+' minor pentatonic — tap again for new';
+      status.textContent=['Single','Double','Triple'][type]+' note pattern — tap again for a different one';
     }
 
     // ── Playback ───────────────────────────────────────────
@@ -3445,7 +3424,7 @@
       const m1desc=measureDesc(0), m2desc=measureDesc(1);
       if(!allBeats().some(bt=>bt.notes.length>0)){ status.textContent='Add some notes first'; return; }
       const msg=
-        'The student has built a 2-measure tab exercise in '+currentKey+' minor pentatonic. '+
+        'The student has built a 2-measure tab exercise. '+
         'Measure 1: '+m1desc+'. Measure 2: '+m2desc+'. '+
         (m1cmd?'Measure 1 fretboard command: '+m1cmd+'. ':'')+
         (m2cmd?'Measure 2 fretboard command: '+m2cmd+'. ':'')+
