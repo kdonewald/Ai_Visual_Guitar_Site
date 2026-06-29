@@ -3539,7 +3539,7 @@
       for(let b=0;b<4;b++){const sf=beatToSF(1,b);if(sf)m2cmds.push(sf);}
       if(!m1cmds.length&&!m2cmds.length){status.textContent='Nothing entered yet — fill in some fret numbers first';return;}
       const allCmds=[...m1cmds,...m2cmds];
-      const msg='The student has built a 2-measure tab exercise. Here are the fretboard commands for each beat in order: '+allCmds.join(', ')+'. Measure 1: '+m1cmds.join(', ')+'. Measure 2: '+m2cmds.join(', ')+'. Please teach this as a tab exercise — start with Measure 1, light each beat one at a time using the SF commands, name the notes or chord, and help the student play it in time. Then move to Measure 2. Keep each instruction to 1-2 sentences. End by asking if they want to play it again or try something new.';
+      const msg='The student has built a 2-measure tab exercise. Measure 1 beats in order: '+m1cmds.join(', ')+'. Measure 2 beats in order: '+m2cmds.join(', ')+'. Teach this tab starting from Beat 1 of Measure 1 — never skip beats. Light each beat one at a time with the SF commands in order, name the note or notes for that beat, and tell the student to play it. Work through every beat of Measure 1 then every beat of Measure 2. One sentence per beat. After the final beat, ask if they want to try it again or move on.';
       status.textContent='Sending to Vizi…';
       try{
         const res=await fetch(RAILWAY_URL+'/claude-tts',{
