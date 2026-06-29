@@ -2816,7 +2816,7 @@
   }
 
   function renderChoicePanel(stage){
-    if (stage.id==='strumming'){ renderStrummingPanel(); document.getElementById('vm-strip-wrap').style.display='none'; return; }
+    if (stage.id==='strumming'){ renderStrummingPanel(); document.getElementById('vm-strip-wrap').style.display='none'; document.getElementById('vm-toggle-btn').style.display='none'; return; }
     if (stage.id==='chord-theory'){ renderChordBuilder(); return; }
     if (stage.id==='chords'){ renderChordsPanel(); return; }
     const def = CHOICE_PANELS[stage.id];
@@ -2929,6 +2929,8 @@
     catPanel.classList.remove('show');
     const vmStrip = document.getElementById('vm-strip-wrap');
     if(vmStrip) vmStrip.style.display='';
+    const vmBtn = document.getElementById('vm-toggle-btn');
+    if(vmBtn) vmBtn.style.display='';
   });
 
   // Auto-open from sessionStorage or hash
