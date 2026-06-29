@@ -11,19 +11,30 @@
   const css = `
 #vm-toggle-btn {
   display: flex; align-items: center; justify-content: center;
-  width: 38px; height: 38px; border-radius: 8px;
+  width: 36px; height: 36px; border-radius: 8px;
   border: 1.5px solid rgba(255,255,255,0.15);
   background: transparent;
   color: rgba(255,255,255,0.7);
-  font-size: 1.1rem; cursor: pointer;
+  font-size: 1rem; cursor: pointer;
   transition: all .18s; flex-shrink: 0;
-  font-family: serif;
+  font-family: serif; line-height: 1;
 }
 #vm-toggle-btn:hover { border-color: rgba(255,255,255,0.4); color: #fff; }
 #vm-toggle-btn.open {
   border-color: var(--gold, #e8a020);
   color: var(--gold, #e8a020);
   background: rgba(232,160,32,0.12);
+}
+
+/* Force nav to stay single line */
+nav .nav-links {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  gap: .3rem !important;
+}
+nav {
+  flex-wrap: nowrap !important;
 }
 
 #vm-strip-wrap {

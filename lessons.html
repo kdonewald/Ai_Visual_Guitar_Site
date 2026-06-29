@@ -32,8 +32,8 @@
   /* nav */
   nav{
     position:sticky; top:0; z-index:50;
-    display:flex; align-items:center; justify-content:space-between;
-    padding:1rem 2rem; background:rgba(15,17,23,0.96);
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:nowrap;
+    padding:.7rem 1rem; background:rgba(15,17,23,0.96);
     backdrop-filter:blur(12px); border-bottom:1.5px solid var(--border);
   }
   .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
@@ -1546,7 +1546,7 @@
     const stage = STAGES.find(s => s.id === id);
     if (!stage) return;
     if (stage.isSong){ window.location.href = 'songs.html'; return; }
-    if (stage.isTab){ renderTabPanel(); activeStage=stage; catStageTag.textContent='Stage 8'; catTitle.textContent='Read & Play Tab'; catDesc.textContent=stage.desc; catPanel.classList.add('show'); catPanel.scrollIntoView({behavior:'smooth',block:'start'}); return; }
+    if (stage.isTab){ renderTabPanel(); activeStage=stage; catStageTag.textContent='Stage 8'; catTitle.textContent='Read & Play Tab'; catDesc.textContent=stage.desc; catPanel.classList.add('show'); window.scrollTo({top:0, behavior:'smooth'}); return; }
     activeStage = stage;
 
     // Tuning stage: auto-open tuner, show tip
@@ -1564,7 +1564,7 @@
       const pr = document.getElementById('powerReminder');
       if(pr) pr.style.display = '';
       catPanel.classList.add('show');
-      catPanel.scrollIntoView({behavior:'smooth',block:'start'});
+      window.scrollTo({top:0, behavior:'smooth'});
         showRandomTip();
       return;
     }
@@ -1593,7 +1593,7 @@
 
     renderExercises(stage);
     catPanel.classList.add('show');
-    catPanel.scrollIntoView({behavior:'smooth',block:'start'});
+    window.scrollTo({top:0, behavior:'smooth'});
   }
 
   // YouTube video window elements
