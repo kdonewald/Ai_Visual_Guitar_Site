@@ -141,6 +141,39 @@
 #vm-play.playing { background: #c93820; box-shadow: 0 2px 8px rgba(201,56,32,.4); }
 #vm-play.playing:hover { background: #e04030; }
 
+#vm-hide {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.6);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; line-height: 1;
+}
+#vm-hide:hover { background: rgba(224,85,64,.3); border-color: #e05540; color: #fff; }
+
+#vm-restore {
+  position: fixed;
+  z-index: 9998;
+  bottom: 24px;
+  right: 24px;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: #1a1a2e;
+  border: 1.5px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.8);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: none;
+  align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,.5);
+  transition: all .2s;
+}
+#vm-restore:hover { background: #2a2a4e; border-color: var(--gold,.8); }
+
 /* beat dots */
 #vm-beats {
   display: flex;
@@ -225,7 +258,12 @@
   try {
     const saved = JSON.parse(localStorage.getItem('viziMetroPos') || 'null');
     if (saved && typeof saved.left === 'number') {
-      applyPos(saved.left, saved.top);
+      // Clamp saved position to current viewport
+      const w = el.root.offsetWidth  || 360;
+      const h = el.root.offsetHeight || 60;
+      const safeLeft = Math.max(0, Math.min(window.innerWidth  - w, saved.left));
+      const safeTop  = Math.max(0, Math.min(window.innerHeight - h, saved.top));
+      applyPos(safeLeft, safeTop);
     } else {
       // slight delay so offsetWidth is known
       setTimeout(defaultPos, 0);
@@ -334,6 +372,32 @@
     el.tap._rt = setTimeout(()=>{ tapTimes=[]; }, 3000);
   });
 
+  // ── Hide / Restore ───────────────────────────────────────────
+  const restoreBtn = document.createElement('button');
+  restoreBtn.id = 'vm-restore';
+  restoreBtn.title = 'Show metronome';
+  restoreBtn.textContent = '♩';
+  document.body.appendChild(restoreBtn);
+
+  document.getElementById('vm-hide').addEventListener('click', () => {
+    el.root.style.display = 'none';
+    restoreBtn.style.display = 'flex';
+    try { localStorage.setItem('viziMetroHidden', '1'); } catch(e){}
+  });
+  restoreBtn.addEventListener('click', () => {
+    el.root.style.display = 'flex';
+    restoreBtn.style.display = 'none';
+    try { localStorage.removeItem('viziMetroHidden'); } catch(e){}
+  });
+
+  // Restore hidden state from localStorage
+  try {
+    if (localStorage.getItem('viziMetroHidden') === '1') {
+      el.root.style.display = 'none';
+      restoreBtn.style.display = 'flex';
+    }
+  } catch(e){}
+
   // ── Drag ─────────────────────────────────────────────────────
   let dragActive = false, startX, startY, startLeft, startTop;
 
@@ -353,8 +417,10 @@
     const touch = e.touches ? e.touches[0] : e;
     const dx = touch.clientX - startX;
     const dy = touch.clientY - startY;
-    const maxLeft = window.innerWidth  - el.root.offsetWidth;
-    const maxTop  = window.innerHeight - el.root.offsetHeight;
+    const w = el.root.offsetWidth  || 360;
+    const h = el.root.offsetHeight || 60;
+    const maxLeft = Math.max(0, window.innerWidth  - w);
+    const maxTop  = Math.max(0, window.innerHeight - h);
     const newLeft = Math.max(0, Math.min(maxLeft, startLeft + dx));
     const newTop  = Math.max(0, Math.min(maxTop,  startTop  + dy));
     applyPos(newLeft, newTop);
