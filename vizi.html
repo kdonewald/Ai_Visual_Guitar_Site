@@ -646,7 +646,7 @@
       'warmup':       'Warmup with Scales',
       'rhythm':       'Rhythm Foundations',
       'chords':       'Chords',
-      'chord-theory': 'How Chords Are Built',
+      'chord-theory': 'Build Scales & Chords',
       'strumming':    'Strumming Patterns',
       'soloing':      'Soloing',
       'song':         'Play a Song'
@@ -742,6 +742,23 @@
         }
       })(),
       'transitions': 'The student wants to practice a ' + exerciseName + '. Suggest a specific well-known chord progression of that length (e.g. for 4-chord: G D Em C), light the first chord with a CHORD command, set a slow tempo with a METRONOME command, and guide them through each change one at a time.',
+      'warmup': (()=>{
+        // exerciseName is e.g. "G Major" or "A Minor"
+        const parts = exerciseName.trim().split(' ');
+        const root = parts[0] || 'G';
+        const quality = (parts[1]||'Major').toLowerCase();
+        const isMinor = quality === 'minor';
+        const scaleType = isMinor ? 'minor' : 'major';
+        const scaleCmd = 'SCALE ' + root + ' ' + (isMinor ? 'minor' : 'major');
+        const suggestedBpm = 60;
+        return 'The student wants to warm up with the ' + exerciseName + ' scale. ' +
+          'Start your response with "OK, here is " followed by the scale name. ' +
+          'Light the scale on the fretboard: ' + scaleCmd + '. ' +
+          'Tell them to set the metronome to ' + suggestedBpm + ' BPM — they can adjust it after. ' +
+          'Send a METRONOME:' + suggestedBpm + ' command. ' +
+          'Then say: start on the low E string and play each lit note going up to the high E string, then come back down. One note per beat. ' +
+          'Keep it to 3 sentences total.';
+      })(),
       'soloing':     'The student wants to solo over ' + exerciseName + '. Light up the scale on the fretboard using a SCALE command. Briefly explain which notes to target (especially the root and fifth), suggest a simple starting phrase, and invite them to start experimenting. Keep the instruction to 2-3 sentences.'
     };
 

@@ -1231,7 +1231,7 @@
       exercises:[]
     },
     {
-      id:'chord-theory', num:3, label:'How Chords Are Built',
+      id:'chord-theory', num:3, label:'Build Scales & Chords',
       desc:'Learn what root, third, and fifth mean — the three notes behind every chord you play.',
       videoUrl:'', // add YouTube link when ready — stage chord_theory theoryMode:true,
       tips:[
@@ -1320,15 +1320,20 @@
   // ── Choice panels ──────────────────────────────────────────
   const CHOICE_PANELS = {
     'warmup': {
-      label:'Choose a scale type to warm up with',
-      hint:'Vizi will light up the scale on your fretboard. The All Scales reference shows the interval pattern for each type.',
+      label:'Choose a scale to warm up with',
+      hint:'Vizi will light the scale on your fretboard and guide you up and down all six strings. Set the metronome to a comfortable tempo.',
       cols:2,
       choices:[
-        { icon:'&#128522;', name:'Major Scales',           desc:'W W H W W W H — bright, happy sound' },
-        { icon:'&#128546;', name:'Minor Scales',           desc:'W H W W H W W — darker, more serious feel' },
-        { icon:'&#11088;',  name:'Major Pentatonic',       desc:'5 notes — smooth and musical instantly' },
-        { icon:'&#127928;', name:'Minor Pentatonic',       desc:'5 notes — the most-used scale in rock and blues' },
-        { icon:'&#128216;', name:'All Scales — Reference', desc:'See the interval pattern and note labels for every scale type — no Vizi needed' },
+        { icon:'☀️',  name:'G Major',  desc:'Open, bright — great starting scale' },
+        { icon:'🌙', name:'G Minor',  desc:'Darker, soulful feel' },
+        { icon:'☀️',  name:'A Major',  desc:'Bright and common in pop and rock' },
+        { icon:'🌙', name:'A Minor',  desc:'Very common — easy open chord shapes' },
+        { icon:'☀️',  name:'C Major',  desc:'No sharps or flats — the classic beginner scale' },
+        { icon:'🌙', name:'C Minor',  desc:'Moody and expressive' },
+        { icon:'☀️',  name:'D Major',  desc:'Bright and rich — great for strumming' },
+        { icon:'🌙', name:'D Minor',  desc:'Melancholic, emotional feel' },
+        { icon:'☀️',  name:'E Major',  desc:'Full and powerful — rock and blues staple' },
+        { icon:'🌙', name:'E Minor',  desc:'The easiest minor scale on guitar' },
       ]
     },
     'open-chords': {
@@ -2838,7 +2843,7 @@
       btn.innerHTML = '<span class="cb-icon">' + ch.icon + '</span><span><span class="cb-name">' + ch.name + '</span><span class="cb-desc">' + ch.desc + '</span></span><span class="cb-arrow">&#8594;</span>';
       btn.addEventListener('click', () => {
         if (ch.name === 'All Scales — Reference'){ renderAllScalesRef(); return; }
-        if (stage.id === 'warmup' && SCALE_KEYS[ch.name]){ renderScaleSubPanel(stage.id, ch.name); return; }
+        if (stage.id === 'warmup'){ goToVizi('warmup', ch.name); return; }
         const ex = ch.name + ' — ' + ch.desc;
         const p = new URLSearchParams({stage:stage.id, exercise:ex});
         window.location.href = 'vizi.html?' + p.toString();
