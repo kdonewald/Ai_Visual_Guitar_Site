@@ -2816,7 +2816,7 @@
   }
 
   function renderChoicePanel(stage){
-    if (stage.id==='strumming'){ renderStrummingPanel(); return; }
+    if (stage.id==='strumming'){ renderStrummingPanel(); document.getElementById('vm-strip-wrap').style.display='none'; return; }
     if (stage.id==='chord-theory'){ renderChordBuilder(); return; }
     if (stage.id==='chords'){ renderChordsPanel(); return; }
     const def = CHOICE_PANELS[stage.id];
@@ -2927,6 +2927,8 @@
   document.getElementById('catClose').addEventListener('click', () => {
     stopTuner();
     catPanel.classList.remove('show');
+    const vmStrip = document.getElementById('vm-strip-wrap');
+    if(vmStrip) vmStrip.style.display='';
   });
 
   // Auto-open from sessionStorage or hash

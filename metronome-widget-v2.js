@@ -11,13 +11,14 @@
   const css = `
 #vm-toggle-btn {
   display: flex; align-items: center; justify-content: center;
-  width: 36px; height: 36px; border-radius: 8px;
+  padding: 0 .7rem; height: 36px; border-radius: 8px;
   border: 1.5px solid rgba(255,255,255,0.15);
   background: transparent;
   color: rgba(255,255,255,0.7);
-  font-size: 1rem; cursor: pointer;
-  transition: all .18s; flex-shrink: 0;
-  font-family: serif; line-height: 1;
+  font-size: .78rem; font-weight: 600; letter-spacing: .04em;
+  cursor: pointer; transition: all .18s; flex-shrink: 0;
+  font-family: 'DM Sans', sans-serif; line-height: 1;
+  white-space: nowrap;
 }
 #vm-toggle-btn:hover { border-color: rgba(255,255,255,0.4); color: #fff; }
 #vm-toggle-btn.open {
@@ -132,7 +133,7 @@ nav {
     const toggleBtn = document.createElement('button');
     toggleBtn.id = 'vm-toggle-btn';
     toggleBtn.title = 'Metronome';
-    toggleBtn.textContent = '♩';
+    toggleBtn.textContent = 'Metro';
     if (navLinks) {
       navLinks.insertBefore(toggleBtn, navLinks.firstChild);
     } else {
