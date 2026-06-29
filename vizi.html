@@ -625,6 +625,39 @@
     startSongPoll();
   }
 
+  // ── Tab Builder hand-off from lessons.html ──
+  ;(async function checkTabMsg(){
+    const tabMsg = sessionStorage.getItem('viziTabMsg');
+    if (!tabMsg) return;
+    sessionStorage.removeItem('viziTabMsg');
+
+    setBtn('thinking');
+    btn.innerHTML = 'Vizi is<br>thinking…';
+    setStatus('Vizi is reading your tab…');
+    songBanner.textContent = '🎸 Tab Exercise loaded — tap button to hear Vizi';
+    songBanner.classList.add('show');
+
+    try {
+      const ttsRes = await fetch(RAILWAY_URL + '/claude-tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: tabMsg, mode: 'talk' })
+      });
+      if (ttsRes.ok) {
+        pendingIntroText = dec(ttsRes.headers.get('X-Vizi-Text'));
+        pendingIntroCmd  = dec(ttsRes.headers.get('X-Vizi-Commands'));
+        pendingIntroBlob = await ttsRes.blob();
+        btn.innerHTML = 'Tap to hear<br>Vizi';
+        setBtn('');
+        setStatus('TAB READY — TAP THE BUTTON TO HEAR VIZI');
+      } else {
+        setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Could not reach Vizi');
+      }
+    } catch(e) {
+      setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Could not reach Vizi — check connection');
+    }
+  })();
+
   // ── Exercise hand-off from lessons.html ──
   ;(async function checkExerciseParams(){
     const urlParams    = new URLSearchParams(window.location.search);
