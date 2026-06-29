@@ -1078,27 +1078,7 @@
   /* Metronome moved to shared floating widget — metronome-widget.js */
 
 
-  /* ── stage selector bar ── */
-  .stage-bar{
-    display:flex; flex-wrap:wrap; gap:.4rem;
-    padding:.75rem 1.5rem; border-bottom:1.5px solid var(--border);
-    background:rgba(15,17,23,0.6);
-  }
-  .stage-pill{
-    font-family:'DM Mono',monospace; font-size:.85rem; font-weight:500;
-    letter-spacing:.06em; text-transform:uppercase;
-    padding:.4rem .85rem; border-radius:20px;
-    border:1.5px solid var(--border); background:transparent;
-    color:var(--text-mid); cursor:pointer; transition:all .18s;
-    white-space:nowrap;
-  }
-  .stage-pill:hover{ border-color:var(--blue); color:var(--blue); background:rgba(79,142,247,0.08); }
-  .stage-pill.active{ border-color:var(--gold); color:var(--gold); background:rgba(232,160,32,0.10); }
-  .stage-pill-song{ border-color:rgba(45,212,191,0.3); color:var(--teal); }
-  .stage-pill-song:hover{ border-color:var(--teal); background:rgba(45,212,191,0.08); }
-  .stage-pill-tab{ border-color:rgba(79,142,247,0.3); color:var(--blue); }
-  .stage-pill-tab:hover{ border-color:var(--blue); background:rgba(79,142,247,0.08); }
-  .pill-num{ color:var(--gold);font-weight:800;font-size:.84rem; }
+  
 
 </style>
 </head>
@@ -1114,17 +1094,7 @@
     </div>
 </nav>
 
-<!-- Stage selector bar -->
-<div class="stage-bar">
-  <button class="stage-pill" data-id="tuning"><span class="pill-num">01</span> · Tuning &amp; Setup</button>
-  <button class="stage-pill" data-id="warmup"><span class="pill-num">02</span> · Warmup with Scales</button>
-  <button class="stage-pill" data-id="chord-theory"><span class="pill-num">03</span> · How Chords Are Built</button>
-  <button class="stage-pill" data-id="chords"><span class="pill-num">04</span> · Chords</button>
-  <button class="stage-pill" data-id="strumming"><span class="pill-num">05</span> · Strumming</button>
-  <button class="stage-pill" data-id="soloing"><span class="pill-num">06</span> · Soloing</button>
-  <button class="stage-pill stage-pill-song" data-id="song"><span class="pill-num">07</span> · Play a Song</button>
-  <button class="stage-pill stage-pill-tab" data-id="tab"><span class="pill-num">08</span> · Read &amp; Play Tab</button>
-</div>
+
 
 <!-- Stage intro YouTube video window -->
 <div class="yt-video-wrap" id="ytVideoWrap">
@@ -1595,7 +1565,7 @@
       if(pr) pr.style.display = '';
       catPanel.classList.add('show');
       catPanel.scrollIntoView({behavior:'smooth',block:'start'});
-      showRandomTip();
+        showRandomTip();
       return;
     }
 
@@ -2947,29 +2917,11 @@
   document.getElementById('catClose').addEventListener('click', () => {
     stopTuner();
     catPanel.classList.remove('show');
-    document.querySelectorAll('.stage-pill').forEach(p => p.classList.remove('active'));
   });
 
   // Auto-open from sessionStorage or hash
-
-  // ── Stage bar nav ──────────────────────────────────────────
-  document.querySelectorAll('.stage-pill').forEach(pill => {
-    pill.addEventListener('click', () => {
-      const id = pill.dataset.id;
-      if (id === 'song') { window.location.href = 'songs.html'; return; }
-      document.querySelectorAll('.stage-pill').forEach(p => p.classList.remove('active'));
-      pill.classList.add('active');
-      openStage(id);
-    });
-  });
-
   function arriveAtStage(stageId){
-    setTimeout(() => {
-      openStage(stageId);
-      document.querySelectorAll('.stage-pill').forEach(p => {
-        p.classList.toggle('active', p.dataset.id === stageId);
-      });
-    }, 80);
+    setTimeout(() => openStage(stageId), 80);
   }
   try {
     const returnStage = sessionStorage.getItem('viziReturnStage');
