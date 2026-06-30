@@ -2716,6 +2716,7 @@
       hint.textContent='Tap a string group to choose where the root sits';
       triBody.appendChild(hint);
     }
+    } // end triads section
 
     // ── Chord action panel (shows after selection) ──
     const actionWrap=document.createElement('div');
@@ -2744,8 +2745,6 @@
       cpProgression.push({...cpSelectedChord});
       updateProgBar();
     });
-
-    } // end triads section
 
     // ── PROGRESSION BUILDER ──
     const progSec=buildProgSection();
