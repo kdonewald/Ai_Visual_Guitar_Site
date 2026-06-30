@@ -40,16 +40,6 @@ nav .nav-links {
   white-space: nowrap;
 }
 
-#vm-toggle-btn {
-  color: rgba(255,255,255,0.7);
-}
-#vm-toggle-btn:hover { border-color: rgba(255,255,255,0.4); color: #fff; }
-#vm-toggle-btn.open {
-  border-color: var(--gold, #e8a020);
-  color: var(--gold, #e8a020);
-  background: rgba(232,160,32,0.12);
-}
-
 #vm-hold-on {
   border-color: rgba(232,160,32,0.4);
   color: var(--gold, #e8a020);
@@ -156,13 +146,6 @@ nav .nav-links {
     const navLinks = nav.querySelector('.nav-links');
     if (!navLinks) return false;
 
-    // Metro toggle
-    const toggleBtn = document.createElement('button');
-    toggleBtn.id = 'vm-toggle-btn';
-    toggleBtn.className = 'nav-ctrl-btn';
-    toggleBtn.title = 'Metronome';
-    toggleBtn.textContent = 'Metro';
-
     // Hold On
     const holdOnBtn = document.createElement('button');
     holdOnBtn.id = 'vm-hold-on';
@@ -178,7 +161,6 @@ nav .nav-links {
     holdOffBtn.textContent = 'Hold Off';
 
     // Insert before Home (first child)
-    navLinks.insertBefore(toggleBtn,  navLinks.firstChild);
     navLinks.insertBefore(holdOffBtn, navLinks.firstChild);
     navLinks.insertBefore(holdOnBtn,  navLinks.firstChild);
 
@@ -231,11 +213,8 @@ nav .nav-links {
   let bpm = 80, beats = 4, beat = 0;
   let playing = false, audioCtx = null, timer = null;
   let tapTimes = [];
-  let stripOpen = false;
-
   function setup() {
     const el = {
-      toggleBtn: document.getElementById('vm-toggle-btn'),
       stripWrap: document.getElementById('vm-strip-wrap'),
       bpmDisp:   document.getElementById('vm-bpm-display'),
       slider:    document.getElementById('vm-slider'),
@@ -245,34 +224,15 @@ nav .nav-links {
     };
     function getDots() { return document.querySelectorAll('.vm-dot'); }
 
-    // ── Restore saved state ───────────────────────────────────
+    // ── Restore saved BPM, always show strip ──────────────────
     try {
       const savedBpm = parseInt(localStorage.getItem('viziMetroBpm') || '80', 10);
       if (savedBpm >= 40 && savedBpm <= 220) { bpm = savedBpm; }
-      const wasOpen = localStorage.getItem('viziMetroOpen') === '1';
-      if (wasOpen) openStrip();
     } catch(e){}
 
     el.bpmDisp.textContent = bpm;
     el.slider.value = bpm;
-
-    // ── Toggle strip ─────────────────────────────────────────
-    function openStrip() {
-      stripOpen = true;
-      el.stripWrap.classList.add('open');
-      el.toggleBtn.classList.add('open');
-      try { localStorage.setItem('viziMetroOpen', '1'); } catch(e){}
-    }
-    function closeStrip() {
-      stripOpen = false;
-      el.stripWrap.classList.remove('open');
-      el.toggleBtn.classList.remove('open');
-      try { localStorage.removeItem('viziMetroOpen'); } catch(e){}
-    }
-
-    el.toggleBtn.addEventListener('click', () => {
-      stripOpen ? closeStrip() : openStrip();
-    });
+    el.stripWrap.classList.add('open'); // always visible
 
     // ── Hold On / Hold Off ────────────────────────────────
     const RAILWAY_URL = window.RAILWAY_URL ||
