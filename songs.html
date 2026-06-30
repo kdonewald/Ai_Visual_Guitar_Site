@@ -279,8 +279,32 @@
 
 
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
   const RAILWAY = 'https://vizi-tts-proxy-production.up.railway.app';
+  if (window['pdfjsLib']) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  // Convert every page of a PDF File into PNG data URLs, silently in the background.
+  // Returns an array of data URLs, one per page, at a readable resolution.
+  async function pdfFileToPageImages(file){
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    const pages = [];
+    const scale = 2.0; // render at 2x for sharpness when zoomed
+    for (let i = 1; i <= pdf.numPages; i++){
+      const page = await pdf.getPage(i);
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d');
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      pages.push(canvas.toDataURL('image/png'));
+    }
+    return pages;
+  }
 
   let sessionId = null, selectedFile = null, textMode = false;
 
@@ -366,17 +390,46 @@
         showStatus('ok', '✓ Song received! Taking you to Vizi…');
         btnLabel.textContent = '✓ Sent to Vizi!';
         if (selectedFile){
-          const reader = new FileReader();
-          reader.onload = () => {
+          const isPdf = (selectedFile.type || '').includes('pdf');
+          if (isPdf){
             try {
-              sessionStorage.setItem('viziSongFile', reader.result);
+              btnLabel.textContent = 'Preparing your song sheet…';
+              const pageImages = await pdfFileToPageImages(selectedFile);
+              sessionStorage.setItem('viziSongPages', JSON.stringify(pageImages));
               sessionStorage.setItem('viziSongName', selectedFile.name);
-              sessionStorage.setItem('viziSongType', selectedFile.type || 'application/octet-stream');
+              sessionStorage.setItem('viziSongType', 'image/png');
               sessionStorage.setItem('viziSongSession', sessionId);
-            } catch(e){}
+              sessionStorage.removeItem('viziSongFile');
+            } catch(e){
+              // Fallback: store raw PDF data URL if conversion fails for any reason
+              const reader = new FileReader();
+              await new Promise(resolve => {
+                reader.onload = () => {
+                  try {
+                    sessionStorage.setItem('viziSongFile', reader.result);
+                    sessionStorage.setItem('viziSongName', selectedFile.name);
+                    sessionStorage.setItem('viziSongType', selectedFile.type || 'application/octet-stream');
+                    sessionStorage.setItem('viziSongSession', sessionId);
+                  } catch(e2){}
+                  resolve();
+                };
+                reader.readAsDataURL(selectedFile);
+              });
+            }
             doRedirect();
-          };
-          reader.readAsDataURL(selectedFile);
+          } else {
+            const reader = new FileReader();
+            reader.onload = () => {
+              try {
+                sessionStorage.setItem('viziSongFile', reader.result);
+                sessionStorage.setItem('viziSongName', selectedFile.name);
+                sessionStorage.setItem('viziSongType', selectedFile.type || 'application/octet-stream');
+                sessionStorage.setItem('viziSongSession', sessionId);
+              } catch(e){}
+              doRedirect();
+            };
+            reader.readAsDataURL(selectedFile);
+          }
         } else {
           try {
             sessionStorage.setItem('viziSongFile', 'text:' + chordsText.value.trim());

@@ -174,6 +174,15 @@
     font-family:'DM Mono',monospace;font-size:.85rem;color:var(--text-dim);
     min-width:2.8rem;text-align:center;
   }
+  .sheet-page-row{
+    display:flex;align-items:center;justify-content:center;gap:.6rem;
+    padding:.4rem .75rem;background:var(--surface2);
+    border-bottom:1.5px solid var(--border);flex-shrink:0;
+  }
+  .sheet-page-val{
+    font-family:'DM Mono',monospace;font-size:.78rem;color:var(--text-mid);
+    min-width:7rem;text-align:center;
+  }
   .sheet-body{flex:1;overflow:auto;position:relative;}
   .sheet-content{transform-origin:top left;transition:transform .15s;width:100%;}
   .sheet-body iframe{width:100%;height:100%;border:none;display:block;min-height:400px}
@@ -240,6 +249,11 @@
         <button class="sheet-btn" id="zoomReset" title="Reset zoom">⟳</button>
         <button class="sheet-close" id="sheetClose">✕</button>
       </div>
+    </div>
+    <div class="sheet-page-row" id="sheetPageRow" style="display:none">
+      <button class="sheet-btn" id="sheetPrevPage">◀</button>
+      <span class="sheet-page-val" id="sheetPageVal">Page 1 of 1</span>
+      <button class="sheet-btn" id="sheetNextPage">▶</button>
     </div>
     <div class="sheet-body" id="sheetBody">
       <div class="sheet-content" id="sheetContent"></div>
@@ -554,45 +568,82 @@
   zoomOut.addEventListener('click',   e => { e.stopPropagation(); zoomLevel = Math.max(ZOOM_MIN, zoomLevel - ZOOM_STEP); applyZoom(); });
   zoomReset.addEventListener('click', e => { e.stopPropagation(); zoomLevel = 1.0; applyZoom(); });
 
+  let songPages = [];
+  let songPageIdx = 0;
+
+  function renderSongPage(){
+    sheetContent.innerHTML = '';
+    if (!songPages.length) return;
+    const img = document.createElement('img');
+    img.src = songPages[songPageIdx];
+    img.alt = 'Song sheet page ' + (songPageIdx + 1);
+    sheetContent.appendChild(img);
+    sheetPageVal.textContent = 'Page ' + (songPageIdx + 1) + ' of ' + songPages.length;
+    applyZoom();
+  }
+
   function loadSongSheet(){
-    const dataUrl = sessionStorage.getItem('viziSongFile');
-    const name    = sessionStorage.getItem('viziSongName') || 'Song Sheet';
-    const type    = sessionStorage.getItem('viziSongType') || '';
-    if (!dataUrl) return;
+    const pagesJson = sessionStorage.getItem('viziSongPages');
+    const dataUrl    = sessionStorage.getItem('viziSongFile');
+    const name       = sessionStorage.getItem('viziSongName') || 'Song Sheet';
+    const type       = sessionStorage.getItem('viziSongType') || '';
+    if (!pagesJson && !dataUrl) return;
 
     sheetTitle.textContent = name;
     sheetContent.innerHTML = '';
     zoomLevel = 1.0;
 
-    if (dataUrl.startsWith('text:')){
+    if (pagesJson){
+      // Pre-converted PDF pages (or any multi-page image set) — no iframe needed
+      try { songPages = JSON.parse(pagesJson); } catch(e){ songPages = []; }
+      songPageIdx = 0;
+      sheetPageRow.style.display = songPages.length > 1 ? 'flex' : 'none';
+      renderSongPage();
+    } else if (dataUrl.startsWith('text:')){
+      songPages = [];
+      sheetPageRow.style.display = 'none';
       const pre = document.createElement('pre');
       pre.textContent = dataUrl.slice(5);
       sheetContent.appendChild(pre);
-    } else if (type.includes('pdf')){
+      applyZoom();
+    } else if (type.startsWith('image/')){
+      songPages = [];
+      sheetPageRow.style.display = 'none';
+      const img = document.createElement('img');
+      img.src = dataUrl; img.alt = name;
+      sheetContent.appendChild(img);
+      applyZoom();
+    } else {
+      // Fallback only — shouldn't normally hit this since PDFs are pre-converted
+      songPages = [];
+      sheetPageRow.style.display = 'none';
       const iframe = document.createElement('iframe');
       iframe.src = dataUrl;
       iframe.style.width = '100%';
       iframe.style.height = '100%';
       iframe.style.minHeight = '500px';
       sheetContent.appendChild(iframe);
-    } else if (type.startsWith('image/')){
-      const img = document.createElement('img');
-      img.src = dataUrl; img.alt = name;
-      sheetContent.appendChild(img);
-    } else {
-      const iframe = document.createElement('iframe');
-      iframe.src = dataUrl;
-      sheetContent.appendChild(iframe);
+      applyZoom();
     }
 
-    applyZoom();
     sheetWrap.classList.add('show');
     sheetShowBtn.classList.remove('show');
   }
 
+  const sheetPageRow  = document.getElementById('sheetPageRow');
+  const sheetPageVal  = document.getElementById('sheetPageVal');
+  const sheetPrevPage = document.getElementById('sheetPrevPage');
+  const sheetNextPage = document.getElementById('sheetNextPage');
+  sheetPrevPage.addEventListener('click', () => {
+    if (songPageIdx > 0){ songPageIdx--; renderSongPage(); }
+  });
+  sheetNextPage.addEventListener('click', () => {
+    if (songPageIdx < songPages.length - 1){ songPageIdx++; renderSongPage(); }
+  });
+
   sheetClose.addEventListener('click', () => {
     sheetWrap.classList.remove('show');
-    if (sessionStorage.getItem('viziSongFile')) sheetShowBtn.classList.add('show');
+    if (sessionStorage.getItem('viziSongPages') || sessionStorage.getItem('viziSongFile')) sheetShowBtn.classList.add('show');
   });
   sheetShowBtn.addEventListener('click', () => {
     sheetWrap.classList.add('show');
