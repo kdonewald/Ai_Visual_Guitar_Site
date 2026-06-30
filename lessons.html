@@ -3249,9 +3249,11 @@
         .tb-num-btn:hover{border-color:var(--blue);background:rgba(79,142,247,.15);color:var(--blue);}
         .tb-num-btn.tb-clr-btn{border-color:rgba(224,85,64,.4);color:var(--red);}
         .tb-num-btn.tb-clr-btn:hover{background:rgba(224,85,64,.15);}
-        .tb-note-pills{display:flex;gap:.3rem;flex-wrap:wrap;min-height:1.8rem;justify-content:center;margin-bottom:.5rem;}
+        .tb-note-pills{display:flex;gap:.3rem;flex-wrap:wrap;min-height:1.8rem;justify-content:center;margin-bottom:.5rem;align-items:center;}
         .tb-note-pill{font-size:.80rem;font-weight:700;padding:.22rem .6rem;border-radius:12px;
           background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.35);color:#8ec8ff;}
+        .tb-note-beat-label{background:rgba(232,160,32,.18);border-color:rgba(232,160,32,.4);color:var(--gold);
+          font-family:'DM Mono',monospace;font-size:.74rem;}
         .tb-status{font-size:.82rem;color:var(--text-mid);text-align:center;min-height:1.2rem;margin-bottom:.6rem;}
         .tb-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem;}
         .tb-action-btn{flex:1;min-width:110px;padding:.7rem 1rem;border-radius:9px;border:none;
@@ -3437,10 +3439,28 @@
       return steps.length?'['+steps.join(',')+']':null;
     }
 
+    function showFullNoteList(){
+      notePills.innerHTML='';
+      allBeats().forEach(bt=>{
+        if(!bt.notes.length) return;
+        const label=document.createElement('span');
+        label.className='tb-note-pill tb-note-beat-label';
+        label.textContent='M'+(bt.m+1)+'·'+(bt.b+1)+':';
+        notePills.appendChild(label);
+        bt.notes.forEach(n=>{
+          const pill=document.createElement('span');
+          pill.className='tb-note-pill';
+          pill.textContent=STRINGS[n.s]+':'+n.f+' = '+fretToNote(STR_CODES[n.s],n.f);
+          notePills.appendChild(pill);
+        });
+      });
+    }
+
     playBtn.addEventListener('click',async()=>{
       const cmd=fullSequenceCmd();
       if(!cmd){ status.textContent='Add some notes first'; return; }
       status.textContent='Sent to fretboard — follow the LEDs at your own pace. Use Metro FASTER/SLOWER to adjust speed.';
+      showFullNoteList();
       await sendFretboardCmd(cmd);
     });
 
