@@ -9,16 +9,39 @@
 
   // ── CSS ──────────────────────────────────────────────────────
   const css = `
-#vm-toggle-btn {
+/* ── Two-row nav ── */
+nav {
+  flex-direction: column !important;
+  align-items: center !important;
+  padding: .5rem 1rem !important;
+  gap: .4rem !important;
+}
+.nav-logo {
+  justify-content: center;
+}
+nav .nav-links {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  gap: .4rem !important;
+  width: 100%;
+  justify-content: center;
+}
+
+/* Nav control buttons — shared style */
+.nav-ctrl-btn {
   display: flex; align-items: center; justify-content: center;
-  padding: 0 .7rem; height: 36px; border-radius: 8px;
+  padding: 0 .65rem; height: 34px; border-radius: 8px;
   border: 1.5px solid rgba(255,255,255,0.15);
   background: transparent;
-  color: rgba(255,255,255,0.7);
-  font-size: .78rem; font-weight: 600; letter-spacing: .04em;
+  font-size: .75rem; font-weight: 600; letter-spacing: .03em;
   cursor: pointer; transition: all .18s; flex-shrink: 0;
   font-family: 'DM Sans', sans-serif; line-height: 1;
   white-space: nowrap;
+}
+
+#vm-toggle-btn {
+  color: rgba(255,255,255,0.7);
 }
 #vm-toggle-btn:hover { border-color: rgba(255,255,255,0.4); color: #fff; }
 #vm-toggle-btn.open {
@@ -27,16 +50,17 @@
   background: rgba(232,160,32,0.12);
 }
 
-/* Force nav to stay single line */
-nav .nav-links {
-  display: flex !important;
-  flex-wrap: nowrap !important;
-  align-items: center;
-  gap: .3rem !important;
+#vm-hold-on {
+  border-color: rgba(232,160,32,0.4);
+  color: var(--gold, #e8a020);
 }
-nav {
-  flex-wrap: nowrap !important;
+#vm-hold-on:hover { border-color: var(--gold, #e8a020); background: rgba(232,160,32,0.12); }
+
+#vm-hold-off {
+  border-color: rgba(224,85,64,0.3);
+  color: rgba(224,85,64,0.75);
 }
+#vm-hold-off:hover { border-color: rgba(224,85,64,0.7); color: #e05540; background: rgba(224,85,64,0.08); }
 
 #vm-strip-wrap {
   width: 100%;
@@ -130,15 +154,34 @@ nav {
     const nav = document.querySelector('nav');
     if (!nav) return false;
     const navLinks = nav.querySelector('.nav-links');
+    if (!navLinks) return false;
+
+    // Metro toggle
     const toggleBtn = document.createElement('button');
     toggleBtn.id = 'vm-toggle-btn';
+    toggleBtn.className = 'nav-ctrl-btn';
     toggleBtn.title = 'Metronome';
     toggleBtn.textContent = 'Metro';
-    if (navLinks) {
-      navLinks.insertBefore(toggleBtn, navLinks.firstChild);
-    } else {
-      nav.appendChild(toggleBtn);
-    }
+
+    // Hold On
+    const holdOnBtn = document.createElement('button');
+    holdOnBtn.id = 'vm-hold-on';
+    holdOnBtn.className = 'nav-ctrl-btn';
+    holdOnBtn.title = 'Latch current fretboard LEDs';
+    holdOnBtn.textContent = 'Hold On';
+
+    // Hold Off
+    const holdOffBtn = document.createElement('button');
+    holdOffBtn.id = 'vm-hold-off';
+    holdOffBtn.className = 'nav-ctrl-btn';
+    holdOffBtn.title = 'Release fretboard hold';
+    holdOffBtn.textContent = 'Hold Off';
+
+    // Insert before Home (first child)
+    navLinks.insertBefore(toggleBtn,  navLinks.firstChild);
+    navLinks.insertBefore(holdOffBtn, navLinks.firstChild);
+    navLinks.insertBefore(holdOnBtn,  navLinks.firstChild);
+
     return true;
   }
 
@@ -230,6 +273,34 @@ nav {
     el.toggleBtn.addEventListener('click', () => {
       stripOpen ? closeStrip() : openStrip();
     });
+
+    // ── Hold On / Hold Off ────────────────────────────────
+    const RAILWAY_URL = window.RAILWAY_URL ||
+      'https://vizi-tts-proxy-production.up.railway.app';
+
+    async function sendHoldCmd(type) {
+      const btn = document.getElementById(type === 'on' ? 'vm-hold-on' : 'vm-hold-off');
+      const orig = btn.textContent;
+      btn.textContent = '…';
+      btn.style.opacity = '.5';
+      try {
+        const msg = type === 'on'
+          ? 'Please return the HOLD ON command to the fretboard immediately.'
+          : 'Please return the HOLD OFF command to the fretboard immediately.';
+        await fetch(RAILWAY_URL + '/claude-tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg, mode: 'talk' })
+        });
+      } catch(e) {}
+      btn.textContent = orig;
+      btn.style.opacity = '';
+    }
+
+    const holdOnEl  = document.getElementById('vm-hold-on');
+    const holdOffEl = document.getElementById('vm-hold-off');
+    if (holdOnEl)  holdOnEl.addEventListener('click',  () => sendHoldCmd('on'));
+    if (holdOffEl) holdOffEl.addEventListener('click', () => sendHoldCmd('off'));
 
     // ── Audio ────────────────────────────────────────────────
     function click(accent) {
