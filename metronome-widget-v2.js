@@ -142,9 +142,7 @@ nav .nav-links {
   // ── Find nav and inject toggle button ─────────────────────────
   function injectToggleBtn() {
     const nav = document.querySelector('nav');
-    if (!nav) return false;
     const navLinks = nav.querySelector('.nav-links');
-    if (!navLinks) return false;
 
     // Hold On
     const holdOnBtn = document.createElement('button');
@@ -163,8 +161,6 @@ nav .nav-links {
     // Insert before Home (first child)
     navLinks.insertBefore(holdOffBtn, navLinks.firstChild);
     navLinks.insertBefore(holdOnBtn,  navLinks.firstChild);
-
-    return true;
   }
 
   // ── Build the strip HTML ──────────────────────────────────────
@@ -187,19 +183,30 @@ nav .nav-links {
   // Insert strip after nav
   function injectStrip() {
     const nav = document.querySelector('nav');
-    if (!nav) return false;
     nav.parentNode.insertBefore(stripWrap, nav.nextSibling);
-    return true;
   }
 
   // ── Wait for DOM then inject ──────────────────────────────────
+  let vmAlreadyInjected = false;
   function init() {
-    if (!injectToggleBtn() || !injectStrip()) {
-      // retry if nav not ready
+    if (vmAlreadyInjected) return;
+    const nav = document.querySelector('nav');
+    if (!nav || !nav.querySelector('.nav-links')) {
       setTimeout(init, 100);
       return;
     }
-    setup();
+    injectToggleBtn();
+    injectStrip();
+    vmAlreadyInjected = true;
+
+    // Verify all required elements actually exist before calling setup()
+    const required = ['vm-strip-wrap','vm-bpm-display','vm-slider','vm-tap','vm-ts','vm-play'];
+    const missing = required.filter(id => !document.getElementById(id));
+    if (missing.length) {
+      console.warn('Vizi metronome: missing elements', missing);
+      return;
+    }
+    try { setup(); } catch(err) { console.error('Vizi metronome setup failed:', err); }
   }
 
   if (document.readyState === 'loading') {
@@ -235,8 +242,7 @@ nav .nav-links {
     el.stripWrap.classList.add('open'); // always visible
 
     // ── Hold On / Hold Off ────────────────────────────────
-    const RAILWAY_URL = window.RAILWAY_URL ||
-      'https://vizi-tts-proxy-production.up.railway.app';
+    const VM_RAILWAY_URL = 'https://vizi-tts-proxy-production.up.railway.app';
 
     async function sendHoldCmd(type) {
       const btn = document.getElementById(type === 'on' ? 'vm-hold-on' : 'vm-hold-off');
@@ -247,7 +253,7 @@ nav .nav-links {
         const msg = type === 'on'
           ? 'Please return the HOLD ON command to the fretboard immediately.'
           : 'Please return the HOLD OFF command to the fretboard immediately.';
-        await fetch(RAILWAY_URL + '/claude-tts', {
+        await fetch(VM_RAILWAY_URL + '/claude-tts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: msg, mode: 'talk' })
