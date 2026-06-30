@@ -3347,7 +3347,7 @@
     // Numpad
     const numWrap=document.createElement('div'); numWrap.className='tb-numpad-wrap';
     const numLabel=document.createElement('div'); numLabel.className='tb-numpad-label';
-    numLabel.textContent='Tap a cell, then enter fret 0–13 · Adjust Metro to change playback speed';
+    numLabel.textContent='Tap a cell, then enter fret 0–13';
     numWrap.appendChild(numLabel);
     const numpad=document.createElement('div'); numpad.className='tb-numpad';
     for(let n=0;n<=13;n++){ const nb=document.createElement('button'); nb.className='tb-num-btn'; nb.textContent=n; nb.addEventListener('click',()=>enterFret(n)); numpad.appendChild(nb); }
@@ -3440,7 +3440,7 @@
     playBtn.addEventListener('click',async()=>{
       const cmd=fullSequenceCmd();
       if(!cmd){ status.textContent='Add some notes first'; return; }
-      status.textContent='Sent to fretboard — follow the LEDs at your own pace. Use Metro FASTER/SLOWER to adjust speed.';
+      status.textContent='Sent to fretboard — follow the LEDs at your own pace.';
       await sendFretboardCmd(cmd);
     });
   }
