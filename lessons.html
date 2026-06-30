@@ -763,19 +763,32 @@
   /* ── CHORDS PANEL (Stage 4) ── */
   .cp-section-head{
     display:flex;align-items:center;gap:.6rem;
-    padding:.6rem .85rem;border-radius:10px;
-    background:linear-gradient(135deg,var(--cream),var(--cream-dark));
-    margin:.85rem 0 .6rem;border:1.5px solid var(--cream-mid);
+    padding:.65rem .9rem;border-radius:10px;
+    background:var(--surface2);
+    margin:.85rem 0 0;border:1.5px solid var(--border);
+    cursor:pointer;user-select:none;transition:all .18s;
   }
+  .cp-section-head:hover{ border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.07); }
+  .cp-section-head.open{ border-color:var(--blue);background:rgba(79,142,247,.08);border-radius:10px 10px 0 0; }
   .cp-section-icon{ font-size:1.1rem;flex-shrink:0; }
-  .cp-section-head span{
-    flex:1;font-family:'DM Sans',sans-serif;font-size:.88rem;
-    font-weight:600;color:var(--text);
+  .cp-section-head .cp-section-label{
+    flex:1;font-family:'DM Sans',sans-serif;font-size:.95rem;
+    font-weight:700;color:var(--text);
   }
+  .cp-section-chevron{
+    font-size:.75rem;color:var(--text-dim);transition:transform .2s;flex-shrink:0;
+  }
+  .cp-section-head.open .cp-section-chevron{ transform:rotate(180deg); color:var(--blue); }
+  .cp-section-body{
+    display:none;border:1.5px solid var(--border);border-top:none;
+    border-radius:0 0 10px 10px;padding:.75rem .85rem .9rem;margin-bottom:.5rem;
+    background:rgba(255,255,255,.02);
+  }
+  .cp-section-body.open{ display:block; }
   .cp-section-toggle{
     font-size:.84rem;padding:.25rem .55rem;border-radius:5px;
-    border:1px solid var(--cream-mid);background:var(--white);
-    color:var(--text-light);cursor:pointer;transition:all .15s;
+    border:1px solid var(--border);background:var(--surface2);
+    color:var(--text-mid);cursor:pointer;transition:all .15s;
   }
   .cp-section-toggle:hover{ border-color:var(--blue);color:var(--blue); }
 
@@ -2362,6 +2375,7 @@
   let cpTriadGroup = null;
   let cpTriadRoot = null;
   let cpSelectedChord = null;
+  let cpOpenSection = 'open-chords'; // which accordion section is open
 
 
   // ── BY CHORD VIEW ────────────────────────────────────────────
@@ -2534,10 +2548,16 @@
     });
 
     // ── SECTION 1: Open Chords ──
-    const ocHead=document.createElement('div'); ocHead.className='cp-section-head';
-    ocHead.innerHTML='<span class="cp-section-icon">🎸</span><span>Open Chords</span>';
+    const ocHead=document.createElement('div');
+    ocHead.className='cp-section-head'+(cpOpenSection==='open-chords'?' open':'');
+    ocHead.innerHTML='<span class="cp-section-icon">🎸</span><span class="cp-section-label">Open Chords</span><span class="cp-section-chevron">▾</span>';
+    ocHead.addEventListener('click',()=>{ cpOpenSection=cpOpenSection==='open-chords'?null:'open-chords'; renderChordsPanel(); });
     exList.appendChild(ocHead);
 
+    const ocBody=document.createElement('div'); ocBody.className='cp-section-body'+(cpOpenSection==='open-chords'?' open':'');
+    exList.appendChild(ocBody);
+
+    if(cpOpenSection==='open-chords'){
     const tabs=document.createElement('div'); tabs.className='cp-tabs';
     Object.keys(ALL_CHORDS).forEach(tab=>{
       const btn=document.createElement('button'); btn.className='cp-tab'+(tab===cpActiveTab?' active':'');
@@ -2545,7 +2565,7 @@
       btn.addEventListener('click',()=>{ cpActiveTab=tab; renderChordsPanel(); });
       tabs.appendChild(btn);
     });
-    exList.appendChild(tabs);
+    ocBody.appendChild(tabs);
 
     const chordGrid=document.createElement('div'); chordGrid.className='cp-chord-grid';
     const diatonicSet=cpActiveScale?DIATONIC[cpActiveScale]:null;
@@ -2576,18 +2596,27 @@
       }
       chordGrid.appendChild(btn);
     });
-    exList.appendChild(chordGrid);
+    ocBody.appendChild(chordGrid);
 
     const barreNote=document.createElement('div');
     barreNote.style.cssText='font-size:.82rem;color:var(--text-light);margin-bottom:.85rem;text-align:center;';
     barreNote.textContent='Greyed = barre chord — tap to send to Vizi, or use the Barre section below for more control';
-    exList.appendChild(barreNote);
+    ocBody.appendChild(barreNote);
+
+    } // end open-chords section
 
     // ── SECTION 2: Barre Chords ──
-    const bcHead=document.createElement('div'); bcHead.className='cp-section-head';
-    bcHead.innerHTML='<span class="cp-section-icon">🤘</span><span>Barre Chords</span>';
+    const bcHead=document.createElement('div');
+    bcHead.className='cp-section-head'+(cpOpenSection==='barre-chords'?' open':'');
+    bcHead.innerHTML='<span class="cp-section-icon">🤘</span><span class="cp-section-label">Barre Chords</span><span class="cp-section-chevron">▾</span>';
+    bcHead.addEventListener('click',()=>{ cpOpenSection=cpOpenSection==='barre-chords'?null:'barre-chords'; renderChordsPanel(); });
     exList.appendChild(bcHead);
-    exList.appendChild(makeVideoIntroBtn('Watch Barre Chord Intro', activeStage&&activeStage.barreVideoUrl||''));
+
+    const bcBody=document.createElement('div'); bcBody.className='cp-section-body'+(cpOpenSection==='barre-chords'?' open':'');
+    exList.appendChild(bcBody);
+
+    if(cpOpenSection==='barre-chords'){
+    bcBody.appendChild(makeVideoIntroBtn('Watch Barre Chord Intro', activeStage&&activeStage.barreVideoUrl||''));
 
     const barreWrap=document.createElement('div'); barreWrap.className='cp-barre-wrap';
     const shapes=document.createElement('div'); shapes.className='cp-barre-shapes';
@@ -2628,13 +2657,22 @@
       hint.textContent='Tap a shape first, then pick your root note';
       barreWrap.appendChild(hint);
     }
-    exList.appendChild(barreWrap);
+    bcBody.appendChild(barreWrap);
+
+    } // end barre-chords section
 
     // ── SECTION 3: Triads ──
-    const triHead=document.createElement('div'); triHead.className='cp-section-head';
-    triHead.innerHTML='<span class="cp-section-icon">✨</span><span>Triads</span>';
+    const triHead=document.createElement('div');
+    triHead.className='cp-section-head'+(cpOpenSection==='triads'?' open':'');
+    triHead.innerHTML='<span class="cp-section-icon">✨</span><span class="cp-section-label">Triads</span><span class="cp-section-chevron">▾</span>';
+    triHead.addEventListener('click',()=>{ cpOpenSection=cpOpenSection==='triads'?null:'triads'; renderChordsPanel(); });
     exList.appendChild(triHead);
-    exList.appendChild(makeVideoIntroBtn('Watch Triad Intro', activeStage&&activeStage.triadVideoUrl||''));
+
+    const triBody=document.createElement('div'); triBody.className='cp-section-body'+(cpOpenSection==='triads'?' open':'');
+    exList.appendChild(triBody);
+
+    if(cpOpenSection==='triads'){
+    triBody.appendChild(makeVideoIntroBtn('Watch Triad Intro', activeStage&&activeStage.triadVideoUrl||''));
 
     const triadGroupRow=document.createElement('div'); triadGroupRow.className='cp-tabs';
     TRIAD_GROUPS_CP.forEach(grp=>{
@@ -2644,7 +2682,7 @@
       btn.addEventListener('click',()=>{ cpTriadGroup=grp.key; renderChordsPanel(); });
       triadGroupRow.appendChild(btn);
     });
-    exList.appendChild(triadGroupRow);
+    triBody.appendChild(triadGroupRow);
 
     if(cpTriadGroup){
       const triadRootGrid=document.createElement('div'); triadRootGrid.className='cp-root-grid';
@@ -2661,21 +2699,21 @@
         });
         triadRootGrid.appendChild(btn);
       });
-      exList.appendChild(triadRootGrid);
+      triBody.appendChild(triadRootGrid);
 
       // Triad type picker goes here — BEFORE action panel
       const triadPickerMount=document.createElement('div');
       triadPickerMount.id='cpTriadPickerMount';
-      exList.appendChild(triadPickerMount);
+      triBody.appendChild(triadPickerMount);
       if(cpTriadRoot){
         const cleanRoot=cpTriadRoot.replace('/','').split('/')[0];
         showTriadTypePicker(cleanRoot, cpTriadGroup, triadPickerMount);
       }
     } else {
       const hint=document.createElement('div');
-      hint.style.cssText='font-size:.84rem;color:var(--text-light);padding:.4rem 0 .6rem;';
+      hint.style.cssText='font-size:.84rem;color:var(--text-mid);padding:.4rem 0 .6rem;';
       hint.textContent='Tap a string group to choose where the root sits';
-      exList.appendChild(hint);
+      triBody.appendChild(hint);
     }
 
     // ── Chord action panel (shows after selection) ──
@@ -2705,6 +2743,8 @@
       cpProgression.push({...cpSelectedChord});
       updateProgBar();
     });
+
+    } // end triads section
 
     // ── PROGRESSION BUILDER ──
     const progSec=buildProgSection();
