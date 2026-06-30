@@ -3230,6 +3230,14 @@
         .tb-m-label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-right:.3rem;align-self:center;}
         .tb-beat-head{width:2.8rem;text-align:center;font-size:.72rem;color:rgba(255,255,255,.5);font-weight:600;}
         .tb-row{display:flex;}
+        .tb-note-row{margin-top:.25rem;}
+        .tb-note-label{
+          width:2.8rem;min-height:1.3rem;margin:2px;
+          display:flex;flex-direction:column;align-items:center;justify-content:center;
+          font-family:'DM Mono',monospace;font-size:.62rem;font-weight:700;line-height:1.15;
+          color:var(--gold);text-align:center;padding:.1rem 0;
+        }
+        .tb-note-label:empty::after{content:'';}
         .tb-cell{width:2.8rem;height:2.6rem;display:flex;align-items:center;justify-content:center;
           border:1.5px solid rgba(255,255,255,.10);border-radius:6px;margin:2px;
           cursor:pointer;transition:all .15s;background:rgba(255,255,255,.04);
@@ -3298,6 +3306,7 @@
     gridWrap.appendChild(lblCol);
 
     const cells=[[],[]] ;
+    const noteLabelCells=[[],[]];
     for(let m=0;m<2;m++){
       cells[m]=[[],[],[],[]];
       const mDiv=document.createElement('div'); mDiv.className='tb-measure';
@@ -3316,6 +3325,14 @@
         }
         mDiv.appendChild(row);
       }
+      // Note-label row — shows the actual note name(s) under each beat column
+      const noteRow=document.createElement('div'); noteRow.className='tb-row tb-note-row';
+      for(let b=0;b<4;b++){
+        const nl=document.createElement('div'); nl.className='tb-note-label';
+        noteLabelCells[m].push(nl);
+        noteRow.appendChild(nl);
+      }
+      mDiv.appendChild(noteRow);
       gridWrap.appendChild(mDiv);
       if(m===0){ const div=document.createElement('div'); div.className='tb-divider'; gridWrap.appendChild(div); }
     }
@@ -3337,44 +3354,29 @@
     const clrCellBtn=document.createElement('button'); clrCellBtn.className='tb-num-btn tb-clr-btn'; clrCellBtn.textContent='✕'; clrCellBtn.addEventListener('click',clearCell); numpad.appendChild(clrCellBtn);
     numWrap.appendChild(numpad); wrap.appendChild(numWrap);
 
-    const notePills=document.createElement('div'); notePills.className='tb-note-pills'; wrap.appendChild(notePills);
     const status=document.createElement('div'); status.className='tb-status'; status.textContent='Choose a preset or tap a cell to start'; wrap.appendChild(status);
 
     const actions=document.createElement('div'); actions.className='tb-actions';
-    const playBtn=document.createElement('button'); playBtn.className='tb-action-btn play'; playBtn.innerHTML='&#9654; Show';
-    const sendBtn=document.createElement('button'); sendBtn.className='tb-action-btn send'; sendBtn.innerHTML='&#127925; Send to Vizi';
-    actions.appendChild(playBtn); actions.appendChild(sendBtn); wrap.appendChild(actions);
+    const playBtn=document.createElement('button'); playBtn.className='tb-action-btn play full-width'; playBtn.innerHTML='&#9654; Show';
+    actions.appendChild(playBtn); wrap.appendChild(actions);
     container.appendChild(wrap);
 
     // ── Helpers ────────────────────────────────────────────
     function token(s,f){ return 'S'+STR_CODES[s]+f; }
-
-    function measureToCmd(m){
-      const steps=[];
-      for(let b=0;b<4;b++){
-        const notes=[];
-        for(let s=0;s<6;s++){ if(grid[m][b][s]!==null) notes.push(token(s,grid[m][b][s])); }
-        if(!notes.length) continue;
-        steps.push(notes.length===1?notes[0]:'('+notes.join(',')+')');
-      }
-      return steps.length?'['+steps.join(',')+','+steps.join(',')+']':null;
-    }
-
-    function measureDesc(m){
-      const parts=[];
-      for(let b=0;b<4;b++){
-        const notes=[];
-        for(let s=0;s<6;s++){ const v=grid[m][b][s]; if(v!==null) notes.push(fretToNote(STR_CODES[s],v)+' on '+STRINGS[s]); }
-        parts.push(notes.length?'Beat '+(b+1)+': '+notes.join(' and '):'Beat '+(b+1)+' is a rest');
-      }
-      return parts.join('. ');
-    }
 
     function updateCell(m,b,s){
       const cell=cells[m][b][s],val=grid[m][b][s];
       cell.classList.remove('filled','empty-ph');
       if(val===null){ cell.textContent=''; cell.classList.add('empty-ph'); }
       else{ cell.textContent=val; cell.classList.add('filled'); }
+      updateNoteLabel(m,b);
+    }
+
+    function updateNoteLabel(m,b){
+      const el=noteLabelCells[m][b];
+      const notes=[];
+      for(let s=0;s<6;s++){ const v=grid[m][b][s]; if(v!==null) notes.push(fretToNote(STR_CODES[s],v)); }
+      el.textContent = notes.length ? notes.join('/') : '';
     }
 
     function selectCell(m,b,s){
@@ -3382,7 +3384,6 @@
       tbSelectedCell={m,b,s};
       cells[m][b][s].classList.remove('empty-ph'); cells[m][b][s].classList.add('selected');
       numLabel.textContent='String '+STRINGS[s]+', Beat '+(b+1)+', Measure '+(m+1)+' — enter fret 0–13';
-      showColNotes(m,b);
     }
 
     function enterFret(n){
@@ -3390,15 +3391,12 @@
       const {m,b,s}=tbSelectedCell;
       grid[m][b][s]=n; updateCell(m,b,s); cells[m][b][s].classList.add('selected');
       status.textContent=STRINGS[s]+' string fret '+n+' = '+fretToNote(STR_CODES[s],n);
-      showColNotes(m,b);
       if(s<5) selectCell(m,b,s+1);
     }
 
-    function clearCell(){ if(!tbSelectedCell)return; const {m,b,s}=tbSelectedCell; grid[m][b][s]=null; updateCell(m,b,s); showColNotes(m,b); }
-    function clearMeasure(m){ for(let b=0;b<4;b++) for(let s=0;s<6;s++){ grid[m][b][s]=null; updateCell(m,b,s); } notePills.innerHTML=''; status.textContent='Measure '+(m+1)+' cleared'; }
+    function clearCell(){ if(!tbSelectedCell)return; const {m,b,s}=tbSelectedCell; grid[m][b][s]=null; updateCell(m,b,s); }
+    function clearMeasure(m){ for(let b=0;b<4;b++) for(let s=0;s<6;s++){ grid[m][b][s]=null; updateCell(m,b,s); } status.textContent='Measure '+(m+1)+' cleared'; }
     function clearAll(){ for(let m=0;m<2;m++) clearMeasure(m); tbSelectedCell=null; }
-    function showColNotes(m,b){ notePills.innerHTML=''; for(let s=0;s<6;s++){ const v=grid[m][b][s]; if(v===null)continue; const pill=document.createElement('span'); pill.className='tb-note-pill'; pill.textContent=STRINGS[s]+':'+v+' = '+fretToNote(STR_CODES[s],v); notePills.appendChild(pill); } }
-
     // ── Random presets ─────────────────────────────────────
     function randFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
     function randomNote(sIdx){ return randFrom(PENTA['G'][STR_CODES[sIdx]]); }
@@ -3439,49 +3437,11 @@
       return steps.length?'['+steps.join(',')+']':null;
     }
 
-    function showFullNoteList(){
-      notePills.innerHTML='';
-      allBeats().forEach(bt=>{
-        if(!bt.notes.length) return;
-        const label=document.createElement('span');
-        label.className='tb-note-pill tb-note-beat-label';
-        label.textContent='M'+(bt.m+1)+'·'+(bt.b+1)+':';
-        notePills.appendChild(label);
-        bt.notes.forEach(n=>{
-          const pill=document.createElement('span');
-          pill.className='tb-note-pill';
-          pill.textContent=STRINGS[n.s]+':'+n.f+' = '+fretToNote(STR_CODES[n.s],n.f);
-          notePills.appendChild(pill);
-        });
-      });
-    }
-
     playBtn.addEventListener('click',async()=>{
       const cmd=fullSequenceCmd();
       if(!cmd){ status.textContent='Add some notes first'; return; }
       status.textContent='Sent to fretboard — follow the LEDs at your own pace. Use Metro FASTER/SLOWER to adjust speed.';
-      showFullNoteList();
       await sendFretboardCmd(cmd);
-    });
-
-    // ── Send to Vizi ───────────────────────────────────────
-    sendBtn.addEventListener('click',()=>{
-      const m1cmd=measureToCmd(0), m2cmd=measureToCmd(1);
-      const m1desc=measureDesc(0), m2desc=measureDesc(1);
-      if(!allBeats().some(bt=>bt.notes.length>0)){ status.textContent='Add some notes first'; return; }
-      const msg=
-        'The student has built a 2-measure tab exercise and wants Vizi to talk through it. '+
-        'Measure 1: '+m1desc+'. Measure 2: '+m2desc+'. '+
-        (m1cmd?'Measure 1 fretboard command: '+m1cmd+'. ':'')+
-        (m2cmd?'Measure 2 fretboard command: '+m2cmd+'. ':'')+
-        'Start with "OK, here is Measure 1." then name each beat including rests, so the student knows what notes they are about to play. '+
-        'Send the Measure 1 fretboard command as your pipe command so they can see it light up while you talk. '+
-        'End by saying "Let me know when you are ready for Measure 2, or ask me anything about this tab." '+
-        'When the student says ready, teach Measure 2 the same way. Answer any questions about note names or fingering naturally. '+
-        'Keep spoken responses concise — one sentence per beat.';
-      try{ sessionStorage.setItem('viziTabMsg', msg); } catch(e){ status.textContent='Storage error'; return; }
-      status.textContent='Sending to Vizi…';
-      window.location.href='vizi.html';
     });
   }
 
