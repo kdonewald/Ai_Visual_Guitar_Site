@@ -131,9 +131,9 @@ nav .nav-links, .site-nav .nav-links {
     }
 
     const { holdOnBtn, holdOffBtn, inline } = buildElements();
-    navLinks.insertBefore(inline,     navLinks.firstChild);
     navLinks.insertBefore(holdOffBtn, navLinks.firstChild);
     navLinks.insertBefore(holdOnBtn,  navLinks.firstChild);
+    navLinks.appendChild(inline); // metronome goes after Home, wraps to its own row on mobile
 
     vmAlreadyInjected = true;
     try { setup(); } catch(err) { console.error('Vizi metronome setup failed:', err); }
