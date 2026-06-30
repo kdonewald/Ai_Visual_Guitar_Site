@@ -639,8 +639,9 @@
       applyZoom();
     }
 
-    sheetWrap.classList.add('show');
-    sheetShowBtn.classList.remove('show');
+    // Content is ready, but don't auto-open the panel — student taps
+    // "Show Song Sheet" if and when they want to see it.
+    sheetShowBtn.classList.add('show');
   }
 
   const sheetPageRow  = document.getElementById('sheetPageRow');
