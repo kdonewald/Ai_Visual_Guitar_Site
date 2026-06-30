@@ -412,8 +412,11 @@
               sessionStorage.setItem('viziSongType', 'image/png');
               sessionStorage.setItem('viziSongSession', sessionId);
               sessionStorage.removeItem('viziSongFile');
+              sessionStorage.removeItem('viziSongPdfError');
             } catch(e){
+              const errMsg = (e && e.message) ? e.message : String(e);
               console.error('PDF page conversion failed, falling back to raw PDF:', e);
+              try { sessionStorage.setItem('viziSongPdfError', errMsg); } catch(e2){}
               // Fallback: store raw PDF data URL if conversion fails for any reason
               const reader = new FileReader();
               await new Promise(resolve => {
