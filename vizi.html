@@ -625,6 +625,48 @@
     startSongPoll();
   }
 
+  // ── Tab Builder hand-off from lessons.html ──
+  ;(async function checkTabMsg(){
+    const msg = sessionStorage.getItem('viziTabMsg');
+    if (!msg) return;
+    sessionStorage.removeItem('viziTabMsg');
+
+    setBtn('thinking');
+    btn.innerHTML = 'Vizi is<br>preparing…';
+    setStatus('Loading your tab exercise…');
+
+    songBanner.textContent = '📐 Tab Exercise — tap button to hear Vizi';
+    songBanner.classList.add('show');
+
+    pendingIntroBlob = null;
+    pendingIntroText = null;
+    pendingIntroCmd  = null;
+
+    try {
+      const res = await fetch(RAILWAY_URL + '/claude-tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg, mode: 'talk' })
+      });
+      if (res.ok && !(res.headers.get('content-type')||'').includes('application/json')){
+        pendingIntroText = dec(res.headers.get('X-Vizi-Text'));
+        pendingIntroCmd  = dec(res.headers.get('X-Vizi-Commands'));
+        pendingIntroBlob = await res.blob();
+        setBtn('intro');
+        btn.innerHTML = 'Tap to<br>hear Vizi';
+        setStatus('Tab exercise ready — tap to hear Vizi');
+      } else {
+        setBtn('');
+        btn.innerHTML = 'Hold<br>to Talk';
+        setStatus('Ready — ask Vizi about your tab');
+      }
+    } catch(e){
+      setBtn('');
+      btn.innerHTML = 'Hold<br>to Talk';
+      setStatus('Ready — ask Vizi about your tab');
+    }
+  })();
+
   // ── Exercise hand-off from lessons.html ──
   ;(async function checkExerciseParams(){
     const urlParams    = new URLSearchParams(window.location.search);
@@ -773,6 +815,7 @@
       specificInstruction,
       `Greet the student warmly and keep your spoken response to 2–3 sentences.`,
       `Always include the relevant fretboard command (CHORD, CHORDS, SCALE, etc.) — do not send METRONOME commands, suggest BPM verbally instead.`,
+    `If the student asks you to speed up or slow down the fretboard animation, or says it's going too fast or too slow, send a FASTER or SLOWER command (no other arguments) as a pipe command — these are the only two speed commands, there is no NORMAL, so to return to default speed use RESET or call FASTER while already on the slowest tier.`,
       `as a pipe command at the end of your response in the standard format.`,
       `End by inviting them to hold the talk button when they have a question or are ready for the next step.`
     ].join(' ');
@@ -810,6 +853,6 @@
 
   loadSongSheet();
 </script>
-<script src="metronome-widget-v2.js?v=1782830807"></script>
+<script src="metronome-widget-v2.js?v=1782833134"></script>
 </body>
 </html>

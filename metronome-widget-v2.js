@@ -45,6 +45,9 @@ nav .nav-links, .site-nav .nav-links {
 #vm-hold-off { border-color: rgba(224,85,64,0.3); color: rgba(224,85,64,0.85); }
 #vm-hold-off:hover { border-color: rgba(224,85,64,0.7); color: #e05540; background: rgba(224,85,64,0.08); }
 
+#vm-reset { border-color: rgba(79,142,247,0.35); color: rgba(79,142,247,0.85); }
+#vm-reset:hover { border-color: var(--blue, #4f8ef7); color: #4f8ef7; background: rgba(79,142,247,0.08); }
+
 #vm-inline {
   display: flex; align-items: center; gap: .35rem;
   padding: 0 .5rem; height: 32px; border-radius: 8px;
@@ -109,6 +112,12 @@ nav .nav-links, .site-nav .nav-links {
     holdOffBtn.title = 'Release fretboard hold';
     holdOffBtn.textContent = 'Hold Off';
 
+    const resetBtn = document.createElement('button');
+    resetBtn.id = 'vm-reset';
+    resetBtn.className = 'nav-ctrl-btn';
+    resetBtn.title = 'Reset hold, speed, and fretboard';
+    resetBtn.textContent = 'Reset';
+
     const inline = document.createElement('div');
     inline.id = 'vm-inline';
     inline.innerHTML = `
@@ -118,7 +127,7 @@ nav .nav-links, .site-nav .nav-links {
       <button id="vm-play">▶</button>
     `;
 
-    return { holdOnBtn, holdOffBtn, inline };
+    return { holdOnBtn, holdOffBtn, resetBtn, inline };
   }
 
   function init() {
@@ -130,7 +139,8 @@ nav .nav-links, .site-nav .nav-links {
       return;
     }
 
-    const { holdOnBtn, holdOffBtn, inline } = buildElements();
+    const { holdOnBtn, holdOffBtn, resetBtn, inline } = buildElements();
+    navLinks.insertBefore(resetBtn,   navLinks.firstChild);
     navLinks.insertBefore(holdOffBtn, navLinks.firstChild);
     navLinks.insertBefore(holdOnBtn,  navLinks.firstChild);
     navLinks.appendChild(inline); // metronome goes after Home, wraps to its own row on mobile
@@ -189,6 +199,26 @@ nav .nav-links, .site-nav .nav-links {
     const holdOffEl = document.getElementById('vm-hold-off');
     if (holdOnEl)  holdOnEl.addEventListener('click',  () => sendHoldCmd('on'));
     if (holdOffEl) holdOffEl.addEventListener('click', () => sendHoldCmd('off'));
+
+    // ── Reset ────────────────────────────────────────────────
+    async function sendReset() {
+      const btn = document.getElementById('vm-reset');
+      if (!btn) return;
+      const orig = btn.textContent;
+      btn.textContent = '…';
+      btn.style.opacity = '.5';
+      try {
+        await fetch(VM_RAILWAY_URL + '/claude-tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Please return the RESET command to the fretboard immediately.', mode: 'talk' })
+        });
+      } catch(e) {}
+      btn.textContent = orig;
+      btn.style.opacity = '';
+    }
+    const resetEl = document.getElementById('vm-reset');
+    if (resetEl) resetEl.addEventListener('click', sendReset);
 
     // ── Audio ────────────────────────────────────────────────
     function click(accent) {

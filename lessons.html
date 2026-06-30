@@ -3205,7 +3205,6 @@
       [[null,null,null,null,null,null],[null,null,null,null,null,null],[null,null,null,null,null,null],[null,null,null,null,null,null]]
     ];
 
-    let tbPlaying=false, tbStep=0, tbTimer=null;
     let tbSelectedCell=null;
 
     // ── CSS ──────────────────────────────────────────────────
@@ -3260,7 +3259,6 @@
           cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:.4rem;}
         .tb-action-btn.play{background:var(--green);color:#fff;box-shadow:0 3px 10px rgba(61,186,114,.3);}
         .tb-action-btn.play:hover{background:#2ea860;}
-        .tb-action-btn.play.playing{background:var(--red);}
         .tb-action-btn.send{background:var(--blue);color:#fff;box-shadow:0 3px 10px rgba(79,142,247,.25);}
         .tb-action-btn.send:hover{background:#3a7ee0;}
         .tb-action-btn.clr{background:transparent;color:var(--text-mid);border:1.5px solid var(--border);font-size:.82rem;}
@@ -3341,7 +3339,7 @@
     const status=document.createElement('div'); status.className='tb-status'; status.textContent='Choose a preset or tap a cell to start'; wrap.appendChild(status);
 
     const actions=document.createElement('div'); actions.className='tb-actions';
-    const playBtn=document.createElement('button'); playBtn.className='tb-action-btn play'; playBtn.innerHTML='&#9654; Play';
+    const playBtn=document.createElement('button'); playBtn.className='tb-action-btn play'; playBtn.innerHTML='&#9654; Show';
     const sendBtn=document.createElement('button'); sendBtn.className='tb-action-btn send'; sendBtn.innerHTML='&#127925; Send to Vizi';
     actions.appendChild(playBtn); actions.appendChild(sendBtn); wrap.appendChild(actions);
     container.appendChild(wrap);
@@ -3422,32 +3420,28 @@
       status.textContent=['Single','Double','Triple'][type]+' note pattern — tap again for a different one';
     }
 
-    // ── Playback ───────────────────────────────────────────
-    function getBeatMs(){ return Math.round(60000/((window.viziMetro&&window.viziMetro.getBpm&&window.viziMetro.getBpm())||80)); }
-
+    // ── Show: hand the whole sequence to the fretboard, no JS timing ──
     async function sendFretboardCmd(cmd){ try{ await fetch(RAILWAY_URL+'/fretboard-command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:cmd})}); }catch(e){} }
 
     function allBeats(){ const beats=[]; for(let m=0;m<2;m++) for(let b=0;b<4;b++){ const notes=[]; for(let s=0;s<6;s++) if(grid[m][b][s]!==null) notes.push({s,f:grid[m][b][s]}); beats.push({m,b,notes}); } return beats; }
 
-    function highlightCol(m,b){ for(let pm=0;pm<2;pm++) for(let pb=0;pb<4;pb++) for(let ps=0;ps<6;ps++) cells[pm][pb][ps].classList.remove('playing'); for(let s=0;s<6;s++) if(grid[m][b][s]!==null) cells[m][b][s].classList.add('playing'); showColNotes(m,b); }
-
-    function playStep(){
-      if(!tbPlaying)return;
-      const beats=allBeats().filter(bt=>bt.notes.length>0);
-      if(tbStep>=beats.length){ stopPlay(); return; }
-      const bt=beats[tbStep]; highlightCol(bt.m,bt.b);
-      const notes=bt.notes.map(n=>token(n.s,n.f));
-      sendFretboardCmd(notes.length===1?notes[0]:'('+notes.join(',')+')');
-      status.textContent='Measure '+(bt.m+1)+', Beat '+(bt.b+1);
-      tbStep++; tbTimer=setTimeout(playStep,getBeatMs());
+    // Build one sequential bracket command spanning BOTH measures in order —
+    // the fretboard firmware paces itself; we don't drive timing from JS.
+    function fullSequenceCmd(){
+      const steps=[];
+      allBeats().forEach(bt=>{
+        if(!bt.notes.length) return;
+        const toks=bt.notes.map(n=>token(n.s,n.f));
+        steps.push(toks.length===1?toks[0]:'('+toks.join(',')+')');
+      });
+      return steps.length?'['+steps.join(',')+']':null;
     }
 
-    function stopPlay(){ tbPlaying=false; clearTimeout(tbTimer); for(let m=0;m<2;m++) for(let b=0;b<4;b++) for(let s=0;s<6;s++) cells[m][b][s].classList.remove('playing'); playBtn.innerHTML='&#9654; Play'; playBtn.classList.remove('playing'); status.textContent='Done — adjust Metro BPM to change speed'; }
-
-    playBtn.addEventListener('click',()=>{
-      if(tbPlaying){ stopPlay(); return; }
-      if(!allBeats().some(bt=>bt.notes.length>0)){ status.textContent='Add some notes first'; return; }
-      tbPlaying=true; tbStep=0; playBtn.innerHTML='&#9632; Stop'; playBtn.classList.add('playing'); playStep();
+    playBtn.addEventListener('click',async()=>{
+      const cmd=fullSequenceCmd();
+      if(!cmd){ status.textContent='Add some notes first'; return; }
+      status.textContent='Sent to fretboard — follow the LEDs at your own pace. Use Metro FASTER/SLOWER to adjust speed.';
+      await sendFretboardCmd(cmd);
     });
 
     // ── Send to Vizi ───────────────────────────────────────
@@ -3456,14 +3450,14 @@
       const m1desc=measureDesc(0), m2desc=measureDesc(1);
       if(!allBeats().some(bt=>bt.notes.length>0)){ status.textContent='Add some notes first'; return; }
       const msg=
-        'The student has built a 2-measure tab exercise. '+
+        'The student has built a 2-measure tab exercise and wants Vizi to talk through it. '+
         'Measure 1: '+m1desc+'. Measure 2: '+m2desc+'. '+
         (m1cmd?'Measure 1 fretboard command: '+m1cmd+'. ':'')+
         (m2cmd?'Measure 2 fretboard command: '+m2cmd+'. ':'')+
-        'Teach this as follows: Start with "OK, here is Measure 1." then name each beat including rests. '+
-        'Say "I will play it twice, follow along" and send the Measure 1 fretboard command as your pipe command. '+
-        'End by saying "Let me know when you are ready for Measure 2, or say repeat to hear Measure 1 again." '+
-        'When student says ready, teach Measure 2 the same way. When they say repeat, resend the same command. '+
+        'Start with "OK, here is Measure 1." then name each beat including rests, so the student knows what notes they are about to play. '+
+        'Send the Measure 1 fretboard command as your pipe command so they can see it light up while you talk. '+
+        'End by saying "Let me know when you are ready for Measure 2, or ask me anything about this tab." '+
+        'When the student says ready, teach Measure 2 the same way. Answer any questions about note names or fingering naturally. '+
         'Keep spoken responses concise — one sentence per beat.';
       try{ sessionStorage.setItem('viziTabMsg', msg); } catch(e){ status.textContent='Storage error'; return; }
       status.textContent='Sending to Vizi…';
@@ -4159,6 +4153,6 @@ renderAll();
 
 })(); // end IIFE
 </script>
-<script src="metronome-widget-v2.js?v=1782830807"></script>
+<script src="metronome-widget-v2.js?v=1782833134"></script>
 </body>
 </html>
