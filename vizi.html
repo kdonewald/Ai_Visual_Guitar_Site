@@ -140,10 +140,22 @@
     border-radius:14px;
     box-shadow:0 12px 40px var(--shadow-lg);
     display:none; flex-direction:column;
-    overflow:hidden; resize:both;
-    min-width:280px; min-height:200px;
+    overflow:hidden;
+    min-width:200px; min-height:160px;
   }
   .sheet-float.show{display:flex}
+  .sheet-resize-handle{
+    position:absolute; right:2px; bottom:2px;
+    width:26px; height:26px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--text-dim); font-size:1rem;
+    cursor:nwse-resize; touch-action:none;
+    border-radius:6px; transition:color .15s, background .15s;
+    z-index:10;
+  }
+  .sheet-resize-handle:hover, .sheet-resize-handle:active{
+    color:var(--blue); background:rgba(79,142,247,0.12);
+  }
   .sheet-head{
     display:flex;align-items:center;justify-content:space-between;
     padding:.55rem .75rem;background:var(--surface2);
@@ -258,6 +270,7 @@
     <div class="sheet-body" id="sheetBody">
       <div class="sheet-content" id="sheetContent"></div>
     </div>
+    <div class="sheet-resize-handle" id="sheetResizeHandle">⤡</div>
   </div>
 
 <!-- Shared floating metronome widget -->
@@ -660,12 +673,40 @@
   });
   dragHandle.addEventListener('pointermove', e => {
     if (!dragging) return;
-    const x=Math.max(0,Math.min(window.innerWidth-sheetWrap.offsetWidth,  e.clientX-dragOffX));
-    const y=Math.max(0,Math.min(window.innerHeight-sheetWrap.offsetHeight,e.clientY-dragOffY));
+    // Allow dragging well past the viewport edges (even mostly off-screen)
+    // so the talk button underneath stays reachable. Keep a small sliver
+    // on-screen so the panel is never fully lost.
+    const margin = 40;
+    const x = Math.max(-sheetWrap.offsetWidth + margin, Math.min(window.innerWidth - margin,  e.clientX-dragOffX));
+    const y = Math.max(-sheetWrap.offsetHeight + margin, Math.min(window.innerHeight - margin, e.clientY-dragOffY));
     sheetWrap.style.left=x+'px'; sheetWrap.style.top=y+'px'; sheetWrap.style.right='auto';
   });
   dragHandle.addEventListener('pointerup',    ()=>{ dragging=false; });
   dragHandle.addEventListener('pointercancel',()=>{ dragging=false; });
+
+  // ── Manual resize (touch-friendly, unlike native CSS resize) ──
+  const resizeHandle = document.getElementById('sheetResizeHandle');
+  let resizing=false, resizeStartX=0, resizeStartY=0, resizeStartW=0, resizeStartH=0;
+  resizeHandle.addEventListener('pointerdown', e => {
+    resizing = true;
+    resizeHandle.setPointerCapture(e.pointerId);
+    resizeStartX = e.clientX; resizeStartY = e.clientY;
+    const r = sheetWrap.getBoundingClientRect();
+    resizeStartW = r.width; resizeStartH = r.height;
+    e.preventDefault(); e.stopPropagation();
+  });
+  resizeHandle.addEventListener('pointermove', e => {
+    if (!resizing) return;
+    const dw = e.clientX - resizeStartX;
+    const dh = e.clientY - resizeStartY;
+    const newW = Math.max(200, Math.min(window.innerWidth  - 20, resizeStartW + dw));
+    const newH = Math.max(160, Math.min(window.innerHeight - 20, resizeStartH + dh));
+    sheetWrap.style.width  = newW + 'px';
+    sheetWrap.style.height = newH + 'px';
+    e.preventDefault();
+  });
+  resizeHandle.addEventListener('pointerup',     ()=>{ resizing=false; });
+  resizeHandle.addEventListener('pointercancel', ()=>{ resizing=false; });
 
   const storedSession = sessionStorage.getItem('viziSongSession');
   if (storedSession && !songLoaded){
