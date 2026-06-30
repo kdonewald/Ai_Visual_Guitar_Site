@@ -145,22 +145,25 @@
   }
   .sheet-float.show{display:flex}
   .sheet-resize-handle{
-    position:absolute; right:2px; bottom:2px;
-    width:26px; height:26px;
+    position:absolute; right:0; bottom:0;
+    width:34px; height:34px;
     display:flex; align-items:center; justify-content:center;
-    color:var(--text-dim); font-size:1rem;
+    color:var(--text-dim); font-size:1.1rem;
     cursor:nwse-resize; touch-action:none;
-    border-radius:6px; transition:color .15s, background .15s;
-    z-index:10;
+    border-radius:8px 0 14px 0;
+    background:rgba(0,0,0,0.15);
+    transition:color .15s, background .15s;
+    z-index:20;
   }
   .sheet-resize-handle:hover, .sheet-resize-handle:active{
-    color:var(--blue); background:rgba(79,142,247,0.12);
+    color:var(--blue); background:rgba(79,142,247,0.18);
   }
   .sheet-head{
     display:flex;align-items:center;justify-content:space-between;
     padding:.55rem .75rem;background:var(--surface2);
     border-bottom:1.5px solid var(--border);
     cursor:grab; flex-shrink:0; user-select:none; gap:.5rem;
+    touch-action:none;
   }
   .sheet-head:active{cursor:grabbing}
   .sheet-title{
@@ -668,11 +671,11 @@
   dragHandle.addEventListener('pointerdown', e => {
     const t = e.target;
     if (t===sheetClose||t===zoomIn||t===zoomOut||t===zoomReset) return;
-    dragging=true; dragHandle.setPointerCapture(e.pointerId);
+    dragging=true;
     const r=sheetWrap.getBoundingClientRect();
     dragOffX=e.clientX-r.left; dragOffY=e.clientY-r.top; e.preventDefault();
   });
-  dragHandle.addEventListener('pointermove', e => {
+  document.addEventListener('pointermove', e => {
     if (!dragging) return;
     // Allow dragging well past the viewport edges (even mostly off-screen)
     // so the talk button underneath stays reachable. Keep a small sliver
@@ -682,21 +685,20 @@
     const y = Math.max(-sheetWrap.offsetHeight + margin, Math.min(window.innerHeight - margin, e.clientY-dragOffY));
     sheetWrap.style.left=x+'px'; sheetWrap.style.top=y+'px'; sheetWrap.style.right='auto';
   });
-  dragHandle.addEventListener('pointerup',    ()=>{ dragging=false; });
-  dragHandle.addEventListener('pointercancel',()=>{ dragging=false; });
+  document.addEventListener('pointerup',    ()=>{ dragging=false; });
+  document.addEventListener('pointercancel',()=>{ dragging=false; });
 
   // ── Manual resize (touch-friendly, unlike native CSS resize) ──
   const resizeHandle = document.getElementById('sheetResizeHandle');
   let resizing=false, resizeStartX=0, resizeStartY=0, resizeStartW=0, resizeStartH=0;
   resizeHandle.addEventListener('pointerdown', e => {
     resizing = true;
-    resizeHandle.setPointerCapture(e.pointerId);
     resizeStartX = e.clientX; resizeStartY = e.clientY;
     const r = sheetWrap.getBoundingClientRect();
     resizeStartW = r.width; resizeStartH = r.height;
     e.preventDefault(); e.stopPropagation();
   });
-  resizeHandle.addEventListener('pointermove', e => {
+  document.addEventListener('pointermove', e => {
     if (!resizing) return;
     const dw = e.clientX - resizeStartX;
     const dh = e.clientY - resizeStartY;
@@ -706,8 +708,8 @@
     sheetWrap.style.height = newH + 'px';
     e.preventDefault();
   });
-  resizeHandle.addEventListener('pointerup',     ()=>{ resizing=false; });
-  resizeHandle.addEventListener('pointercancel', ()=>{ resizing=false; });
+  document.addEventListener('pointerup',     ()=>{ resizing=false; });
+  document.addEventListener('pointercancel', ()=>{ resizing=false; });
 
   const storedSession = sessionStorage.getItem('viziSongSession');
   if (storedSession && !songLoaded){
