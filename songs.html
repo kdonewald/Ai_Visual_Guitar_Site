@@ -282,13 +282,25 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
   const RAILWAY = 'https://vizi-tts-proxy-production.up.railway.app';
-  if (window['pdfjsLib']) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  }
 
   // Convert every page of a PDF File into PNG data URLs, silently in the background.
   // Returns an array of data URLs, one per page, at a readable resolution.
+  function waitForPdfJs(timeoutMs){
+    return new Promise((resolve, reject) => {
+      const start = Date.now();
+      (function check(){
+        if (window.pdfjsLib) return resolve();
+        if (Date.now() - start > timeoutMs) return reject(new Error('PDF.js did not load in time'));
+        setTimeout(check, 100);
+      })();
+    });
+  }
+
   async function pdfFileToPageImages(file){
+    await waitForPdfJs(8000);
+    if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
     const buf = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
     const pages = [];
@@ -401,6 +413,7 @@
               sessionStorage.setItem('viziSongSession', sessionId);
               sessionStorage.removeItem('viziSongFile');
             } catch(e){
+              console.error('PDF page conversion failed, falling back to raw PDF:', e);
               // Fallback: store raw PDF data URL if conversion fails for any reason
               const reader = new FileReader();
               await new Promise(resolve => {
