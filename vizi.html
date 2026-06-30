@@ -630,15 +630,31 @@
       sheetContent.appendChild(img);
       applyZoom();
     } else {
-      // Fallback only — shouldn't normally hit this since PDFs are pre-converted
+      // Fallback when PDF→image conversion failed — render the PDF directly
+      // inside the panel using <object>, which mobile browsers handle better
+      // than an iframe with a data: URI. The panel itself stays draggable
+      // and resizable regardless of how this content renders.
       songPages = [];
       sheetPageRow.style.display = 'none';
-      const iframe = document.createElement('iframe');
-      iframe.src = dataUrl;
-      iframe.style.width = '100%';
-      iframe.style.height = '100%';
-      iframe.style.minHeight = '500px';
-      sheetContent.appendChild(iframe);
+
+      const obj = document.createElement('object');
+      obj.data = dataUrl;
+      obj.type = 'application/pdf';
+      obj.style.width = '100%';
+      obj.style.height = '100%';
+      obj.style.minHeight = '500px';
+      obj.style.border = 'none';
+
+      // <object> shows its inner content only if the data itself fails to render
+      const fallbackMsg = document.createElement('div');
+      fallbackMsg.style.cssText = 'padding:2rem 1.25rem;text-align:center;color:var(--text-mid);font-family:DM Sans,sans-serif;';
+      fallbackMsg.innerHTML = `
+        <p style="margin-bottom:1rem;line-height:1.5;">This PDF can't be previewed on this device, but Vizi has already read it and knows the chords.</p>
+        <a href="${dataUrl}" download="${name}" style="display:inline-block;padding:.6rem 1.2rem;background:var(--blue);color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Download PDF</a>
+      `;
+      obj.appendChild(fallbackMsg);
+
+      sheetContent.appendChild(obj);
       applyZoom();
     }
 
