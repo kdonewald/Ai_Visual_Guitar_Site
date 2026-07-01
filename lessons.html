@@ -3173,7 +3173,7 @@
       tracks: [
         { file: '12_Slow_Am_AmG_Fmaj7_Dm9_60_bpm.mp3',        title: 'Slow Ballad',   chords: 'Am G Fmaj7 Dm9', bpm: 60  },
         { file: '03_Rock_Backing_Track_Am_76_bpm.mp3',         title: 'Rock Track',    chords: 'Am',             bpm: 76  },
-        { file: '02_Easy_Track_Am_Am_G_100bpm_FF_100_bpm.mp3', title: 'Easy Track',    chords: 'Am G',           bpm: 100 },
+        { file: '02_Easy_Track_Am_%20Am_G_100bpm_FF_100_bpm.mp3', title: 'Easy Track',    chords: 'Am G',           bpm: 100 },
         { file: '07_Dreamy_Ballad_Am_Fmaj7_Am7_108_bpm.mp3',  title: 'Dreamy Ballad', chords: 'Fmaj7 Am7',      bpm: 108 },
       ]
     },
@@ -3330,7 +3330,13 @@
           soloAudioEl = new Audio(TRACKS_BASE + track.file);
           soloAudioEl.dataset.file = track.file;
           soloAudioEl.loop = true;
-          soloAudioEl.play().catch(e => console.warn('Audio play failed:', e));
+          soloAudioEl.play().catch(e => {
+            console.warn('Audio play failed:', soloAudioEl.src, e);
+            btn.classList.remove('playing');
+            btn.querySelector('.solo-track-icon').textContent = '✗';
+            btn.querySelector('.solo-track-meta').textContent = 'Could not load — check filename';
+            soloAudioEl = null;
+          });
           btn.classList.add('playing');
           btn.querySelector('.solo-track-icon').textContent = '■';
         });
