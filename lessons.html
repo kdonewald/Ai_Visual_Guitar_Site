@@ -3150,34 +3150,220 @@
   }
 
   // ── Soloing panel ────────────────────────────────────────────
+  // ── Backing tracks data ──────────────────────────────────────
+  const BACKING_TRACKS = {
+    'E Minor': {
+      desc: 'Em C G D — most common beginner key',
+      scales: [
+        { label: 'E Minor Scale',        desc: 'Full melodic sound',              cmd: 'E minor' },
+        { label: 'E Minor Pentatonic',   desc: '5 notes — easiest to sound good', cmd: 'E minor pentatonic' },
+      ],
+      tracks: [
+        { file: '01_Pop_Backing_Track_Em_EmCGD.mp3',  title: 'Pop Backing Track', chords: 'Em C G D', bpm: null },
+        { file: '06_Rock_Em_Hard_Rock_92_bpm.mp3',    title: 'Hard Rock',         chords: 'Em',        bpm: 92   },
+        { file: '09_Granitic_Rock_Em_135_bpm.mp3',    title: 'Granitic Rock',     chords: 'Em',        bpm: 135  },
+      ]
+    },
+    'A Minor': {
+      desc: 'Am G — soulful and expressive',
+      scales: [
+        { label: 'A Minor Scale',        desc: 'Full melodic sound',          cmd: 'A minor' },
+        { label: 'A Minor Pentatonic',   desc: 'Classic blues-rock feel',     cmd: 'A minor pentatonic' },
+      ],
+      tracks: [
+        { file: '12_Slow_Am_AmG_Fmaj7_Dm9_60_bpm.mp3',        title: 'Slow Ballad',   chords: 'Am G Fmaj7 Dm9', bpm: 60  },
+        { file: '03_Rock_Backing_Track_Am_76_bpm.mp3',         title: 'Rock Track',    chords: 'Am',             bpm: 76  },
+        { file: '02_Easy_Track_Am_Am_G_100bpm_FF_100_bpm.mp3', title: 'Easy Track',    chords: 'Am G',           bpm: 100 },
+        { file: '07_Dreamy_Ballad_Am_Fmaj7_Am7_108_bpm.mp3',  title: 'Dreamy Ballad', chords: 'Fmaj7 Am7',      bpm: 108 },
+      ]
+    },
+    'D Major': {
+      desc: 'D G Bm A — great for pop and country',
+      scales: [
+        { label: 'D Major Scale',        desc: 'Bright and melodic',          cmd: 'D major' },
+        { label: 'B Minor Pentatonic',   desc: 'Warm blues feel over D',      cmd: 'B minor pentatonic' },
+      ],
+      tracks: [
+        { file: '05_4Chords_PopBackingTrack_D_Majo_D_G_Bm_A_132_bpm.mp3', title: '4 Chords Pop', chords: 'D G Bm A', bpm: 132 },
+      ]
+    },
+    'C Major': {
+      desc: 'C G Am F — the most common chord set',
+      scales: [
+        { label: 'C Major Scale',        desc: 'Full, classical sound',                    cmd: 'C major' },
+        { label: 'A Minor Pentatonic',   desc: 'Versatile — works over almost anything',   cmd: 'A minor pentatonic' },
+      ],
+      tracks: [
+        { file: '15_C_CAmG_110_bpm.mp3',      title: 'Backing Track C', chords: 'C Am G',   bpm: 110 },
+        { file: '13_Epic_C_CGAmF_155_bpm.mp3', title: 'Epic Track',      chords: 'C G Am F', bpm: 155 },
+      ]
+    },
+  };
+
+  const TRACKS_BASE = 'https://aivisualguitar.com/';
+  let soloAudioEl = null;
+
   function renderSoloingPanel(def){
-    exList.innerHTML='';
-    const btLabel=document.createElement('span'); btLabel.className='choice-panel-label'; btLabel.textContent='Step 1 — Find a backing track'; exList.appendChild(btLabel);
-    const btHint=document.createElement('div'); btHint.className='choice-hint'; btHint.textContent=def.hint; exList.appendChild(btHint);
-    const btLink=document.createElement('a'); btLink.href=def.bandcamp; btLink.target='_blank'; btLink.rel='noopener'; btLink.className='bt-link';
-    btLink.innerHTML='<div class="bt-left"><span class="bt-icon">&#127925;</span><span><span class="bt-name">Open Backing Tracks</span><span class="bt-tag">Easy Backing Tracks · Opens in new window</span></span></div><span class="bt-arrow">&#8599;</span>';
-    exList.appendChild(btLink);
-    const step2=document.createElement('span'); step2.className='choice-panel-label'; step2.style.marginTop='.5rem'; step2.textContent='Step 2 — Pick your key and scale'; exList.appendChild(step2);
-    const feedback=document.createElement('div'); feedback.style.cssText='font-family:"DM Mono",monospace;font-size:.87rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text-light);text-align:center;padding:.5rem;margin-bottom:.5rem;min-height:1.4em;'; feedback.textContent='Pick a key and scale — fretboard lights instantly'; exList.appendChild(feedback);
-    soloFeedbackEl=feedback;
-    def.groups.forEach(group=>{
-      const grpEl=document.createElement('div'); grpEl.className='solo-group';
-      const hd=document.createElement('div'); hd.className='solo-group-head';
-      hd.innerHTML='<span class="solo-key">'+group.key+'</span><span class="solo-key-desc">'+group.desc+'</span>';
-      grpEl.appendChild(hd);
-      const row=document.createElement('div'); row.className='solo-scale-row';
-      group.choices.forEach(ch=>{
-        const btn=document.createElement('button'); btn.className='solo-scale-btn';
-        const sn=ch.name.split(' — ')[1]||ch.name;
-        btn.innerHTML='<span class="ssb-name">'+sn+'</span><span class="ssb-desc">'+ch.desc+'</span>';
-        btn.addEventListener('click',()=>{ document.querySelectorAll('.solo-scale-btn').forEach(b=>b.style.borderColor=''); btn.style.borderColor='var(--green)'; lightScaleOnFretboard(ch.name); });
-        row.appendChild(btn);
+    exList.innerHTML = '';
+    if (soloAudioEl){ soloAudioEl.pause(); soloAudioEl = null; }
+
+    // ── Inject CSS once ──────────────────────────────────────
+    if (!document.getElementById('soloCSS')){
+      const st = document.createElement('style'); st.id = 'soloCSS';
+      st.textContent = `
+        .solo-section-head{
+          display:flex; align-items:center; gap:.6rem;
+          padding:.65rem .9rem; border-radius:10px;
+          background:var(--surface2); margin:.5rem 0 0;
+          border:1.5px solid var(--border); cursor:pointer;
+          transition:all .18s; user-select:none;
+        }
+        .solo-section-head:hover{ border-color:rgba(255,255,255,.22); }
+        .solo-section-head.open{ border-color:var(--blue); background:rgba(79,142,247,.08); border-radius:10px 10px 0 0; }
+        .solo-key-name{ font-family:'DM Sans',sans-serif; font-size:.95rem; font-weight:700; color:#fff; flex-shrink:0; }
+        .solo-key-desc{ font-size:.78rem; color:var(--text-mid); }
+        .solo-chevron{ margin-left:auto; color:var(--text-dim); font-size:.75rem; transition:transform .2s; flex-shrink:0; }
+        .solo-section-head.open .solo-chevron{ transform:rotate(180deg); color:var(--blue); }
+        .solo-section-body{
+          display:none; border:1.5px solid var(--blue); border-top:none;
+          border-radius:0 0 10px 10px; padding:.75rem .85rem;
+          background:rgba(79,142,247,.03); margin-bottom:.25rem;
+        }
+        .solo-section-body.open{ display:block; }
+        .solo-track-list{ display:flex; flex-direction:column; gap:.35rem; margin-bottom:.85rem; }
+        .solo-track-btn{
+          display:flex; align-items:center; gap:.6rem;
+          padding:.55rem .8rem; border-radius:8px;
+          border:1.5px solid var(--border); background:var(--surface2);
+          cursor:pointer; transition:all .18s; text-align:left; width:100%;
+        }
+        .solo-track-btn:hover{ border-color:rgba(255,255,255,.25); background:rgba(255,255,255,.06); }
+        .solo-track-btn.playing{ border-color:var(--green); background:rgba(61,186,114,.1); }
+        .solo-track-icon{ font-size:.9rem; flex-shrink:0; color:var(--text-mid); width:1rem; text-align:center; }
+        .solo-track-btn.playing .solo-track-icon{ color:var(--green); }
+        .solo-track-info{ flex:1; min-width:0; }
+        .solo-track-title{ display:block; font-family:'DM Sans',sans-serif; font-size:.88rem; font-weight:600; color:#fff; }
+        .solo-track-meta{ display:block; font-family:'DM Mono',monospace; font-size:.70rem; color:var(--text-mid); margin-top:.1rem; }
+        .solo-track-bpm{ font-family:'DM Mono',monospace; font-size:.72rem; font-weight:700; color:var(--gold); flex-shrink:0; }
+        .solo-scales-label{
+          display:block; font-family:'DM Mono',monospace; font-size:.72rem;
+          letter-spacing:.1em; text-transform:uppercase;
+          color:var(--text-mid); margin-bottom:.5rem;
+        }
+        .solo-scale-row{ display:flex; gap:.5rem; }
+        .solo-scale-btn{
+          flex:1; padding:.6rem .5rem; border-radius:8px;
+          border:1.5px solid var(--border); background:var(--surface2);
+          cursor:pointer; transition:all .18s; text-align:center;
+        }
+        .solo-scale-btn:hover{ border-color:var(--green); background:rgba(61,186,114,.1); }
+        .solo-scale-btn.active{ border-color:var(--green); background:rgba(61,186,114,.15); }
+        .ssb-name{ display:block; font-family:'DM Sans',sans-serif; font-size:.82rem; font-weight:700; color:#fff; }
+        .ssb-desc{ display:block; font-size:.70rem; color:var(--text-mid); margin-top:.15rem; }
+        .solo-ask-vizi{
+          display:block; width:100%; margin-top:1.25rem; padding:.9rem 1rem;
+          border-radius:10px; border:2px solid var(--blue);
+          background:rgba(79,142,247,.08); font-family:'DM Sans',sans-serif;
+          font-size:1rem; font-weight:700; color:var(--blue);
+          cursor:pointer; text-align:center; transition:all .18s;
+        }
+        .solo-ask-vizi:hover{ background:rgba(79,142,247,.2); color:#fff; border-color:#fff; }
+      `;
+      document.head.appendChild(st);
+    }
+
+    let openKey = null;
+
+    function openSection(key){
+      openKey = key;
+      document.querySelectorAll('.solo-section-head').forEach(h => h.classList.toggle('open', h.dataset.key === key));
+      document.querySelectorAll('.solo-section-body').forEach(b => b.classList.toggle('open', b.dataset.key === key));
+    }
+
+    Object.entries(BACKING_TRACKS).forEach(([keyName, data]) => {
+      // Section header
+      const head = document.createElement('div');
+      head.className = 'solo-section-head';
+      head.dataset.key = keyName;
+      head.innerHTML = `<span class="solo-key-name">${keyName}</span><span class="solo-key-desc">${data.desc}</span><span class="solo-chevron">▾</span>`;
+      head.addEventListener('click', () => {
+        if (openKey === keyName){
+          openKey = null;
+          document.querySelectorAll('.solo-section-head').forEach(h => h.classList.remove('open'));
+          document.querySelectorAll('.solo-section-body').forEach(b => b.classList.remove('open'));
+        } else {
+          openSection(keyName);
+        }
       });
-      grpEl.appendChild(row); exList.appendChild(grpEl);
+      exList.appendChild(head);
+
+      // Section body
+      const body = document.createElement('div');
+      body.className = 'solo-section-body';
+      body.dataset.key = keyName;
+
+      // Track list
+      const trackList = document.createElement('div'); trackList.className = 'solo-track-list';
+      data.tracks.forEach(track => {
+        const btn = document.createElement('button'); btn.className = 'solo-track-btn';
+        btn.innerHTML = `
+          <span class="solo-track-icon">▶</span>
+          <span class="solo-track-info">
+            <span class="solo-track-title">${track.title}</span>
+            <span class="solo-track-meta">${track.chords}</span>
+          </span>
+          ${track.bpm ? `<span class="solo-track-bpm">${track.bpm} BPM</span>` : ''}
+        `;
+        btn.addEventListener('click', () => {
+          const isCurrent = soloAudioEl && soloAudioEl.dataset.file === track.file;
+          // Stop current
+          if (soloAudioEl){
+            soloAudioEl.pause();
+            soloAudioEl = null;
+            document.querySelectorAll('.solo-track-btn').forEach(b => {
+              b.classList.remove('playing');
+              b.querySelector('.solo-track-icon').textContent = '▶';
+            });
+          }
+          if (isCurrent) return; // toggle off
+          // Play new
+          soloAudioEl = new Audio(TRACKS_BASE + track.file);
+          soloAudioEl.dataset.file = track.file;
+          soloAudioEl.loop = true;
+          soloAudioEl.play().catch(e => console.warn('Audio play failed:', e));
+          btn.classList.add('playing');
+          btn.querySelector('.solo-track-icon').textContent = '■';
+        });
+        trackList.appendChild(btn);
+      });
+      body.appendChild(trackList);
+
+      // Scale buttons
+      const scalesLabel = document.createElement('span');
+      scalesLabel.className = 'solo-scales-label';
+      scalesLabel.textContent = 'Pick a scale — fretboard lights instantly';
+      body.appendChild(scalesLabel);
+
+      const scaleRow = document.createElement('div'); scaleRow.className = 'solo-scale-row';
+      data.scales.forEach(scale => {
+        const sb = document.createElement('button'); sb.className = 'solo-scale-btn';
+        sb.innerHTML = `<span class="ssb-name">${scale.label}</span><span class="ssb-desc">${scale.desc}</span>`;
+        sb.addEventListener('click', () => {
+          body.querySelectorAll('.solo-scale-btn').forEach(b => b.classList.remove('active'));
+          sb.classList.add('active');
+          lightScaleOnFretboard(scale.cmd);
+        });
+        scaleRow.appendChild(sb);
+      });
+      body.appendChild(scaleRow);
+      exList.appendChild(body);
     });
-    const vl=document.createElement('div'); vl.style.cssText='text-align:center;margin-top:1rem;';
-    vl.innerHTML='<a href="vizi.html" style="font-family:DM Mono,monospace;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);text-decoration:none">Ask Vizi for guidance →</a>';
-    exList.appendChild(vl);
+
+    // Ask Vizi button — large, prominent
+    const askBtn = document.createElement('button'); askBtn.className = 'solo-ask-vizi';
+    askBtn.textContent = 'Ask Vizi for Guidance →';
+    askBtn.addEventListener('click', () => goToVizi('soloing', 'Backing Track Solo'));
+    exList.appendChild(askBtn);
   }
 
   // ── Tab reader ───────────────────────────────────────────────
