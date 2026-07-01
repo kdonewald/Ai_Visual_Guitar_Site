@@ -1,8 +1,8 @@
 /**
- * Vizi Metronome — inline nav controls
- * Injects Hold On / Hold Off / metronome controls directly into the
- * existing .nav-links row alongside Home. No separate sticky element,
- * no race conditions with page navigation or content re-renders.
+ * Vizi Metronome — inline nav controls v3
+ * Row 1: [Home] [Hold On] [Hold Off] [Reset]
+ * Row 2: [3/4] [4/4] [−] [BPM] [+] [▶]  — full width, no slider, no tap
+ * Hold-to-repeat with acceleration on − and + buttons.
  * API: window.viziMetro = { setBpm, getBpm, start, stop, setBeats }
  */
 (function(){
@@ -18,75 +18,113 @@ nav, .site-nav {
   padding: .5rem 1rem !important;
   gap: .45rem !important;
 }
-.nav-logo { justify-content: center; }
+.nav-logo { display: none !important; }
+
+/* Row 1 — nav-links holds Home + hold buttons */
 nav .nav-links, .site-nav .nav-links {
   display: flex !important;
-  flex-wrap: wrap !important;
+  flex-wrap: nowrap !important;
   align-items: center;
-  gap: .35rem !important;
+  gap: .4rem !important;
   width: 100%;
-  justify-content: center;
+  justify-content: flex-start !important;
 }
 
+/* Row 2 — metronome bar */
+#vm-metro-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: .4rem;
+  box-sizing: border-box;
+}
+
+/* Shared button base */
 .nav-ctrl-btn {
   display: flex; align-items: center; justify-content: center;
-  padding: 0 .6rem; height: 32px; border-radius: 8px;
+  padding: 0 .75rem; height: 38px; border-radius: 8px;
   border: 1.5px solid rgba(255,255,255,0.15);
   background: transparent;
-  font-size: .72rem; font-weight: 600; letter-spacing: .02em;
+  font-size: .82rem; font-weight: 600; letter-spacing: .02em;
   cursor: pointer; transition: all .18s; flex-shrink: 0;
   font-family: 'DM Sans', sans-serif; line-height: 1;
-  white-space: nowrap;
+  white-space: nowrap; color: var(--text, #f0ede8);
 }
 
+/* Home */
+#vm-home { border-color: rgba(255,255,255,0.2); color: var(--text, #f0ede8); text-decoration: none; }
+#vm-home:hover { border-color: #fff; background: rgba(255,255,255,0.06); }
+
+/* Hold On */
 #vm-hold-on { border-color: rgba(232,160,32,0.4); color: var(--gold, #e8a020); }
 #vm-hold-on:hover { border-color: var(--gold, #e8a020); background: rgba(232,160,32,0.12); }
 
+/* Hold Off */
 #vm-hold-off { border-color: rgba(224,85,64,0.3); color: rgba(224,85,64,0.85); }
 #vm-hold-off:hover { border-color: rgba(224,85,64,0.7); color: #e05540; background: rgba(224,85,64,0.08); }
 
+/* Reset */
 #vm-reset { border-color: rgba(79,142,247,0.35); color: rgba(79,142,247,0.85); }
 #vm-reset:hover { border-color: var(--blue, #4f8ef7); color: #4f8ef7; background: rgba(79,142,247,0.08); }
 
-#vm-inline {
-  display: flex; align-items: center; gap: .35rem;
-  padding: 0 .5rem; height: 32px; border-radius: 8px;
-  border: 1.5px solid rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.03);
+/* Time sig toggle buttons */
+.vm-ts-btn {
+  display: flex; align-items: center; justify-content: center;
+  height: 42px; width: 52px; border-radius: 8px; flex-shrink: 0;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  background: transparent;
+  font-family: 'DM Mono', monospace; font-size: .88rem; font-weight: 700;
+  color: rgba(255,255,255,0.5); cursor: pointer; transition: all .18s;
+}
+.vm-ts-btn.active {
+  border-color: var(--teal, #2dd4bf);
+  color: var(--teal, #2dd4bf);
+  background: rgba(45,212,191,0.1);
+}
+.vm-ts-btn:hover:not(.active) {
+  border-color: rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.8);
+}
+
+/* BPM − + display */
+#vm-bpm-minus, #vm-bpm-plus {
+  display: flex; align-items: center; justify-content: center;
+  height: 42px; width: 42px; border-radius: 8px; flex-shrink: 0;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.04);
+  font-size: 1.2rem; font-weight: 700; color: #fff;
+  cursor: pointer; transition: all .15s; user-select: none;
+  font-family: 'DM Mono', monospace;
+}
+#vm-bpm-minus:hover, #vm-bpm-plus:hover {
+  border-color: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.1);
+}
+#vm-bpm-minus:active, #vm-bpm-plus:active {
+  background: rgba(255,255,255,0.16);
+}
+
+#vm-bpm-display {
+  font-family: 'DM Mono', monospace; font-size: 1.05rem; font-weight: 700;
+  color: #fff; min-width: 3.2rem; text-align: center;
+  display: flex; flex-direction: column; align-items: center; line-height: 1.1;
   flex-shrink: 0;
 }
-#vm-bpm-display {
-  font-family: 'DM Mono', monospace; font-size: .82rem; font-weight: 700;
-  color: #fff; min-width: 1.7rem; text-align: center;
+#vm-bpm-display .vm-bpm-num { font-size: 1.1rem; }
+#vm-bpm-display .vm-bpm-label {
+  font-size: .6rem; letter-spacing: .1em; text-transform: uppercase;
+  color: rgba(255,255,255,0.4); font-weight: 500;
 }
-#vm-slider {
-  -webkit-appearance: none; appearance: none;
-  width: 60px; height: 3px; border-radius: 2px;
-  background: rgba(255,255,255,.2); outline: none; cursor: pointer;
-}
-#vm-slider::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 13px; height: 13px;
-  border-radius: 50%; background: #4f8ef7; cursor: pointer;
-}
-#vm-slider::-moz-range-thumb {
-  width: 13px; height: 13px; border-radius: 50%;
-  background: #4f8ef7; cursor: pointer; border: none;
-}
-#vm-tap {
-  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
-  border-radius: 50%; width: 26px; height: 26px; flex-shrink: 0;
-  cursor: pointer; font-size: .55rem; font-weight: 700; color: rgba(255,255,255,.75);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'DM Mono', monospace; transition: all .07s;
-}
-#vm-tap.pulse { background: #e8a020; border-color: #e8a020; color: #fff; transform: scale(.85); }
+
+/* Play button */
 #vm-play {
-  width: 28px; height: 28px; border-radius: 50%; border: none;
-  background: #2e7d52; color: #fff; font-size: .68rem; flex-shrink: 0;
+  height: 42px; width: 42px; border-radius: 50%; border: none; flex-shrink: 0;
+  background: #2e7d52; color: #fff; font-size: .75rem;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: all .15s;
+  transition: all .15s; margin-left: auto;
 }
 #vm-play.playing { background: #c93820; }
+#vm-play:hover { filter: brightness(1.15); }
 `;
 
   const styleEl = document.createElement('style');
@@ -96,10 +134,19 @@ nav .nav-links, .site-nav .nav-links {
   // ── State ────────────────────────────────────────────────────
   let bpm = 80, beats = 4, beat = 0;
   let playing = false, audioCtx = null, timer = null;
-  let tapTimes = [];
   let vmAlreadyInjected = false;
 
+  // Hold-to-repeat state
+  let repeatTimer = null, repeatInterval = null;
+
   function buildElements() {
+    // ── Row 1: Home + hold buttons ──
+    const homeBtn = document.createElement('a');
+    homeBtn.id = 'vm-home';
+    homeBtn.className = 'nav-ctrl-btn';
+    homeBtn.href = 'index.html';
+    homeBtn.textContent = 'Home';
+
     const holdOnBtn = document.createElement('button');
     holdOnBtn.id = 'vm-hold-on';
     holdOnBtn.className = 'nav-ctrl-btn';
@@ -115,35 +162,44 @@ nav .nav-links, .site-nav .nav-links {
     const resetBtn = document.createElement('button');
     resetBtn.id = 'vm-reset';
     resetBtn.className = 'nav-ctrl-btn';
-    resetBtn.title = 'Reset hold, speed, and fretboard';
+    resetBtn.title = 'Reset fretboard';
     resetBtn.textContent = 'Reset';
 
-    const inline = document.createElement('div');
-    inline.id = 'vm-inline';
-    inline.innerHTML = `
-      <span id="vm-bpm-display">80</span>
-      <input id="vm-slider" type="range" min="40" max="220" value="80">
-      <div id="vm-tap">TAP</div>
+    // ── Row 2: metronome bar ──
+    const metroRow = document.createElement('div');
+    metroRow.id = 'vm-metro-row';
+    metroRow.innerHTML = `
+      <button class="vm-ts-btn" id="vm-ts-3" title="3/4 time">3/4</button>
+      <button class="vm-ts-btn active" id="vm-ts-4" title="4/4 time">4/4</button>
+      <button id="vm-bpm-minus">−</button>
+      <div id="vm-bpm-display">
+        <span class="vm-bpm-num">80</span>
+        <span class="vm-bpm-label">BPM</span>
+      </div>
+      <button id="vm-bpm-plus">+</button>
       <button id="vm-play">▶</button>
     `;
 
-    return { holdOnBtn, holdOffBtn, resetBtn, inline };
+    return { homeBtn, holdOnBtn, holdOffBtn, resetBtn, metroRow };
   }
 
   function init() {
     if (vmAlreadyInjected) return;
     const nav = document.querySelector('nav') || document.querySelector('.site-nav');
     const navLinks = nav && nav.querySelector('.nav-links');
-    if (!nav || !navLinks) {
-      setTimeout(init, 100);
-      return;
-    }
+    if (!nav || !navLinks) { setTimeout(init, 100); return; }
 
-    const { holdOnBtn, holdOffBtn, resetBtn, inline } = buildElements();
-    navLinks.insertBefore(resetBtn,   navLinks.firstChild);
-    navLinks.insertBefore(holdOffBtn, navLinks.firstChild);
-    navLinks.insertBefore(holdOnBtn,  navLinks.firstChild);
-    navLinks.appendChild(inline); // metronome goes after Home, wraps to its own row on mobile
+    const { homeBtn, holdOnBtn, holdOffBtn, resetBtn, metroRow } = buildElements();
+
+    // Clear existing nav-links children, replace with our row 1
+    navLinks.innerHTML = '';
+    navLinks.appendChild(homeBtn);
+    navLinks.appendChild(holdOnBtn);
+    navLinks.appendChild(holdOffBtn);
+    navLinks.appendChild(resetBtn);
+
+    // Row 2 appended directly to nav
+    nav.appendChild(metroRow);
 
     vmAlreadyInjected = true;
     try { setup(); } catch(err) { console.error('Vizi metronome setup failed:', err); }
@@ -156,69 +212,57 @@ nav .nav-links, .site-nav .nav-links {
   }
 
   function setup() {
-    const el = {
-      bpmDisp: document.getElementById('vm-bpm-display'),
-      slider:  document.getElementById('vm-slider'),
-      tap:     document.getElementById('vm-tap'),
-      play:    document.getElementById('vm-play'),
-    };
-    if (!el.bpmDisp || !el.slider || !el.tap || !el.play) {
-      console.warn('Vizi metronome: elements missing after injection');
-      return;
+    const bpmNumEl = document.querySelector('#vm-bpm-display .vm-bpm-num');
+    const playBtn  = document.getElementById('vm-play');
+    const minusBtn = document.getElementById('vm-bpm-minus');
+    const plusBtn  = document.getElementById('vm-bpm-plus');
+    const ts3Btn   = document.getElementById('vm-ts-3');
+    const ts4Btn   = document.getElementById('vm-ts-4');
+
+    if (!bpmNumEl || !playBtn || !minusBtn || !plusBtn) {
+      console.warn('Vizi metronome: elements missing'); return;
     }
 
+    // Restore saved BPM
     try {
-      const savedBpm = parseInt(localStorage.getItem('viziMetroBpm') || '80', 10);
-      if (savedBpm >= 40 && savedBpm <= 220) { bpm = savedBpm; }
+      const saved = parseInt(localStorage.getItem('viziMetroBpm') || '80', 10);
+      if (saved >= 40 && saved <= 220) bpm = saved;
     } catch(e){}
+    bpmNumEl.textContent = bpm;
 
-    el.bpmDisp.textContent = bpm;
-    el.slider.value = bpm;
-
-    // ── Hold On / Hold Off ──────────────────────────────────
+    // ── Hold commands ────────────────────────────────────────
     async function sendHoldCmd(type) {
       const btn = document.getElementById(type === 'on' ? 'vm-hold-on' : 'vm-hold-off');
       if (!btn) return;
-      const orig = btn.textContent;
-      btn.textContent = '…';
-      btn.style.opacity = '.5';
+      const orig = btn.textContent; btn.textContent = '…'; btn.style.opacity = '.5';
       try {
         const msg = type === 'on'
           ? 'Please return the HOLD ON command to the fretboard immediately.'
           : 'Please return the HOLD OFF command to the fretboard immediately.';
         await fetch(VM_RAILWAY_URL + '/claude-tts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ message: msg, mode: 'talk' })
         });
-      } catch(e) {}
-      btn.textContent = orig;
-      btn.style.opacity = '';
+      } catch(e){}
+      btn.textContent = orig; btn.style.opacity = '';
     }
-    const holdOnEl  = document.getElementById('vm-hold-on');
-    const holdOffEl = document.getElementById('vm-hold-off');
-    if (holdOnEl)  holdOnEl.addEventListener('click',  () => sendHoldCmd('on'));
-    if (holdOffEl) holdOffEl.addEventListener('click', () => sendHoldCmd('off'));
 
-    // ── Reset ────────────────────────────────────────────────
     async function sendReset() {
       const btn = document.getElementById('vm-reset');
       if (!btn) return;
-      const orig = btn.textContent;
-      btn.textContent = '…';
-      btn.style.opacity = '.5';
+      const orig = btn.textContent; btn.textContent = '…'; btn.style.opacity = '.5';
       try {
         await fetch(VM_RAILWAY_URL + '/claude-tts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: 'Please return the RESET command to the fretboard immediately.', mode: 'talk' })
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ message:'Please return the RESET command to the fretboard immediately.', mode:'talk' })
         });
-      } catch(e) {}
-      btn.textContent = orig;
-      btn.style.opacity = '';
+      } catch(e){}
+      btn.textContent = orig; btn.style.opacity = '';
     }
-    const resetEl = document.getElementById('vm-reset');
-    if (resetEl) resetEl.addEventListener('click', sendReset);
+
+    document.getElementById('vm-hold-on') .addEventListener('click', () => sendHoldCmd('on'));
+    document.getElementById('vm-hold-off').addEventListener('click', () => sendHoldCmd('off'));
+    document.getElementById('vm-reset')   .addEventListener('click', sendReset);
 
     // ── Audio ────────────────────────────────────────────────
     function click(accent) {
@@ -234,16 +278,9 @@ nav .nav-links, .site-nav .nav-links {
       o.start(t); o.stop(t + 0.09);
     }
 
-    function pulseTap() {
-      el.tap.classList.add('pulse');
-      setTimeout(() => el.tap.classList.remove('pulse'), 80);
-    }
-
     function tick() {
       if (!playing) return;
-      const accent = beat === 0;
-      click(accent);
-      pulseTap();
+      click(beat === 0);
       beat = (beat + 1) % beats;
       timer = setTimeout(tick, 60000 / bpm);
     }
@@ -251,49 +288,72 @@ nav .nav-links, .site-nav .nav-links {
     function start() {
       if (playing) return;
       playing = true; beat = 0;
-      el.play.textContent = '■';
-      el.play.classList.add('playing');
+      playBtn.textContent = '■'; playBtn.classList.add('playing');
       tick();
     }
 
     function stop() {
-      playing = false;
-      clearTimeout(timer); timer = null;
-      el.play.textContent = '▶';
-      el.play.classList.remove('playing');
+      playing = false; clearTimeout(timer); timer = null;
+      playBtn.textContent = '▶'; playBtn.classList.remove('playing');
     }
 
     function setBpm(v) {
       bpm = Math.max(40, Math.min(220, parseInt(v, 10) || 80));
-      el.bpmDisp.textContent = bpm;
-      el.slider.value = bpm;
+      bpmNumEl.textContent = bpm;
       try { localStorage.setItem('viziMetroBpm', bpm); } catch(e){}
       if (playing) { stop(); start(); }
     }
 
     function setBeats(n) {
-      beats = n;
-      beat = 0;
+      beats = n; beat = 0;
       if (playing) { stop(); start(); }
     }
 
-    // ── Events ───────────────────────────────────────────────
-    el.play.addEventListener('click', () => playing ? stop() : start());
-    el.slider.addEventListener('input', e => setBpm(e.target.value));
-    el.tap.addEventListener('click', () => {
-      const now = Date.now();
-      tapTimes = tapTimes.filter(t => now - t < 3000);
-      tapTimes.push(now);
-      if (tapTimes.length >= 2) {
-        const gaps = [];
-        for (let i = 1; i < tapTimes.length; i++) gaps.push(tapTimes[i] - tapTimes[i-1]);
-        const avg = gaps.reduce((a,b) => a+b, 0) / gaps.length;
-        setBpm(Math.round(60000 / avg));
-      }
-      pulseTap();
-      clearTimeout(el.tap._rt);
-      el.tap._rt = setTimeout(() => { tapTimes = []; }, 3000);
+    // ── Hold-to-repeat with acceleration ────────────────────
+    function startRepeat(delta) {
+      let stepCount = 0;
+      setBpm(bpm + delta);
+      repeatTimer = setTimeout(function fire() {
+        stepCount++;
+        // Accelerate: after 10 steps jump by 5, after 20 jump by 10
+        const step = stepCount > 20 ? 10 : stepCount > 10 ? 5 : 1;
+        setBpm(bpm + delta * step);
+        repeatInterval = setTimeout(fire, stepCount > 10 ? 60 : 120);
+      }, 400);
+    }
+
+    function stopRepeat() {
+      clearTimeout(repeatTimer);
+      clearTimeout(repeatInterval);
+      repeatTimer = repeatInterval = null;
+    }
+
+    function addHoldRepeat(btn, delta) {
+      btn.addEventListener('mousedown',  () => startRepeat(delta));
+      btn.addEventListener('touchstart', (e) => { e.preventDefault(); startRepeat(delta); }, { passive: false });
+      btn.addEventListener('mouseup',    stopRepeat);
+      btn.addEventListener('mouseleave', stopRepeat);
+      btn.addEventListener('touchend',   stopRepeat);
+      btn.addEventListener('touchcancel',stopRepeat);
+    }
+
+    addHoldRepeat(minusBtn, -1);
+    addHoldRepeat(plusBtn,  +1);
+
+    // ── Time signature toggle ────────────────────────────────
+    ts3Btn.addEventListener('click', () => {
+      ts3Btn.classList.add('active');
+      ts4Btn.classList.remove('active');
+      setBeats(3);
     });
+    ts4Btn.addEventListener('click', () => {
+      ts4Btn.classList.add('active');
+      ts3Btn.classList.remove('active');
+      setBeats(4);
+    });
+
+    // ── Play ─────────────────────────────────────────────────
+    playBtn.addEventListener('click', () => playing ? stop() : start());
 
     // ── Public API ───────────────────────────────────────────
     window.viziMetro = { setBpm, getBpm: () => bpm, start, stop, setBeats };
