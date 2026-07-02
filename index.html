@@ -417,6 +417,15 @@
     welcomeIframe.src='';
     welcomeWrap.classList.remove('show');
     welcomeBtn.classList.remove('active');
+    // Clear transcript panels
+    const bYou  = document.getElementById('bYou');
+    const bVizi = document.getElementById('bVizi');
+    const pYou  = document.getElementById('pYou');
+    const pVizi = document.getElementById('pVizi');
+    if(bYou)  bYou.textContent  = '';
+    if(bVizi) bVizi.textContent = '';
+    if(pYou)  pYou.classList.remove('show');
+    if(pVizi) pVizi.classList.remove('show');
   }
   welcomeBtn.addEventListener('click',()=>{
     welcomeWrap.classList.contains('show') ? closeWelcome() : openWelcome();
