@@ -1160,19 +1160,19 @@
         </div>
       </div>
 
-      <div class="vid-wrap" id="vidWrap">
-        <video id="introVideo" controls playsinline></video>
-        <div class="vid-meta">
-          <span id="vidLabel">Intro video</span>
-          <button id="vidToExercises">Go to exercises &rarr;</button>
-        </div>
-      </div>
-
       <div class="tip-card" id="tipCard">
         <span class="tip-icon">&#128161;</span>
         <div>
           <span class="tip-label">Tip</span>
           <span class="tip-text" id="tipText"></span>
+        </div>
+      </div>
+
+      <div class="vid-wrap" id="vidWrap">
+        <video id="introVideo" controls playsinline></video>
+        <div class="vid-meta">
+          <span id="vidLabel">Intro video</span>
+          <button id="vidToExercises">Go to exercises &rarr;</button>
         </div>
       </div>
 
@@ -2991,16 +2991,16 @@
 
   // Map scale choice names to fretboard SCALE commands
   const SCALE_COMMANDS = {
-    'E Minor — Major Scale':        'SCALE E minor all',
-    'E Minor — E Minor Pentatonic': 'SCALE E minor pentatonic all',
-    'A Minor — Major Scale':        'SCALE A minor all',
-    'A Minor — A Minor Pentatonic': 'SCALE A minor pentatonic all',
-    'G Major — Major Scale':        'SCALE G major all',
-    'G Major — E Minor Pentatonic': 'SCALE E minor pentatonic all',
-    'D Major — Major Scale':        'SCALE D major all',
-    'D Major — B Minor Pentatonic': 'SCALE B minor pentatonic all',
-    'C Major — Major Scale':        'SCALE C major all',
-    'C Major — A Minor Pentatonic': 'SCALE A minor pentatonic all',
+    'E Minor — Major Scale':        'SCALE E major shape 1',
+    'E Minor — E Minor Pentatonic': 'SCALE E minor pentatonic shape 1',
+    'A Minor — Major Scale':        'SCALE A major shape 1',
+    'A Minor — A Minor Pentatonic': 'SCALE A minor pentatonic shape 1',
+    'G Major — Major Scale':        'SCALE G major shape 1',
+    'G Major — E Minor Pentatonic': 'SCALE E minor pentatonic shape 1',
+    'D Major — Major Scale':        'SCALE D major shape 1',
+    'D Major — B Minor Pentatonic': 'SCALE B minor pentatonic shape 1',
+    'C Major — Major Scale':        'SCALE C major shape 1',
+    'C Major — A Minor Pentatonic': 'SCALE A minor pentatonic shape 1',
   };
 
   let soloFeedbackEl = null; // set when solo panel is rendered
