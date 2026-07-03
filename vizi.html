@@ -307,16 +307,7 @@
   const PREROLL_FRAMES = 6;
 
   function setStatus(t){ statusEl.textContent = t; }
-  function setBtn(cls){
-    btn.className = 'talk' + (cls ? ' ' + cls : '');
-    const labels = {
-      'listening': 'Listening…',
-      'thinking':  'Vizi is<br>thinking…',
-      'intro':     'Vizi is<br>speaking…',
-      '':          'Hold<br>to Talk'
-    };
-    btn.innerHTML = labels[cls] ?? 'Hold<br>to Talk';
-  }
+  function setBtn(cls){ btn.className = 'talk' + (cls ? ' ' + cls : ''); }
   function setListening(on){ stageWrap.classList.toggle('listening', on); }
   function showTalking(){ stage.classList.add('talking'); try{ viziVid.currentTime=0; viziVid.play(); }catch(e){} }
   function showIdle(){ stage.classList.remove('talking'); try{ viziVid.pause(); }catch(e){} }
@@ -912,15 +903,15 @@
         const root = parts[0] || 'G';
         const quality = (parts[1]||'Major').toLowerCase();
         const isMinor = quality === 'minor';
+        const isPent = quality === 'pentatonic' || exerciseName.toLowerCase().includes('pent');
         const scaleType = isMinor ? 'minor' : 'major';
-        const scaleCmd = 'SCALE ' + root + ' ' + (isMinor ? 'minor' : 'major');
-        const suggestedBpm = 60;
+        const scaleCmd = 'SCALE ' + root + (isMinor ? 'm' : '') + (isPent ? ' pent' : ' ' + scaleType) + ' all';
         return 'The student wants to warm up with the ' + exerciseName + ' scale. ' +
-          'Start your response with "OK, here is " followed by the scale name. ' +
-          'Light the scale on the fretboard: ' + scaleCmd + '. ' +
-          'In your spoken response only, suggest they set the metronome to 60 BPM — do not send a METRONOME command. ' +
-          'Then say: start on the low E string and play each lit note going up to the high E string, then back down, one note per beat. ' +
-          'Keep it to 2 sentences total.';
+          'Light all 5 CAGED shapes now: ' + scaleCmd + '. ' +
+          'Tell them: each color is a separate shape — Blue is shape 1, Green shape 2, Gold shape 3, Purple shape 4, Cyan shape 5. White notes are shared between shapes. ' +
+          'Ask them to start with shape 1 (the blue notes), play every blue note from the lowest string to the highest, then move to shape 2 (green) and do the same, continuing up the neck through all 5 shapes. Then reverse back down. ' +
+          'Suggest 60 BPM — do not send a METRONOME command. ' +
+          'Keep your spoken response to 3 sentences.'
       })(),
       'soloing':     'The student wants to solo over ' + exerciseName + '. Light up the scale on the fretboard using a SCALE command. Briefly explain which notes to target (especially the root and fifth), suggest a simple starting phrase, and invite them to start experimenting. Keep the instruction to 2-3 sentences.'
     };
