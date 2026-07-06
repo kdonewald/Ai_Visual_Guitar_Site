@@ -177,6 +177,7 @@
   @media(max-width:640px){
     nav{padding:.85rem 1.2rem}
     .choice-row{grid-template-columns:1fr}
+    .choice-grid.cols-3{grid-template-columns:1fr}
     .cat-head,.cat-body{padding-left:1.3rem;padding-right:1.3rem}
     .scale-key-grid{grid-template-columns:1fr 1fr}
     .solo-scale-row{grid-template-columns:1fr}
@@ -1332,18 +1333,23 @@
     'warmup': {
       label:'Choose a scale to warm up with',
       hint:'Vizi will light the scale on your fretboard and guide you up and down all six strings. Set the metronome to a comfortable tempo.',
-      cols:2,
+      cols:3,
       choices:[
         { icon:'☀️',  name:'G Major',  desc:'Open, bright — great starting scale' },
         { icon:'🌙', name:'G Minor',  desc:'Darker, soulful feel' },
+        { icon:'🎸', name:'G Minor Pentatonic', desc:'5 notes — simplified, great for soloing' },
         { icon:'☀️',  name:'A Major',  desc:'Bright and common in pop and rock' },
         { icon:'🌙', name:'A Minor',  desc:'Very common — easy open chord shapes' },
+        { icon:'🎸', name:'A Minor Pentatonic', desc:'Classic blues-rock feel' },
         { icon:'☀️',  name:'C Major',  desc:'No sharps or flats — the classic beginner scale' },
         { icon:'🌙', name:'C Minor',  desc:'Moody and expressive' },
+        { icon:'🎸', name:'C Minor Pentatonic', desc:'Smooth and versatile for soloing' },
         { icon:'☀️',  name:'D Major',  desc:'Bright and rich — great for strumming' },
         { icon:'🌙', name:'D Minor',  desc:'Melancholic, emotional feel' },
+        { icon:'🎸', name:'D Minor Pentatonic', desc:'Warm, bluesy feel' },
         { icon:'☀️',  name:'E Major',  desc:'Full and powerful — rock and blues staple' },
         { icon:'🌙', name:'E Minor',  desc:'The easiest minor scale on guitar' },
+        { icon:'🎸', name:'E Minor Pentatonic', desc:'The easiest pentatonic to start with' },
       ]
     },
     'open-chords': {
