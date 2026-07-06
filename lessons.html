@@ -1187,7 +1187,7 @@
     {
       id:'tuning', num:1, label:'Tuning & Setup',
       desc:'Get your guitar in tune and learn how to hold it comfortably before anything else.',
-      videoUrl:'', autoTuner:true, // add YouTube link when ready
+      videoUrl:'https://youtube.com/shorts/r4ZlU7y8oXs', autoTuner:true,
       tips:[
         "Hold the neck with your thumb low and behind it — not wrapped over the top.",
         "Rest the guitar waist on your right leg and tilt the neck slightly upward — not flat across your lap.",
@@ -1243,7 +1243,7 @@
     {
       id:'chord-theory', num:3, label:'Build Scales & Chords',
       desc:'Learn what root, third, and fifth mean — the three notes behind every chord you play.',
-      videoUrl:'', // add YouTube link when ready — stage chord_theory theoryMode:true,
+      videoUrl:'https://youtube.com/shorts/Gq1ik4qMKvg', theoryMode:true,
       tips:[
         "The root note is what gives a chord its name — a C chord starts on the note C.",
         "Major and minor are decided entirely by the third — everything else can stay the same.",
@@ -1623,7 +1623,7 @@
     const embedUrl = url
       .replace('youtube.com/shorts/','youtube.com/embed/')
       .replace('youtube.com/watch?v=','youtube.com/embed/')
-      + (url.includes('?')?'&':'?') + 'rel=0&modestbranding=1&autoplay=1';
+      + (url.includes('?')?'&':'?') + 'rel=0&modestbranding=1&autoplay=1&enablejsapi=1';
     ytIframe.src = embedUrl;
     ytWrap.classList.add('show');
     ytWrap.scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -1633,6 +1633,21 @@
     if(ytWrap) ytWrap.classList.remove('show');
   }
   if(ytClose){ ytClose.addEventListener('click', closeStageVideo); }
+
+  // Auto-close the stage video player when the YouTube clip finishes playing
+  if(ytIframe){
+    ytIframe.addEventListener('load', function(){
+      try{ ytIframe.contentWindow.postMessage(JSON.stringify({event:'listening', id:'ytIframe'}), '*'); }catch(e){}
+    });
+  }
+  window.addEventListener('message', function(event){
+    if(typeof event.data !== 'string') return;
+    let data;
+    try{ data = JSON.parse(event.data); }catch(e){ return; }
+    if(data.event === 'infoDelivery' && data.info && data.info.playerState === 0){
+      closeStageVideo();
+    }
+  });
 
   introChoice.addEventListener('click', () => {
     if (!activeStage) return;

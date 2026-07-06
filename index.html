@@ -405,7 +405,7 @@
   const welcomeWrap  = document.getElementById('welcomeWrap');
   const welcomeIframe = document.getElementById('welcomeIframe');
   const welcomeClose  = document.getElementById('welcomeClose');
-  const WELCOME_URL   = 'https://www.youtube.com/embed/A9n5GdYfTZw?rel=0&modestbranding=1&autoplay=1';
+  const WELCOME_URL   = 'https://www.youtube.com/embed/nA4Af4x0Seg?rel=0&modestbranding=1&autoplay=1&enablejsapi=1';
 
   function openWelcome(){
     welcomeIframe.src = WELCOME_URL;
@@ -427,6 +427,19 @@
     if(pYou)  pYou.classList.remove('show');
     if(pVizi) pVizi.classList.remove('show');
   }
+  // Auto-close the welcome video player when the YouTube clip finishes playing
+  welcomeIframe.addEventListener('load', function(){
+    try{ welcomeIframe.contentWindow.postMessage(JSON.stringify({event:'listening', id:'welcomeIframe'}), '*'); }catch(e){}
+  });
+  window.addEventListener('message', function(event){
+    if(typeof event.data !== 'string') return;
+    let data;
+    try{ data = JSON.parse(event.data); }catch(e){ return; }
+    if(data.event === 'infoDelivery' && data.info && data.info.playerState === 0){
+      closeWelcome();
+    }
+  });
+
   welcomeBtn.addEventListener('click',()=>{
     welcomeWrap.classList.contains('show') ? closeWelcome() : openWelcome();
   });
