@@ -177,6 +177,43 @@
     .page{padding:1.75rem 1.1rem}
     .steps{flex-direction:column}
   }
+
+  /* ── Section video intro button (ported from lessons.html for consistency) ── */
+  .cp-video-intro-btn{
+    display:flex;align-items:center;gap:.6rem;
+    padding:.65rem 1.2rem;border-radius:10px;
+    border:none;background:var(--green);
+    font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;
+    color:#fff;cursor:pointer;transition:all .18s;
+    margin-bottom:1.25rem;box-shadow:0 3px 12px rgba(61,186,114,0.28);
+  }
+  .cp-video-intro-btn:hover{ background:#2e9658;transform:translateY(-1px); }
+  .cp-video-intro-btn:disabled{ background:rgba(255,255,255,0.10);color:var(--text-dim);box-shadow:none;cursor:default; }
+  .cp-video-intro-btn .cp-vid-icon{ font-size:1rem; }
+
+  .yt-video-wrap{
+    display:none;width:240px;margin:.5rem auto 1.5rem;
+    position:relative;animation:fade-up .2s ease both;
+  }
+  .yt-video-wrap.show{ display:block; }
+  .yt-video-box{
+    border-radius:10px;overflow:hidden;
+    background:#0a0a0a;box-shadow:0 6px 18px var(--shadow-lg);
+    position:relative;
+  }
+  .yt-video-box iframe{
+    width:100%;aspect-ratio:9/16;border:none;display:block;
+  }
+  .yt-close{
+    position:absolute;top:5px;right:5px;z-index:10;
+    width:22px;height:22px;border-radius:50%;
+    background:rgba(0,0,0,0.65);border:none;color:white;
+    font-size:.82rem;cursor:pointer;display:flex;
+    align-items:center;justify-content:center;transition:background .15s;
+  }
+  .yt-close:hover{ background:var(--red); }
+
+  @keyframes fade-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -195,6 +232,16 @@
   <div class="page-eyebrow">Music Library</div>
   <h1 class="page-title">Find &amp; Load a Song</h1>
   <p class="page-desc">Browse free beginner chord sheets on Ultimate Guitar, or upload one you already have. Once it's loaded, Vizi will walk you through every chord on your fretboard.</p>
+
+  <!-- Songs page video intro -->
+  <button class="cp-video-intro-btn" id="songsIntroBtn"><span class="cp-vid-icon">▶</span><span>Watch Intro Video</span></button>
+
+  <div class="yt-video-wrap" id="ytVideoWrap">
+    <div class="yt-video-box">
+      <button class="yt-close" id="ytClose" title="Close">✕</button>
+      <iframe id="ytIframe" src="" allow="autoplay; fullscreen" allowfullscreen></iframe>
+    </div>
+  </div>
 
   <!-- ── Find a Song ── -->
   <div class="section-head">
@@ -282,6 +329,56 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
   const RAILWAY = 'https://vizi-tts-proxy-production.up.railway.app';
+
+  // ── Songs page intro video ──
+  // Fill in once the video is recorded/uploaded (same format as other stage videos: a plain
+  // youtube.com/watch?v=... or youtube.com/shorts/... link — no need to convert to embed format).
+  const SONGS_VIDEO_URL = '';
+
+  const songsIntroBtn = document.getElementById('songsIntroBtn');
+  const ytWrap    = document.getElementById('ytVideoWrap');
+  const ytIframe  = document.getElementById('ytIframe');
+  const ytClose   = document.getElementById('ytClose');
+
+  function openSongsVideo(url){
+    if(!ytIframe||!ytWrap||!url) return;
+    const embedUrl = url
+      .replace('youtube.com/shorts/','youtube.com/embed/')
+      .replace('youtube.com/watch?v=','youtube.com/embed/')
+      + (url.includes('?')?'&':'?') + 'rel=0&modestbranding=1&autoplay=1&enablejsapi=1';
+    ytIframe.src = embedUrl;
+    ytWrap.classList.add('show');
+    ytWrap.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+  function closeSongsVideo(){
+    if(ytIframe) ytIframe.src='';
+    if(ytWrap) ytWrap.classList.remove('show');
+  }
+  if(songsIntroBtn){
+    if(!SONGS_VIDEO_URL){
+      songsIntroBtn.style.opacity='.45';
+      songsIntroBtn.title='Video coming soon';
+      songsIntroBtn.disabled=true;
+    } else {
+      songsIntroBtn.addEventListener('click', ()=>openSongsVideo(SONGS_VIDEO_URL));
+    }
+  }
+  if(ytClose){ ytClose.addEventListener('click', closeSongsVideo); }
+
+  // Auto-close the video player when the YouTube clip finishes playing
+  if(ytIframe){
+    ytIframe.addEventListener('load', function(){
+      try{ ytIframe.contentWindow.postMessage(JSON.stringify({event:'listening', id:'ytIframe'}), '*'); }catch(e){}
+    });
+  }
+  window.addEventListener('message', function(event){
+    if(typeof event.data !== 'string') return;
+    let data;
+    try{ data = JSON.parse(event.data); }catch(e){ return; }
+    if(data.event === 'infoDelivery' && data.info && data.info.playerState === 0){
+      closeSongsVideo();
+    }
+  });
 
   // Convert every page of a PDF File into PNG data URLs, silently in the background.
   // Returns an array of data URLs, one per page, at a readable resolution.
