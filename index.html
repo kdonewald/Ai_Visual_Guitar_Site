@@ -345,7 +345,7 @@
     finally{ showIdle(); }
   }
   async function sendToVizi(b64){
-    setBtn('thinking'); setStatus('Vizi is thinking…');
+    setBtn('thinking'); btn.innerHTML='Vizi is<br>Thinking'; setStatus('Vizi is thinking…');
     try{
       const res=await fetch(RAILWAY_URL+'/stt-claude-tts',{
         method:'POST',headers:{'Content-Type':'application/json'},
@@ -354,7 +354,7 @@
       const ct=(res.headers.get('content-type')||'');
       if(ct.includes('application/json')){
         const j=await res.json();
-        setBtn(''); setStatus(j.empty?"Didn't catch that — try again":'Error: '+(j.error||'unknown'));
+        setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus(j.empty?"Didn't catch that — try again":'Error: '+(j.error||'unknown'));
         return;
       }
       const transcript=dec(res.headers.get('X-Vizi-Transcript'));
@@ -368,10 +368,10 @@
         if(m && window.viziMetro) window.viziMetro.setBpm(parseInt(m[1],10));
       }
       const blob=await res.blob();
-      setBtn(''); setStatus('');
+      setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus('');
       await playBlob(blob);
       setStatus('Ready');
-    }catch(e){ setBtn(''); setStatus('Could not reach Vizi — check connection'); }
+    }catch(e){ setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus('Could not reach Vizi — check connection'); }
   }
 
   async function press(e){
