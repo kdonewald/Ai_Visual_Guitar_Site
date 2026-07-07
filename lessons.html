@@ -2647,6 +2647,38 @@
     barreWrap.appendChild(shapes);
 
     if(cpBarreShape){
+      const shapeLetter = cpBarreShape.charAt(0); // 'E Shape' -> 'E'
+      const supportsMinor = (shapeLetter==='E' || shapeLetter==='A' || shapeLetter==='D');
+
+      const playRow=document.createElement('div');
+      playRow.style.cssText='display:flex;gap:.5rem;margin:.5rem 0 .75rem;';
+      const playStatus=document.createElement('div');
+      playStatus.style.cssText='font-size:.82rem;color:var(--text-mid);margin-bottom:.4rem;min-height:1.1em;';
+      const sendShapePlay=async (isMinor)=>{
+        playStatus.textContent='Lighting fretboard...';
+        playStatus.style.color='var(--gold)';
+        try{
+          const res=await fetch(RAILWAY_URL+'/fretboard-command',{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({command:shapeLetter+' SHAPE PLAY'+(isMinor?' MINOR':'')})
+          });
+          if(res.ok){ playStatus.textContent='Playing — watch the shape slide up the neck'; playStatus.style.color='var(--green)'; }
+          else{ playStatus.textContent='Could not reach fretboard'; playStatus.style.color='var(--red)'; }
+        }catch(e){ playStatus.textContent='Could not reach fretboard'; playStatus.style.color='var(--red)'; }
+      };
+      const playMajBtn=document.createElement('button');
+      playMajBtn.className='cp-action-btn send'; playMajBtn.textContent='▶ Play Shape Down the Fretboard';
+      playMajBtn.addEventListener('click',()=>sendShapePlay(false));
+      playRow.appendChild(playMajBtn);
+      if(supportsMinor){
+        const playMinBtn=document.createElement('button');
+        playMinBtn.className='cp-action-btn send'; playMinBtn.textContent='▶ Play Minor Version';
+        playMinBtn.addEventListener('click',()=>sendShapePlay(true));
+        playRow.appendChild(playMinBtn);
+      }
+      barreWrap.appendChild(playRow);
+      barreWrap.appendChild(playStatus);
+
       const rootGrid=document.createElement('div'); rootGrid.className='cp-root-grid';
       CHROMATIC_ROOTS.forEach(root=>{
         const btn=document.createElement('button');
@@ -2723,10 +2755,10 @@
         }catch(e){ playAllStatus.textContent='Could not reach fretboard'; playAllStatus.style.color='var(--red)'; }
       };
       const playAllMajBtn=document.createElement('button');
-      playAllMajBtn.className='cp-action-btn send'; playAllMajBtn.textContent='▶ Play All — Major';
+      playAllMajBtn.className='cp-action-btn send'; playAllMajBtn.textContent='▶ Play Shape Down the Fretboard';
       playAllMajBtn.addEventListener('click',()=>sendTriadPlayAll(false));
       const playAllMinBtn=document.createElement('button');
-      playAllMinBtn.className='cp-action-btn send'; playAllMinBtn.textContent='▶ Play All — Minor';
+      playAllMinBtn.className='cp-action-btn send'; playAllMinBtn.textContent='▶ Play Minor Version';
       playAllMinBtn.addEventListener('click',()=>sendTriadPlayAll(true));
       playAllRow.appendChild(playAllMajBtn); playAllRow.appendChild(playAllMinBtn);
       triBody.appendChild(playAllRow);
