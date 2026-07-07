@@ -2641,7 +2641,7 @@
       const btn=document.createElement('button');
       btn.className='cp-shape-btn'+(cpBarreShape===shape?' active':'');
       btn.textContent=shape;
-      btn.addEventListener('click',()=>{ cpBarreShape=shape; renderChordsPanel(); });
+      btn.addEventListener('click',()=>{ cpBarreShape=shape; cpBarreRoot=null; cpSelectedChord=null; renderChordsPanel(); });
       shapes.appendChild(btn);
     });
     barreWrap.appendChild(shapes);
@@ -2650,6 +2650,7 @@
       const shapeLetter = cpBarreShape.charAt(0); // 'E Shape' -> 'E'
       const supportsMinor = (shapeLetter==='E' || shapeLetter==='A' || shapeLetter==='D');
 
+      if(!cpBarreRoot){
       const playRow=document.createElement('div');
       playRow.style.cssText='display:flex;gap:.5rem;margin:.5rem 0 .75rem;';
       const playStatus=document.createElement('div');
@@ -2678,6 +2679,7 @@
       }
       barreWrap.appendChild(playRow);
       barreWrap.appendChild(playStatus);
+      }
 
       const rootGrid=document.createElement('div'); rootGrid.className='cp-root-grid';
       CHROMATIC_ROOTS.forEach(root=>{
@@ -2728,7 +2730,7 @@
       const btn=document.createElement('button');
       btn.className='cp-tab'+(cpTriadGroup===grp.key?' active':'');
       btn.textContent=grp.label;
-      btn.addEventListener('click',()=>{ cpTriadGroup=grp.key; renderChordsPanel(); });
+      btn.addEventListener('click',()=>{ cpTriadGroup=grp.key; cpTriadRoot=null; cpSelectedChord=null; renderChordsPanel(); });
       triadGroupRow.appendChild(btn);
     });
     triBody.appendChild(triadGroupRow);
@@ -2738,6 +2740,7 @@
       // (the High-E group is stored internally as 'hie', but the firmware expects 'HE').
       const triadFwKey = (cpTriadGroup==='hie') ? 'HE' : cpTriadGroup.toUpperCase();
 
+      if(!cpTriadRoot){
       const playAllRow=document.createElement('div');
       playAllRow.style.cssText='display:flex;gap:.5rem;margin:.5rem 0 .75rem;';
       const playAllStatus=document.createElement('div');
@@ -2763,6 +2766,7 @@
       playAllRow.appendChild(playAllMajBtn); playAllRow.appendChild(playAllMinBtn);
       triBody.appendChild(playAllRow);
       triBody.appendChild(playAllStatus);
+      }
 
       const triadRootGrid=document.createElement('div'); triadRootGrid.className='cp-root-grid';
       CHROMATIC_ROOTS.forEach(root=>{
