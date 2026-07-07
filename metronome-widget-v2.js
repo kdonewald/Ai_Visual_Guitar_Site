@@ -51,9 +51,19 @@ nav .nav-links, .site-nav .nav-links {
   white-space: nowrap; color: var(--text, #f0ede8);
 }
 
-/* Home */
-#vm-home { border-color: rgba(255,255,255,0.2); color: var(--text, #f0ede8); text-decoration: none; }
-#vm-home:hover { border-color: #fff; background: rgba(255,255,255,0.06); }
+/* Home — bigger and more distinctive than the other controls, since it's the primary escape hatch */
+#vm-home {
+  height: 42px;
+  padding: 0 1rem;
+  font-size: .88rem;
+  font-weight: 700;
+  border-width: 2px;
+  border-color: var(--vizi, #3dba72);
+  color: var(--vizi, #3dba72);
+  background: rgba(61,186,114,0.10);
+  text-decoration: none;
+}
+#vm-home:hover { border-color: var(--vizi, #3dba72); background: rgba(61,186,114,0.20); }
 
 /* Hold On */
 #vm-hold-on { border-color: rgba(232,160,32,0.4); color: var(--gold, #e8a020); }
