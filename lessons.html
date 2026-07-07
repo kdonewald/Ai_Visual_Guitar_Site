@@ -177,7 +177,6 @@
   @media(max-width:640px){
     nav{padding:.85rem 1.2rem}
     .choice-row{grid-template-columns:1fr}
-    .choice-grid.cols-3{grid-template-columns:1fr}
     .cat-head,.cat-body{padding-left:1.3rem;padding-right:1.3rem}
     .scale-key-grid{grid-template-columns:1fr 1fr}
     .solo-scale-row{grid-template-columns:1fr}
@@ -1333,23 +1332,18 @@
     'warmup': {
       label:'Choose a scale to warm up with',
       hint:'Vizi will light the scale on your fretboard and guide you up and down all six strings. Set the metronome to a comfortable tempo.',
-      cols:3,
+      cols:2,
       choices:[
         { icon:'☀️',  name:'G Major',  desc:'Open, bright — great starting scale' },
         { icon:'🌙', name:'G Minor',  desc:'Darker, soulful feel' },
-        { icon:'🎸', name:'G Minor Pentatonic', desc:'5 notes — simplified, great for soloing' },
         { icon:'☀️',  name:'A Major',  desc:'Bright and common in pop and rock' },
         { icon:'🌙', name:'A Minor',  desc:'Very common — easy open chord shapes' },
-        { icon:'🎸', name:'A Minor Pentatonic', desc:'Classic blues-rock feel' },
         { icon:'☀️',  name:'C Major',  desc:'No sharps or flats — the classic beginner scale' },
         { icon:'🌙', name:'C Minor',  desc:'Moody and expressive' },
-        { icon:'🎸', name:'C Minor Pentatonic', desc:'Smooth and versatile for soloing' },
         { icon:'☀️',  name:'D Major',  desc:'Bright and rich — great for strumming' },
         { icon:'🌙', name:'D Minor',  desc:'Melancholic, emotional feel' },
-        { icon:'🎸', name:'D Minor Pentatonic', desc:'Warm, bluesy feel' },
         { icon:'☀️',  name:'E Major',  desc:'Full and powerful — rock and blues staple' },
         { icon:'🌙', name:'E Minor',  desc:'The easiest minor scale on guitar' },
-        { icon:'🎸', name:'E Minor Pentatonic', desc:'The easiest pentatonic to start with' },
       ]
     },
     'open-chords': {
@@ -2708,6 +2702,36 @@
     triBody.appendChild(triadGroupRow);
 
     if(cpTriadGroup){
+      // Maps the app's internal group key to the string name the firmware recognizes
+      // (the High-E group is stored internally as 'hie', but the firmware expects 'HE').
+      const triadFwKey = (cpTriadGroup==='hie') ? 'HE' : cpTriadGroup.toUpperCase();
+
+      const playAllRow=document.createElement('div');
+      playAllRow.style.cssText='display:flex;gap:.5rem;margin:.5rem 0 .75rem;';
+      const playAllStatus=document.createElement('div');
+      playAllStatus.style.cssText='font-size:.82rem;color:var(--text-mid);margin-bottom:.4rem;min-height:1.1em;';
+      const sendTriadPlayAll=async (isMinor)=>{
+        playAllStatus.textContent='Lighting fretboard...';
+        playAllStatus.style.color='var(--gold)';
+        try{
+          const res=await fetch(RAILWAY_URL+'/fretboard-command',{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({command:'TRIAD '+triadFwKey+' PLAY'+(isMinor?' MINOR':'')})
+          });
+          if(res.ok){ playAllStatus.textContent='Playing — watch the shape slide up the neck'; playAllStatus.style.color='var(--green)'; }
+          else{ playAllStatus.textContent='Could not reach fretboard'; playAllStatus.style.color='var(--red)'; }
+        }catch(e){ playAllStatus.textContent='Could not reach fretboard'; playAllStatus.style.color='var(--red)'; }
+      };
+      const playAllMajBtn=document.createElement('button');
+      playAllMajBtn.className='cp-action-btn send'; playAllMajBtn.textContent='▶ Play All — Major';
+      playAllMajBtn.addEventListener('click',()=>sendTriadPlayAll(false));
+      const playAllMinBtn=document.createElement('button');
+      playAllMinBtn.className='cp-action-btn send'; playAllMinBtn.textContent='▶ Play All — Minor';
+      playAllMinBtn.addEventListener('click',()=>sendTriadPlayAll(true));
+      playAllRow.appendChild(playAllMajBtn); playAllRow.appendChild(playAllMinBtn);
+      triBody.appendChild(playAllRow);
+      triBody.appendChild(playAllStatus);
+
       const triadRootGrid=document.createElement('div'); triadRootGrid.className='cp-root-grid';
       CHROMATIC_ROOTS.forEach(root=>{
         const btn=document.createElement('button');
@@ -2810,7 +2834,7 @@
       btn.style.borderColor=type==='Major'?'rgba(232,160,32,0.6)':'rgba(27,79,138,0.4)';
       btn.style.color=type==='Major'?'#BA7517':'var(--blue)';
       btn.addEventListener('click',()=>{
-        const grpUp=group.toUpperCase();
+        const grpUp=(group==='hie')?'HE':group.toUpperCase();
         cpSelectedChord={
           label:root+' '+type+' Triad ('+group.toUpperCase()+')',
           cmd:'TRIAD '+grpUp+' '+root+(type==='Minor'?'M':''),
