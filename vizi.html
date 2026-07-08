@@ -497,6 +497,9 @@
 
         if (promptData.ready && promptData.message){
           currentMode = 'song';
+          setBtn('thinking');
+          btn.innerHTML = 'Vizi is<br>preparing…';
+          setStatus('Reading your song…');
           const ttsRes = await fetch(RAILWAY_URL + '/claude-tts', {
             method:'POST', headers:{ 'Content-Type':'application/json' },
             body: JSON.stringify({ message: promptData.message, mode: 'song' })
@@ -511,7 +514,13 @@
               btn.innerHTML = 'Tap to hear<br>Vizi intro';
               setStatus('Song ready — tap the button to hear Vizi');
               songBanner.textContent += ' — tap button to hear intro';
+            } else {
+              setBtn(''); btn.innerHTML = 'Hold<br>to Talk';
+              setStatus('Could not load song intro — hold to talk instead');
             }
+          } else {
+            setBtn(''); btn.innerHTML = 'Hold<br>to Talk';
+            setStatus('Could not load song intro — hold to talk instead');
           }
         }
       } else if (data.status === 'error'){
