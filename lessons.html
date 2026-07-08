@@ -846,7 +846,9 @@
     position:relative;
   }
   .cp-chord-btn:hover{ border-color:var(--gold);background:rgba(232,160,32,0.06); }
-  .cp-chord-btn.in-scale{ border-color:rgba(42,172,184,0.5);background:rgba(42,172,184,0.05); }
+  .cp-chord-btn.in-scale{ border-color:rgba(42,172,184,0.6);background:rgba(42,172,184,0.12); }
+  .cp-chord-btn.in-scale-barre{ border-color:var(--red);background:rgba(224,85,64,0.12);color:var(--red);font-weight:700; }
+  .cp-chord-btn.filter-dim{ color:var(--text-light);background:var(--cream);opacity:.6; }
   .cp-chord-btn.in-progression{
     border-color:var(--gold);background:rgba(232,160,32,0.1);
   }
@@ -1278,25 +1280,7 @@
       exercises:[]
     },
     {
-      id:'soloing', num:6, label:'Soloing',
-      desc:'Warm up with scales and start playing single-note lines and simple solos.',
-      videoUrl:'', // add YouTube link when ready — stage soloing
-      tips:[
-        "Practice scales slowly with a metronome before chasing speed.",
-        "Alternate picking (down-up-down-up) builds speed more reliably than all downstrokes.",
-        "The pentatonic scale is the fastest path to sounding musical while improvising.",
-        "Bend strings gradually and check pitch against a fretted note for accuracy.",
-        "Vibrato is a small, controlled wobble — not a fast shake.",
-        "Improvising over just one or two chords is the easiest way to start soloing.",
-        "Your fretting hand should stay relaxed even during fast scale runs.",
-        "Listening to solos you admire and humming them first builds your musical ear.",
-        "Mistakes during improvisation are normal — recovering smoothly matters more than avoiding them.",
-        "Short daily scale practice beats occasional long sessions for finger speed."
-      ],
-      exercises:[]
-    },
-    {
-      id:'song', num:7,  label:'Play a Song',
+      id:'song', num:6,  label:'Play a Song',
       desc:'Put everything together — upload a song sheet and Vizi will walk you through every chord on your fretboard.',
       videoUrl:'', // add YouTube link when ready — stage song
       tips:[
@@ -1318,6 +1302,24 @@
         'Play through the full song with the metronome'
       ],
       isSong:true
+    },
+    {
+      id:'soloing', num:7, label:'Soloing',
+      desc:'Warm up with scales and start playing single-note lines and simple solos.',
+      videoUrl:'', // add YouTube link when ready — stage soloing
+      tips:[
+        "Practice scales slowly with a metronome before chasing speed.",
+        "Alternate picking (down-up-down-up) builds speed more reliably than all downstrokes.",
+        "The pentatonic scale is the fastest path to sounding musical while improvising.",
+        "Bend strings gradually and check pitch against a fretted note for accuracy.",
+        "Vibrato is a small, controlled wobble — not a fast shake.",
+        "Improvising over just one or two chords is the easiest way to start soloing.",
+        "Your fretting hand should stay relaxed even during fast scale runs.",
+        "Listening to solos you admire and humming them first builds your musical ear.",
+        "Mistakes during improvisation are normal — recovering smoothly matters more than avoiding them.",
+        "Short daily scale practice beats occasional long sessions for finger speed."
+      ],
+      exercises:[]
     },
     {
       id:'tab', num:8, label:'Read & Play Tab',
@@ -1595,14 +1597,9 @@
     catTitle.textContent = stage.label;
     catDesc.textContent  = stage.desc;
 
-    const p = getProgress();
-    const watched = (p[id] && p[id].introWatched) || 0;
     if(document.getElementById('introWatchedNote')){
-      document.getElementById('introWatchedNote').textContent = watched > 0
-        ? 'Watched ' + watched + 'x — watch again'
-        : 'Watch Intro Video';
+      document.getElementById('introWatchedNote').textContent = 'Watch Intro Video';
     }
-    if(introChoice) introChoice.classList.toggle('cp-video-intro-watched', watched > 0);
 
     vidWrap.classList.remove('show');
     tipCard.classList.remove('show');
@@ -2561,7 +2558,7 @@
     filterPanel.appendChild(scaleGrid);
     if(cpActiveScale){
       const hint=document.createElement('div'); hint.className='cp-filter-hint';
-      hint.textContent='Teal chords belong to '+cpActiveScale+'. Others are still tappable.';
+      hint.innerHTML='Lit up = part of '+cpActiveScale+'. <span style="color:var(--red);font-weight:700;">Red</span> = part of the scale, but not a true open chord — it\'s a barre chord. Greyed out = not part of the chosen scale, but still tappable.';
       filterPanel.appendChild(hint);
     }
     exList.appendChild(filterPanel);
@@ -2592,11 +2589,22 @@
 
     const chordGrid=document.createElement('div'); chordGrid.className='cp-chord-grid';
     const diatonicSet=cpActiveScale?DIATONIC[cpActiveScale]:null;
+    const filterActive=!!cpActiveScale;
     ALL_CHORDS[cpActiveTab].forEach(({n,open})=>{
       const btn=document.createElement('button');
       const inScale=diatonicSet&&diatonicSet.some(d=>d.replace('dim','').replace('m','')===n.replace('m','').replace('maj7','').replace('7','').replace('/','').split('/')[0]);
       const inProg=cpProgression.some(p=>p.label===n);
-      btn.className='cp-chord-btn'+(open?'':' barre-chord')+(inScale?' in-scale':'')+(inProg?' in-progression':'');
+      let cls='cp-chord-btn';
+      if(filterActive){
+        // Scale filter is active: exactly 3 states, color is the only signal.
+        if(inScale)      cls += open ? ' in-scale' : ' in-scale-barre';
+        else             cls += ' filter-dim';
+      } else if(!open){
+        // No filter active: baseline "this is a barre chord" indicator, unrelated to scale filtering.
+        cls += ' barre-chord';
+      }
+      if(inProg) cls += ' in-progression';
+      btn.className=cls;
       btn.textContent=n;
       if(inProg){
         const badge=document.createElement('span'); badge.className='cp-badge';
@@ -2621,10 +2629,12 @@
     });
     ocBody.appendChild(chordGrid);
 
-    const barreNote=document.createElement('div');
-    barreNote.style.cssText='font-size:.82rem;color:var(--text-light);margin-bottom:.85rem;text-align:center;';
-    barreNote.textContent='Greyed = barre chord — tap to send to Vizi, or use the Barre section below for more control';
-    ocBody.appendChild(barreNote);
+    if(!cpActiveScale){
+      const barreNote=document.createElement('div');
+      barreNote.style.cssText='font-size:.82rem;color:var(--text-light);margin-bottom:.85rem;text-align:center;';
+      barreNote.textContent='Greyed = barre chord — tap to send to Vizi, or use the Barre section below for more control';
+      ocBody.appendChild(barreNote);
+    }
 
     } // end open-chords section
 
