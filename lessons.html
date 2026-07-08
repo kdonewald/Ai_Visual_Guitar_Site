@@ -3929,9 +3929,9 @@ const TIME_SIGS = {
     explainerBody: 'Count: 1 – 2 – 3 – 4, then repeat. Your foot taps four times per measure. Beat 1 is the strongest. The vast majority of songs you know are in 4/4.',
     songs: 'Wonderwall · Let Her Go · Brown Eyed Girl · almost everything else',
     patterns: [
-      { label: 'DU DU DU DU', slots: ['D','U','D','U','D','U','D','U'] },
+      { label: 'D D D D',      slots: ['D',' ','D',' ','D',' ','D',' '] },
+      { label: 'D U D U D U D U', slots: ['D','U','D','U','D','U','D','U'] },
       { label: 'D  DU UD  U', slots: ['D',' ','D','U','U','D',' ','U'] },
-      { label: 'D  DU  U DU', slots: ['D',' ','D','U',' ','U','D','U'] },
       { label: 'Custom',      slots: [' ',' ',' ',' ',' ',' ',' ',' '], custom:true },
     ]
   },
@@ -4148,6 +4148,11 @@ function renderFootTaps(){
   });
 }
 
+function patternLabel(pat){
+  if (pat.custom) return 'Custom';
+  return pat.slots.join('');
+}
+
 function renderPatternTabs(){
   const ts = TIME_SIGS[currentTS];
   const container = document.getElementById('patternTabs');
@@ -4155,7 +4160,7 @@ function renderPatternTabs(){
   ts.patterns.forEach((pat,i)=>{
     const btn = document.createElement('button');
     btn.className = 'pattern-tab'+(pat.custom?' custom-tab':'')+(i===currentPatternIdx?' active':'');
-    btn.textContent = pat.label;
+    btn.textContent = patternLabel(pat);
     btn.addEventListener('click',()=>{
       if (pat.custom) stopPlayback();
       currentPatternIdx=i;
