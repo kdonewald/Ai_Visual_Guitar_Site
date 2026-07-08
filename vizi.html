@@ -913,7 +913,29 @@
           'Suggest 60 BPM — do not send a METRONOME command. ' +
           'Keep your spoken response to 3 sentences.'
       })(),
-      'soloing':     'The student wants to solo over ' + exerciseName + '. Light up the scale on the fretboard using a SCALE command. Briefly explain which notes to target (especially the root and fifth), suggest a simple starting phrase, and invite them to start experimenting. Keep the instruction to 2-3 sentences.'
+      'soloing': (()=>{
+        // exerciseName format: "Key | Scale Label | scale cmd | Track Title (BPM)"
+        const parts = exerciseName.split('|').map(s => s.trim());
+        const keyPart = parts[0] || 'the selected key';
+        const scaleLabel = parts[1] || 'the selected scale';
+        const scaleCmdRaw = parts[2] || '';
+        const trackPart = parts[3] || '';
+        const scaleCmd = scaleCmdRaw ? ('SCALE ' + scaleCmdRaw + ' ALL') : '';
+        const bpmMatch = trackPart.match(/\((\d+)\s*BPM\)/i);
+        const bpm = bpmMatch ? bpmMatch[1] : null;
+
+        let instr = 'The student is soloing in ' + keyPart + ' using the ' + scaleLabel + '. ';
+        if (scaleCmd) instr += 'Light it now: ' + scaleCmd + '. ';
+        instr += 'Briefly explain which notes to target (especially the root and fifth), suggest a simple starting phrase like root-third-fifth, and remind them there are no wrong notes in this scale. ';
+        if (trackPart && trackPart !== 'no backing track selected') {
+          instr += 'They are playing along with "' + trackPart + '". ';
+        }
+        if (bpm) {
+          instr += 'Tell them to set the metronome in the nav bar to ' + bpm + ' BPM to stay in sync with the track — do not send a METRONOME command. ';
+        }
+        instr += 'Keep your spoken response to 2-3 sentences.';
+        return instr;
+      })()
     };
 
     const specificInstruction = stageInstructions[stageId] ||

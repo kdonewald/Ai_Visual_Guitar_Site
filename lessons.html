@@ -3359,6 +3359,35 @@
     }
 
     let openKey = null;
+    let selectedTrack = null;      // { title, chords, bpm, file }
+    let selectedScale = null;      // { label, desc, cmd }
+    let selectedKeyName = null;    // e.g. 'E Minor'
+    let askBtn = null;             // assigned below, referenced by refreshAskBtnState
+
+    function refreshAskBtnState(){
+      if (!askBtn) return;
+      const ready = !!selectedScale;
+      askBtn.disabled = !ready;
+      askBtn.style.opacity = ready ? '1' : '.45';
+      askBtn.style.cursor = ready ? 'pointer' : 'not-allowed';
+      if (!ready){
+        askBtn.textContent = 'Pick a scale to send your solo to Vizi →';
+      } else if (!selectedTrack){
+        askBtn.textContent = 'Send Solo to Vizi →';
+      } else {
+        askBtn.textContent = 'Send Solo to Vizi →';
+      }
+    }
+
+    function buildSoloExercise(){
+      const keyPart = selectedKeyName || 'a key';
+      const scalePart = selectedScale ? selectedScale.label : 'a scale';
+      const scaleCmdPart = selectedScale ? selectedScale.cmd : '';
+      const trackPart = selectedTrack
+        ? selectedTrack.title + (selectedTrack.bpm ? ' (' + selectedTrack.bpm + ' BPM)' : ' (no fixed tempo)')
+        : 'no backing track selected';
+      return keyPart + ' | ' + scalePart + ' | ' + scaleCmdPart + ' | ' + trackPart;
+    }
 
     function openSection(key){
       openKey = key;
@@ -3425,6 +3454,9 @@
           });
           btn.classList.add('playing');
           btn.querySelector('.solo-track-icon').textContent = '■';
+          selectedTrack = track;
+          selectedKeyName = keyName;
+          refreshAskBtnState();
         });
         trackList.appendChild(btn);
       });
@@ -3444,6 +3476,9 @@
           body.querySelectorAll('.solo-scale-btn').forEach(b => b.classList.remove('active'));
           sb.classList.add('active');
           lightScaleOnFretboard(scale.cmd);
+          selectedScale = scale;
+          selectedKeyName = keyName;
+          refreshAskBtnState();
         });
         scaleRow.appendChild(sb);
       });
@@ -3451,11 +3486,18 @@
       exList.appendChild(body);
     });
 
-    // Ask Vizi button — large, prominent
-    const askBtn = document.createElement('button'); askBtn.className = 'solo-ask-vizi';
-    askBtn.textContent = 'Ask Vizi for Guidance →';
-    askBtn.addEventListener('click', () => goToVizi('soloing', 'Backing Track Solo'));
+    // Send Solo to Vizi button — large, prominent
+    // Opens in a NEW TAB (not window.location.href) so the backing track keeps
+    // playing in this tab while the student talks to Vizi in the other one.
+    askBtn = document.createElement('button'); askBtn.className = 'solo-ask-vizi';
+    askBtn.addEventListener('click', () => {
+      if (askBtn.disabled) return;
+      const exercise = buildSoloExercise();
+      const p = new URLSearchParams({stage:'soloing', exercise});
+      window.open('vizi.html?' + p.toString(), '_blank');
+    });
     exList.appendChild(askBtn);
+    refreshAskBtnState();
   }
 
   // ── Tab reader ───────────────────────────────────────────────
