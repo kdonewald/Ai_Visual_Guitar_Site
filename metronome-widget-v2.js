@@ -30,14 +30,15 @@ nav .nav-links, .site-nav .nav-links {
   justify-content: flex-start !important;
 }
 
-/* Row 2 — metronome bar */
+/* Row 2 — metronome bar (collapsed by default; toggled via #vm-metro-toggle) */
 #vm-metro-row {
-  display: flex;
+  display: none;
   align-items: center;
   width: 100%;
   gap: .4rem;
   box-sizing: border-box;
 }
+#vm-metro-row.open { display: flex; }
 
 /* Shared button base */
 .nav-ctrl-btn {
@@ -65,13 +66,18 @@ nav .nav-links, .site-nav .nav-links {
 }
 #vm-home:hover { border-color: var(--vizi, #3dba72); background: rgba(61,186,114,0.20); }
 
-/* Hold On */
-#vm-hold-on { border-color: rgba(232,160,32,0.4); color: var(--gold, #e8a020); }
-#vm-hold-on:hover { border-color: var(--gold, #e8a020); background: rgba(232,160,32,0.12); }
+/* Hold toggle — single button, style driven by data-state.
+   data-state="off" = hold is currently off, button offers "Hold On" (gold).
+   data-state="on"  = hold is currently on,  button offers "Hold Off" (red). */
+#vm-hold-toggle[data-state="off"] { border-color: rgba(232,160,32,0.4); color: var(--gold, #e8a020); }
+#vm-hold-toggle[data-state="off"]:hover { border-color: var(--gold, #e8a020); background: rgba(232,160,32,0.12); }
+#vm-hold-toggle[data-state="on"] { border-color: rgba(224,85,64,0.3); color: rgba(224,85,64,0.85); }
+#vm-hold-toggle[data-state="on"]:hover { border-color: rgba(224,85,64,0.7); color: #e05540; background: rgba(224,85,64,0.08); }
 
-/* Hold Off */
-#vm-hold-off { border-color: rgba(224,85,64,0.3); color: rgba(224,85,64,0.85); }
-#vm-hold-off:hover { border-color: rgba(224,85,64,0.7); color: #e05540; background: rgba(224,85,64,0.08); }
+/* Metronome toggle */
+#vm-metro-toggle { border-color: rgba(45,212,191,0.35); color: rgba(45,212,191,0.85); }
+#vm-metro-toggle:hover { border-color: var(--teal, #2dd4bf); color: var(--teal, #2dd4bf); background: rgba(45,212,191,0.08); }
+#vm-metro-toggle.open { border-color: var(--teal, #2dd4bf); color: var(--teal, #2dd4bf); background: rgba(45,212,191,0.14); }
 
 /* Reset */
 #vm-reset { border-color: rgba(79,142,247,0.35); color: rgba(79,142,247,0.85); }
@@ -150,24 +156,27 @@ nav .nav-links, .site-nav .nav-links {
   let repeatTimer = null, repeatInterval = null;
 
   function buildElements() {
-    // ── Row 1: Home + hold buttons ──
+    // ── Row 1: Home + hold toggle + metronome toggle + reset ──
     const homeBtn = document.createElement('a');
     homeBtn.id = 'vm-home';
     homeBtn.className = 'nav-ctrl-btn';
     homeBtn.href = 'index.html';
     homeBtn.textContent = 'Home';
 
-    const holdOnBtn = document.createElement('button');
-    holdOnBtn.id = 'vm-hold-on';
-    holdOnBtn.className = 'nav-ctrl-btn';
-    holdOnBtn.title = 'Latch current fretboard LEDs';
-    holdOnBtn.textContent = 'Hold On';
+    // Single toggle button — label/color flips between "Hold On" and "Hold Off"
+    // based on data-state, instead of showing both buttons at once.
+    const holdToggleBtn = document.createElement('button');
+    holdToggleBtn.id = 'vm-hold-toggle';
+    holdToggleBtn.className = 'nav-ctrl-btn';
+    holdToggleBtn.dataset.state = 'off'; // 'off' = hold is off, button offers "Hold On"
+    holdToggleBtn.title = 'Toggle fretboard LED hold';
+    holdToggleBtn.textContent = 'Hold On';
 
-    const holdOffBtn = document.createElement('button');
-    holdOffBtn.id = 'vm-hold-off';
-    holdOffBtn.className = 'nav-ctrl-btn';
-    holdOffBtn.title = 'Release fretboard hold';
-    holdOffBtn.textContent = 'Hold Off';
+    const metroToggleBtn = document.createElement('button');
+    metroToggleBtn.id = 'vm-metro-toggle';
+    metroToggleBtn.className = 'nav-ctrl-btn';
+    metroToggleBtn.title = 'Show/hide metronome';
+    metroToggleBtn.textContent = 'Metro';
 
     const resetBtn = document.createElement('button');
     resetBtn.id = 'vm-reset';
@@ -175,7 +184,7 @@ nav .nav-links, .site-nav .nav-links {
     resetBtn.title = 'Reset fretboard';
     resetBtn.textContent = 'Reset';
 
-    // ── Row 2: metronome bar ──
+    // ── Row 2: metronome bar — collapsed by default, opened via metroToggleBtn ──
     const metroRow = document.createElement('div');
     metroRow.id = 'vm-metro-row';
     metroRow.innerHTML = `
@@ -190,7 +199,7 @@ nav .nav-links, .site-nav .nav-links {
       <button id="vm-play">▶</button>
     `;
 
-    return { homeBtn, holdOnBtn, holdOffBtn, resetBtn, metroRow };
+    return { homeBtn, holdToggleBtn, metroToggleBtn, resetBtn, metroRow };
   }
 
   function init() {
@@ -199,13 +208,13 @@ nav .nav-links, .site-nav .nav-links {
     const navLinks = nav && nav.querySelector('.nav-links');
     if (!nav || !navLinks) { setTimeout(init, 100); return; }
 
-    const { homeBtn, holdOnBtn, holdOffBtn, resetBtn, metroRow } = buildElements();
+    const { homeBtn, holdToggleBtn, metroToggleBtn, resetBtn, metroRow } = buildElements();
 
     // Clear existing nav-links children, replace with our row 1
     navLinks.innerHTML = '';
     navLinks.appendChild(homeBtn);
-    navLinks.appendChild(holdOnBtn);
-    navLinks.appendChild(holdOffBtn);
+    navLinks.appendChild(holdToggleBtn);
+    navLinks.appendChild(metroToggleBtn);
     navLinks.appendChild(resetBtn);
 
     // Row 2 appended directly to nav
@@ -240,21 +249,31 @@ nav .nav-links, .site-nav .nav-links {
     } catch(e){}
     bpmNumEl.textContent = bpm;
 
-    // ── Hold commands ────────────────────────────────────────
-    async function sendHoldCmd(type) {
-      const btn = document.getElementById(type === 'on' ? 'vm-hold-on' : 'vm-hold-off');
+    // ── Hold toggle ──────────────────────────────────────────
+    // "off" → button offers "Hold On" (gold). "on" → button offers "Hold Off" (red).
+    function renderHoldToggle(){
+      const holdBtn = document.getElementById('vm-hold-toggle');
+      if (!holdBtn) return;
+      holdBtn.textContent = holdBtn.dataset.state === 'on' ? 'Hold Off' : 'Hold On';
+    }
+
+    async function sendHoldToggle() {
+      const btn = document.getElementById('vm-hold-toggle');
       if (!btn) return;
-      const orig = btn.textContent; btn.textContent = '…'; btn.style.opacity = '.5';
+      const goingOn = btn.dataset.state !== 'on'; // currently off (or unknown) → this click turns it on
+      btn.textContent = '…'; btn.style.opacity = '.5'; btn.disabled = true;
       try {
-        const msg = type === 'on'
+        const msg = goingOn
           ? 'Please return the HOLD ON command to the fretboard immediately.'
           : 'Please return the HOLD OFF command to the fretboard immediately.';
         await fetch(VM_RAILWAY_URL + '/claude-tts', {
           method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ message: msg, mode: 'talk' })
         });
+        btn.dataset.state = goingOn ? 'on' : 'off';
       } catch(e){}
-      btn.textContent = orig; btn.style.opacity = '';
+      btn.style.opacity = ''; btn.disabled = false;
+      renderHoldToggle();
     }
 
     async function sendReset() {
@@ -268,11 +287,24 @@ nav .nav-links, .site-nav .nav-links {
         });
       } catch(e){}
       btn.textContent = orig; btn.style.opacity = '';
+      // RESET clears holdMode on the fretboard itself — mirror that in the UI.
+      const holdBtn = document.getElementById('vm-hold-toggle');
+      if (holdBtn){ holdBtn.dataset.state = 'off'; renderHoldToggle(); }
     }
 
-    document.getElementById('vm-hold-on') .addEventListener('click', () => sendHoldCmd('on'));
-    document.getElementById('vm-hold-off').addEventListener('click', () => sendHoldCmd('off'));
-    document.getElementById('vm-reset')   .addEventListener('click', sendReset);
+    document.getElementById('vm-hold-toggle').addEventListener('click', sendHoldToggle);
+    document.getElementById('vm-reset')      .addEventListener('click', sendReset);
+    renderHoldToggle();
+
+    // ── Metronome show/hide ─────────────────────────────────────
+    const metroToggleBtn = document.getElementById('vm-metro-toggle');
+    const metroRowEl     = document.getElementById('vm-metro-row');
+    if (metroToggleBtn && metroRowEl){
+      metroToggleBtn.addEventListener('click', () => {
+        const open = metroRowEl.classList.toggle('open');
+        metroToggleBtn.classList.toggle('open', open);
+      });
+    }
 
     // ── Audio ────────────────────────────────────────────────
     function click(accent) {

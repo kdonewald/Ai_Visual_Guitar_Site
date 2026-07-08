@@ -439,6 +439,14 @@
     if (cmd)  { showPanel('pCmd','bCmd', cmd); applyMetronomeCommand(cmd); }
     setStatus('');
     await playBlob(blob);
+    // If this tab was opened from the Soloing panel (window.open, not a same-tab
+    // navigation), tell that tab Vizi's spoken intro is done so it can resume
+    // any backing track it paused while she was talking.
+    try {
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ type: 'vizi-intro-done' }, '*');
+      }
+    } catch(e){}
     currentMode = 'talk';
     setStatus('Ready');
   }

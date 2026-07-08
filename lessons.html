@@ -3288,10 +3288,17 @@
 
   const TRACKS_BASE = 'https://aivisualguitar.com/';
   let soloAudioEl = null;
+  // Persistent across repeated renderSoloingPanel() calls (e.g. reopening the
+  // panel) so the guarded message listener below always sees current values.
+  let selectedTrack = null;      // { title, chords, bpm, file }
+  let selectedScale = null;      // { label, desc, cmd }
+  let selectedKeyName = null;    // e.g. 'E Minor'
+  let askBtn = null;             // reassigned each render, referenced by refreshAskBtnState
 
   function renderSoloingPanel(def){
     exList.innerHTML = '';
     if (soloAudioEl){ soloAudioEl.pause(); soloAudioEl = null; }
+    selectedTrack = null; selectedScale = null; selectedKeyName = null;
 
     // ── Inject CSS once ──────────────────────────────────────
     if (!document.getElementById('soloCSS')){
@@ -3359,10 +3366,6 @@
     }
 
     let openKey = null;
-    let selectedTrack = null;      // { title, chords, bpm, file }
-    let selectedScale = null;      // { label, desc, cmd }
-    let selectedKeyName = null;    // e.g. 'E Minor'
-    let askBtn = null;             // assigned below, referenced by refreshAskBtnState
 
     function refreshAskBtnState(){
       if (!askBtn) return;
@@ -3488,16 +3491,49 @@
 
     // Send Solo to Vizi button — large, prominent
     // Opens in a NEW TAB (not window.location.href) so the backing track keeps
-    // playing in this tab while the student talks to Vizi in the other one.
+    // playing in this tab while the student talks to Vizi in the other one —
+    // but we pause it for the duration of Vizi's spoken intro so the two don't
+    // compete, then resume it once she's done (signaled back via postMessage).
     askBtn = document.createElement('button'); askBtn.className = 'solo-ask-vizi';
     askBtn.addEventListener('click', () => {
       if (askBtn.disabled) return;
       const exercise = buildSoloExercise();
+
+      if (soloAudioEl && !soloAudioEl.paused) {
+        soloAudioEl.pause();
+        document.querySelectorAll('.solo-track-btn').forEach(b => {
+          b.classList.remove('playing');
+          const icon = b.querySelector('.solo-track-icon');
+          if (icon) icon.textContent = '▶';
+        });
+      }
+
       const p = new URLSearchParams({stage:'soloing', exercise});
       window.open('vizi.html?' + p.toString(), '_blank');
     });
     exList.appendChild(askBtn);
     refreshAskBtnState();
+
+    // Resume the backing track once Vizi's spoken intro finishes in the new tab.
+    // Guarded so reopening this panel within the same page load doesn't stack
+    // duplicate listeners.
+    if (!window._viziSoloResumeListenerAdded){
+      window._viziSoloResumeListenerAdded = true;
+      window.addEventListener('message', (event) => {
+        if (!event.data || event.data.type !== 'vizi-intro-done') return;
+        if (!soloAudioEl || !soloAudioEl.paused) return;
+        soloAudioEl.play().catch(() => {});
+        const activeTitle = selectedTrack ? selectedTrack.title : null;
+        document.querySelectorAll('.solo-track-btn').forEach(b => {
+          const titleEl = b.querySelector('.solo-track-title');
+          if (titleEl && activeTitle && titleEl.textContent === activeTitle) {
+            b.classList.add('playing');
+            const icon = b.querySelector('.solo-track-icon');
+            if (icon) icon.textContent = '■';
+          }
+        });
+      });
+    }
   }
 
   // ── Tab reader ───────────────────────────────────────────────
