@@ -277,6 +277,7 @@
     <div class="panel vizi" id="pVizi"><div class="label">Vizi</div><div class="body" id="bVizi"></div></div>
     <div class="panel cmd"  id="pCmd"><div class="label">Fretboard commands</div><div class="body" id="bCmd"></div></div>
     <div class="panel strum" id="pStrum"><div class="label">Strumming Pattern</div><div class="body" id="bStrum"></div></div>
+    <div class="panel cmd" id="pTiming"><div class="label">Latency (debug)</div><div class="body" id="bTiming" style="font-family:monospace; font-size:12px; line-height:1.6;"></div></div>
   </div>
 
   <!-- Floating song sheet panel -->
@@ -461,26 +462,53 @@
   }
   function dec(v){ try { return v ? decodeURIComponent(v) : ''; } catch(_){ return v||''; } }
 
-  async function playBlob(blob){
+  function renderTimingPanel(t){
+    const row = (label, ms) => `<div>${label}: <b>${ms==null ? '—' : Math.round(ms)+'ms'}</b></div>`;
+    const overhead = (t.serverTotal!=null && t.stt!=null && t.claude!=null && t.tts!=null)
+      ? t.serverTotal - t.stt - t.claude - t.tts : null;
+    const html =
+      row('Client encode (release → request sent)', t.encodeMs) +
+      row('Upload + server processing (request sent → headers back)', t.uploadPlusServerMs) +
+      row('&nbsp;&nbsp;↳ STT', t.stt) +
+      row('&nbsp;&nbsp;↳ Claude', t.claude) +
+      row('&nbsp;&nbsp;↳ TTS', t.tts) +
+      row('&nbsp;&nbsp;↳ server overhead / network', overhead) +
+      row('Audio download', t.downloadMs) +
+      row('Audio decode', t.decodeMs) +
+      '<hr style="opacity:.3">' +
+      row('TOTAL — release to sound', t.totalMs);
+    document.getElementById('bTiming').innerHTML = html;
+    document.getElementById('pTiming').classList.add('show');
+    console.log('[Vizi latency]', t);
+  }
+
+  async function playBlob(blob, timing){
     try {
       await ensureAudioCtx();
       const arr = await blob.arrayBuffer();
       const buf = await audioCtx.decodeAudioData(arr);
+      if (timing) timing.decodeMs = performance.now() - timing._tBlobDone;
       const src = audioCtx.createBufferSource();
       src.buffer = buf; src.connect(audioCtx.destination);
       showTalking(); src.start();
+      if (timing) {
+        timing.totalMs = performance.now() - timing._tRelease;
+        renderTimingPanel(timing);
+      }
       await new Promise(r => { src.onended = r; });
     } catch(e){}
     finally { showIdle(); }
   }
 
-  async function sendToVizi(b64){
+  async function sendToVizi(b64, tRelease, tEncoded){
     setBtn('thinking'); btn.innerHTML = 'Vizi is<br>Thinking'; setStatus('Vizi is thinking…');
+    const tBeforeFetch = performance.now();
     try {
       const res = await fetch(RAILWAY_URL + '/stt-claude-tts', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
         body: JSON.stringify({ audio:b64, sampleRate:TARGET_RATE, mode:currentMode })
       });
+      const tHeaders = performance.now();
       const ct = (res.headers.get('content-type') || '');
       if (ct.includes('application/json')){
         const j = await res.json();
@@ -490,12 +518,23 @@
       const transcript = dec(res.headers.get('X-Vizi-Transcript'));
       const text       = dec(res.headers.get('X-Vizi-Text'));
       const commands   = dec(res.headers.get('X-Vizi-Commands'));
+      let serverTiming = {};
+      try { serverTiming = JSON.parse(dec(res.headers.get('X-Vizi-Timing')) || '{}'); } catch(e){}
       if (transcript) showPanel('pYou','bYou', transcript);
       if (text)       showPanel('pVizi','bVizi', text);
       if (commands)   { showPanel('pCmd','bCmd', commands); applyMetronomeCommand(commands); }
       const blob = await res.blob();
+      const tBlobDone = performance.now();
       setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('');
-      await playBlob(blob);
+      const timing = (tRelease != null) ? {
+        _tRelease: tRelease, _tBlobDone: tBlobDone,
+        encodeMs: tEncoded - tRelease,
+        uploadPlusServerMs: tHeaders - tBeforeFetch,
+        downloadMs: tBlobDone - tHeaders,
+        stt: serverTiming.stt, claude: serverTiming.claude, tts: serverTiming.tts,
+        serverTotal: serverTiming.total
+      } : null;
+      await playBlob(blob, timing);
       if (currentMode === 'song') currentMode = 'talk';
       if (!pendingIntroBlob) setStatus('Ready');
     } catch(e){ setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Could not reach Vizi — check connection'); }
@@ -630,10 +669,12 @@
     e.preventDefault();
     if (pendingIntroBlob) return;
     if (!recording) return;
+    const tRelease = performance.now();
     setListening(false);
     const b64 = stopCapture();
+    const tEncoded = performance.now();
     if (!b64){ setBtn(''); setStatus('Nothing recorded — hold a moment longer'); return; }
-    sendToVizi(b64);
+    sendToVizi(b64, tRelease, tEncoded);
   }
 
   btn.addEventListener('pointerdown', press);
