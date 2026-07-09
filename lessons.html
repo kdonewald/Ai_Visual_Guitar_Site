@@ -477,12 +477,12 @@
   .play-row{display:flex;align-items:center;justify-content:center;margin-top:.2rem;}
   .play-btn{
     width:64px;height:64px;border-radius:50%;border:none;
-    background:var(--red);color:white;font-size:1.3rem;
+    background:var(--green);color:white;font-size:1.3rem;
     cursor:pointer;transition:all .18s;
-    box-shadow:0 4px 18px rgba(217,64,37,0.38);
+    box-shadow:0 4px 18px rgba(61,186,114,0.38);
     display:flex;align-items:center;justify-content:center;
   }
-  .play-btn.playing{background:var(--text);box-shadow:0 4px 16px rgba(42,32,24,0.25);}
+  .play-btn.playing{background:var(--red);box-shadow:0 4px 16px rgba(224,85,64,0.38);}
   .play-btn:active{transform:scale(0.93);}
   .play-btn:disabled{
     background:var(--cream-dark);color:var(--text-light);
@@ -4385,26 +4385,36 @@ function renderStaticDiagram(){
       if (gi<1){ const div=document.createElement('div'); div.className='static-divider'; container.appendChild(div); }
     });
   } else {
-    // slots is ALWAYS stored at a fixed native resolution (2 per beat for
-    // standard patterns) regardless of which duration button is selected —
-    // the duration only controls how many of those native slots to show per
-    // beat, never how the array itself is indexed.
-    const nativeSlotsPerBeat = slots.length / ts.beats;
-    for (let b=0; b<ts.beats; b++){
+    if (subdivisions===0){
+      // Whole note — one single cell spanning the entire measure
       const cell=document.createElement('div'); cell.className='static-beat';
-      const num=document.createElement('div'); num.className='static-beat-num'; num.textContent=b+1;
+      const num=document.createElement('div'); num.className='static-beat-num'; num.textContent='1';
       cell.appendChild(num);
       const grp=document.createElement('div'); grp.className='static-beat-group';
-      const baseIdx = b*nativeSlotsPerBeat;
-      if (subdivisions>=2){
-        // Eighth (or finer): show every native slot in this beat
-        for (let s=0; s<nativeSlotsPerBeat; s++) grp.appendChild(makeStaticStroke(slots[baseIdx+s]||' '));
-      } else {
-        // Quarter, Half, Whole: one representative stroke per beat — the downbeat
-        grp.appendChild(makeStaticStroke(slots[baseIdx]||' '));
-      }
+      grp.appendChild(makeStaticStroke(slots[0]||' '));
       cell.appendChild(grp); container.appendChild(cell);
-      if (b<ts.beats-1){ const div=document.createElement('div'); div.className='static-divider'; container.appendChild(div); }
+    } else if (subdivisions===-1){
+      // Half notes — two cells, each spanning half the measure
+      for (let h=0; h<2; h++){
+        const cell=document.createElement('div'); cell.className='static-beat';
+        const num=document.createElement('div'); num.className='static-beat-num';
+        num.textContent = h===0 ? '1' : String(Math.round(ts.beats/2)+1);
+        cell.appendChild(num);
+        const grp=document.createElement('div'); grp.className='static-beat-group';
+        grp.appendChild(makeStaticStroke(slots[h]||' '));
+        cell.appendChild(grp); container.appendChild(cell);
+        if (h<1){ const div=document.createElement('div'); div.className='static-divider'; container.appendChild(div); }
+      }
+    } else {
+      for (let b=0; b<ts.beats; b++){
+        const cell=document.createElement('div'); cell.className='static-beat';
+        const num=document.createElement('div'); num.className='static-beat-num'; num.textContent=b+1;
+        cell.appendChild(num);
+        const grp=document.createElement('div'); grp.className='static-beat-group';
+        for (let s=0; s<subdivisions; s++) grp.appendChild(makeStaticStroke(slots[b*subdivisions+s]||' '));
+        cell.appendChild(grp); container.appendChild(cell);
+        if (b<ts.beats-1){ const div=document.createElement('div'); div.className='static-divider'; container.appendChild(div); }
+      }
     }
   }
 }
@@ -4447,10 +4457,11 @@ function buildGrid(){
       cell.appendChild(strokes); grid.appendChild(cell);
     });
   } else {
-    // slots is ALWAYS stored at a fixed native resolution (2 per beat for
-    // standard patterns) regardless of which duration button is selected —
-    // see the matching note in renderStaticDiagram.
-    const nativeSlotsPerBeat = slots.length / ts.beats;
+    // slotsPerBeat: whole=all in 1 cell, half=2 cells total, quarter=1/beat, eighth=2/beat
+    const slotsPerBeat = subdivisions===0 ? 0
+                       : subdivisions===-1 ? 0
+                       : subdivisions===1  ? 1
+                       : 2; // eighth
     if (subdivisions===0){
       // Whole note — one single cell spanning all beats
       const cell=document.createElement('div'); cell.className='beat-cell';
@@ -4461,25 +4472,23 @@ function buildGrid(){
       strokes.appendChild(makeSlot(0));
       cell.appendChild(strokes); grid.appendChild(cell);
     } else if (subdivisions===-1){
-      // Half notes — two cells, each representing half the measure's beats
-      const beatsPerHalf = ts.beats/2;
+      // Half notes — two cells
       for (let h=0; h<2; h++){
         const cell=document.createElement('div'); cell.className='beat-cell'; cell.style.flex='2';
         const num=document.createElement('div'); num.className='beat-number';
         num.textContent = h===0?'1-2':'3-4';
         cell.appendChild(num);
         const strokes=document.createElement('div'); strokes.className='beat-strokes';
-        strokes.appendChild(makeSlot(h*beatsPerHalf*nativeSlotsPerBeat));
+        strokes.appendChild(makeSlot(h));
         cell.appendChild(strokes); grid.appendChild(cell);
       }
     } else {
-      const slotsPerBeat = subdivisions>=2 ? nativeSlotsPerBeat : 1;
       for (let b=0; b<ts.beats; b++){
         const cell=document.createElement('div'); cell.className='beat-cell';
         const num=document.createElement('div'); num.className='beat-number'; num.textContent=b+1;
         cell.appendChild(num);
         const strokes=document.createElement('div'); strokes.className='beat-strokes';
-        for (let s=0; s<slotsPerBeat; s++) strokes.appendChild(makeSlot(b*nativeSlotsPerBeat+s));
+        for (let s=0; s<slotsPerBeat; s++) strokes.appendChild(makeSlot(b*slotsPerBeat+s));
         cell.appendChild(strokes); grid.appendChild(cell);
       }
     }
@@ -4509,20 +4518,46 @@ function updatePlayBtn(){
 }
 
 function syncSlotsLength(){
-  // slots per measure by duration:
-  // whole=1, half=2, quarter=beats, eighth=beats*2
-  let needed;
-  if (currentTS==='68'){
-    needed = 6; // 6/8 always 6 eighth notes
-  } else {
-    const beats = TIME_SIGS[currentTS].beats;
-    if      (subdivisions===0)  needed = 1;           // whole note
-    else if (subdivisions===-1) needed = 2;           // half notes
-    else if (subdivisions===1)  needed = beats;       // quarter notes
-    else                        needed = beats * 2;   // eighth notes (default)
+  if (isCustom()){
+    // Custom patterns: the student is building their own from scratch, so a
+    // simple pad/trim with blanks to match the selected duration's editable
+    // slot count is correct and expected here.
+    let needed;
+    if (currentTS==='68'){
+      needed = 6; // 6/8 always 6 eighth notes
+    } else {
+      const beats = TIME_SIGS[currentTS].beats;
+      if      (subdivisions===0)  needed = 1;           // whole note
+      else if (subdivisions===-1) needed = 2;           // half notes
+      else if (subdivisions===1)  needed = beats;       // quarter notes
+      else                        needed = beats * 2;   // eighth notes (default)
+    }
+    while (slots.length<needed) slots.push(' ');
+    while (slots.length>needed) slots.pop();
+    return;
   }
-  while (slots.length<needed) slots.push(' ');
-  while (slots.length>needed) slots.pop();
+
+  // Built-in/preset patterns (D D D D, D U D U, etc.) are authored at a fixed
+  // native resolution (2 slots per beat). The old logic here just chopped
+  // slots off the END of the array when shrinking for a coarser duration —
+  // for an 8-slot 'D D D D' pattern in Quarter mode that kept slots[0..3]
+  // ('D',' ','D',' '), discarding the real downbeats at indices 4-7 entirely
+  // and leaving visible gaps. The fix: resample by keeping every Nth element
+  // (the actual downbeat of each group) instead of truncating raw positions.
+  if (currentTS==='68') return; // 6/8 doesn't use the duration selector at all
+
+  const beats = TIME_SIGS[currentTS].beats;
+  const nativeSlotsPerBeat = slots.length / beats;
+  if (subdivisions===2 || nativeSlotsPerBeat<=1) return; // eighth = native resolution, nothing to resample
+
+  let groupSize;
+  if      (subdivisions===0)  groupSize = beats * nativeSlotsPerBeat;      // whole = entire measure
+  else if (subdivisions===-1) groupSize = (beats/2) * nativeSlotsPerBeat; // half
+  else                        groupSize = nativeSlotsPerBeat;             // quarter = 1 beat's worth
+
+  const resampled = [];
+  for (let i=0; i<slots.length; i+=groupSize) resampled.push(slots[i]);
+  slots = resampled;
 }
 
 function renderAll(){
