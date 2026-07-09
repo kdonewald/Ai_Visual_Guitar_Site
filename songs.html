@@ -162,13 +162,15 @@
   textarea::placeholder{color:var(--text-dim)}
 
   .btn-send{
-    width:100%;background:var(--red);color:white;border:none;
-    border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:600;
-    padding:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.6rem;
+    width:100%;background:var(--blue);color:white;border:none;
+    border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;
+    padding:.9rem 1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.6rem;
     transition:all .2s;
   }
-  .btn-send:hover:not(:disabled){background:var(--red-dark);transform:translateY(-1px);box-shadow:0 4px 14px rgba(224,85,64,.3)}
+  .btn-send:hover:not(:disabled){background:#3a7ce0;transform:translateY(-1px);box-shadow:0 4px 14px rgba(79,142,247,.3)}
   .btn-send:disabled{background:var(--surface2);color:var(--text-dim);cursor:not-allowed;border:1.5px solid var(--border)}
+  .btn-send.sending{background:var(--vizi, #3dba72);box-shadow:0 4px 14px rgba(61,186,114,.35)}
+  .btn-send.sending:hover{background:var(--vizi, #3dba72)}
   @keyframes spin{to{transform:rotate(360deg)}}
   .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
 
@@ -490,6 +492,7 @@
     if (!sessionId){ showStatus('err', 'No session — reload and try again'); return; }
     showStatus('loading', 'Sending to Vizi…');
     submitBtn.disabled = true;
+    submitBtn.classList.add('sending');
     btnLabel.innerHTML = '<span class="spinner"></span> Sending…';
 
     try {
@@ -503,6 +506,7 @@
       if (res.ok){
         const doRedirect = () => setTimeout(() => { window.location.href = 'vizi.html'; }, 1200);
         showStatus('ok', '✓ Song received! Taking you to Vizi…');
+        submitBtn.classList.remove('sending');
         btnLabel.textContent = '✓ Sent to Vizi!';
         if (selectedFile){
           const isPdf = (selectedFile.type || '').includes('pdf');
@@ -562,11 +566,13 @@
         const txt = await res.text();
         showStatus('err', `Upload failed (${res.status}) — ${txt}`);
         submitBtn.disabled = false;
+        submitBtn.classList.remove('sending');
         btnLabel.textContent = 'Send to Vizi 🎸';
       }
     } catch(e){
       showStatus('err', 'Could not reach Vizi — check your connection');
       submitBtn.disabled = false;
+      submitBtn.classList.remove('sending');
       btnLabel.textContent = 'Send to Vizi 🎸';
     }
   });

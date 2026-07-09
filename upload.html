@@ -129,13 +129,15 @@
   textarea::placeholder{color:var(--text-light)}
 
   .btn-send{
-    width:100%;background:var(--red);color:white;border:none;
-    border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:600;
+    width:100%;background:var(--blue);color:white;border:none;
+    border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;
     padding:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.6rem;
     transition:all .2s;
   }
-  .btn-send:hover:not(:disabled){background:var(--red-dark);transform:translateY(-1px);box-shadow:0 4px 14px rgba(217,64,37,.3)}
+  .btn-send:hover:not(:disabled){background:#153f6e;transform:translateY(-1px);box-shadow:0 4px 14px rgba(27,79,138,.3)}
   .btn-send:disabled{background:var(--cream-dark);color:var(--text-light);cursor:not-allowed}
+  .btn-send.sending{background:var(--green);box-shadow:0 4px 14px rgba(46,125,50,.3)}
+  .btn-send.sending:hover{background:var(--green)}
   @keyframes spin{to{transform:rotate(360deg)}}
   .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
 
@@ -336,6 +338,7 @@
     }
     showStatus('loading', 'Sending to Vizi…');
     submitBtn.disabled = true;
+    submitBtn.classList.add('sending');
     btnLabel.innerHTML = '<span class="spinner"></span> Sending…';
 
     try {
@@ -351,6 +354,7 @@
 
       if (res.ok) {
         showStatus('ok', '✓ Song received! Taking you back to Vizi…');
+        submitBtn.classList.remove('sending');
         btnLabel.textContent = '✓ Sent to Vizi!';
         // Store the file so vizi.html can display it on screen
         const doRedirect = () => setTimeout(() => { window.location.href = 'vizi.html'; }, 1200);
@@ -377,11 +381,13 @@
         const txt = await res.text();
         showStatus('err', `Upload failed (${res.status}) — ${txt}`);
         submitBtn.disabled = false;
+        submitBtn.classList.remove('sending');
         btnLabel.textContent = 'Send to Vizi 🎸';
       }
     } catch(e) {
       showStatus('err', 'Could not reach Vizi — check your connection');
       submitBtn.disabled = false;
+      submitBtn.classList.remove('sending');
       btnLabel.textContent = 'Send to Vizi 🎸';
     }
   });

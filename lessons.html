@@ -3361,12 +3361,15 @@
         .ssb-desc{ display:block; font-size:.70rem; color:var(--text-mid); margin-top:.15rem; }
         .solo-ask-vizi{
           display:block; width:100%; margin-top:1.25rem; padding:.9rem 1rem;
-          border-radius:10px; border:2px solid var(--blue);
-          background:rgba(79,142,247,.08); font-family:'DM Sans',sans-serif;
-          font-size:1rem; font-weight:700; color:var(--blue);
+          border-radius:10px; border:none;
+          background:var(--blue); font-family:'DM Sans',sans-serif;
+          font-size:1rem; font-weight:700; color:#fff;
           cursor:pointer; text-align:center; transition:all .18s;
         }
-        .solo-ask-vizi:hover{ background:rgba(79,142,247,.2); color:#fff; border-color:#fff; }
+        .solo-ask-vizi:hover:not(:disabled){ background:#3a7ce0; box-shadow:0 4px 14px rgba(79,142,247,.3); }
+        .solo-ask-vizi:disabled{ background:var(--surface2); color:var(--text-dim); cursor:not-allowed; border:1.5px solid var(--border); }
+        .solo-ask-vizi.sending{ background:var(--vizi, #3dba72); box-shadow:0 4px 14px rgba(61,186,114,.35); }
+        .solo-ask-vizi.sending:hover{ background:var(--vizi, #3dba72); }
         .solo-hold-reminder{
           display:flex; align-items:center; gap:.6rem;
           padding:.7rem .9rem; border-radius:10px;
@@ -3392,8 +3395,7 @@
       if (!askBtn) return;
       const ready = !!selectedScale;
       askBtn.disabled = !ready;
-      askBtn.style.opacity = ready ? '1' : '.45';
-      askBtn.style.cursor = ready ? 'pointer' : 'not-allowed';
+      askBtn.classList.remove('sending');
       askBtn.textContent = ready ? 'Send Solo to Vizi →' : 'Pick a scale to send your solo to Vizi →';
     }
 
@@ -3514,6 +3516,9 @@
       if (askBtn.disabled) return;
       const exercise = buildSoloExercise();
 
+      askBtn.classList.add('sending');
+      askBtn.textContent = 'Sending to Vizi…';
+
       if (soloAudioEl && !soloAudioEl.paused) {
         soloAudioEl.pause();
         document.querySelectorAll('.solo-track-btn').forEach(b => {
@@ -3525,28 +3530,52 @@
 
       const p = new URLSearchParams({stage:'soloing', exercise});
       window.open('vizi.html?' + p.toString(), '_blank');
+
+      // Same messaging pattern as the Songs "Send to Vizi" flow: green while
+      // sending, back to normal once the "sent" confirmation shows, then reset
+      // to ready state after a moment so it can be used again (unlike Songs,
+      // this page doesn't navigate away — the student may want to send another
+      // key/scale combo without reloading).
+      askBtn.classList.remove('sending');
+      askBtn.textContent = '✓ Sent to Vizi!';
+      setTimeout(refreshAskBtnState, 1200);
     });
     exList.appendChild(askBtn);
     refreshAskBtnState();
 
-    // Resume the backing track once Vizi's spoken intro finishes in the new tab.
+    // Resume the backing track once Vizi's spoken intro finishes in the new tab,
+    // or stop it entirely if the student taps "Stop Backing Track" over there.
     // Guarded so reopening this panel within the same page load doesn't stack
     // duplicate listeners.
     if (!window._viziSoloResumeListenerAdded){
       window._viziSoloResumeListenerAdded = true;
       window.addEventListener('message', (event) => {
-        if (!event.data || event.data.type !== 'vizi-intro-done') return;
-        if (!soloAudioEl || !soloAudioEl.paused) return;
-        soloAudioEl.play().catch(() => {});
-        const activeTitle = selectedTrack ? selectedTrack.title : null;
-        document.querySelectorAll('.solo-track-btn').forEach(b => {
-          const titleEl = b.querySelector('.solo-track-title');
-          if (titleEl && activeTitle && titleEl.textContent === activeTitle) {
-            b.classList.add('playing');
-            const icon = b.querySelector('.solo-track-icon');
-            if (icon) icon.textContent = '■';
+        if (!event.data) return;
+
+        if (event.data.type === 'vizi-intro-done'){
+          if (!soloAudioEl || !soloAudioEl.paused) return;
+          soloAudioEl.play().catch(() => {});
+          const activeTitle = selectedTrack ? selectedTrack.title : null;
+          document.querySelectorAll('.solo-track-btn').forEach(b => {
+            const titleEl = b.querySelector('.solo-track-title');
+            if (titleEl && activeTitle && titleEl.textContent === activeTitle) {
+              b.classList.add('playing');
+              const icon = b.querySelector('.solo-track-icon');
+              if (icon) icon.textContent = '■';
+            }
+          });
+        }
+
+        if (event.data.type === 'vizi-stop-backing-track'){
+          if (soloAudioEl){
+            soloAudioEl.pause();
+            document.querySelectorAll('.solo-track-btn').forEach(b => {
+              b.classList.remove('playing');
+              const icon = b.querySelector('.solo-track-icon');
+              if (icon) icon.textContent = '▶';
+            });
           }
-        });
+        }
       });
     }
   }

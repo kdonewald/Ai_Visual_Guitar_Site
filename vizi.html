@@ -105,6 +105,17 @@
   }
   .upload-btn:hover{border-color:var(--blue);color:var(--blue)}
   .upload-btn.waiting{border-color:var(--gold);color:var(--gold);animation:pulse-btn 1.4s ease-in-out infinite}
+  .stop-track-btn{
+    display:flex;align-items:center;justify-content:center;gap:.5rem;
+    background:var(--surface);border:1.5px solid rgba(224,85,64,0.4);
+    border-radius:10px;padding:.65rem 1.4rem;
+    font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;
+    color:#e05540;cursor:pointer;transition:all .2s;
+    margin-bottom:1rem;
+    box-shadow:0 2px 8px var(--shadow);
+  }
+  .stop-track-btn:hover{background:rgba(224,85,64,0.08);border-color:#e05540}
+  .stop-track-btn:disabled{opacity:.5;cursor:not-allowed}
   @keyframes pulse-btn{0%,100%{opacity:1}50%{opacity:.6}}
 
   /* ── song banner ── */
@@ -252,6 +263,8 @@
   <button class="talk" id="talkBtn">Hold<br>to Talk</button>
   <div class="status" id="status">Ready</div>
 
+  <button class="stop-track-btn" id="stopTrackBtn" style="display:none">⏹ Stop Backing Track</button>
+
   <button class="upload-btn" id="uploadBtn" style="display:none">🎵 Upload a Song</button>
   <div class="song-banner" id="songBanner"></div>
 
@@ -301,6 +314,31 @@
   const stage      = document.getElementById('stage');
   const viziVid    = document.getElementById('viziVid');
   const uploadBtn  = document.getElementById('uploadBtn');
+  const stopTrackBtn = document.getElementById('stopTrackBtn');
+
+  // Only relevant when this tab was opened from the Soloing panel (window.open,
+  // not a same-tab navigation) — showing a "stop backing track" button anywhere
+  // else would just be confusing since nothing is playing there.
+  (function initStopTrackBtn(){
+    const params  = new URLSearchParams(window.location.search);
+    const stageId = params.get('stage');
+    if (stageId !== 'soloing' || !window.opener || window.opener.closed) return;
+
+    stopTrackBtn.style.display = '';
+    stopTrackBtn.addEventListener('click', () => {
+      try {
+        if (window.opener && !window.opener.closed) {
+          window.opener.postMessage({ type: 'vizi-stop-backing-track' }, '*');
+        }
+      } catch(e){}
+      stopTrackBtn.disabled = true;
+      stopTrackBtn.textContent = '⏹ Stopped';
+      setTimeout(() => {
+        stopTrackBtn.disabled = false;
+        stopTrackBtn.textContent = '⏹ Stop Backing Track';
+      }, 1500);
+    });
+  })();
   const songBanner = document.getElementById('songBanner');
 
   let currentMode   = 'talk';
