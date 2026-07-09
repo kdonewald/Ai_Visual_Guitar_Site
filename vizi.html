@@ -132,6 +132,10 @@
   .panel.you{border-left:3px solid var(--blue)}
   .panel.vizi{border-left:3px solid var(--red)}
   .panel.cmd{border-left:3px solid var(--gold);background:rgba(232,160,32,0.06)}
+  .panel.strum{border-left:3px solid var(--teal, #2dd4bf);background:rgba(45,212,191,0.06)}
+  .panel.strum .body{font-family:'DM Mono',monospace;font-size:.95rem;color:var(--text);white-space:pre-line;line-height:1.6}
+  .panel.strum .body .strum-arrows{font-size:1.5rem;letter-spacing:.15em;display:block;margin-bottom:.15rem}
+  .panel.strum .body .strum-counts{font-size:.8rem;color:var(--text-mid);letter-spacing:.1em;display:block;margin-bottom:.35rem}
   .panel .body{font-size:.95rem;line-height:1.55;color:var(--text);font-weight:400}
   .panel.cmd .body{font-family:'DM Mono',monospace;font-size:.86rem;color:var(--text-mid);word-break:break-word}
 
@@ -257,6 +261,7 @@
     <div class="panel you"  id="pYou"><div class="label">You said</div><div class="body" id="bYou"></div></div>
     <div class="panel vizi" id="pVizi"><div class="label">Vizi</div><div class="body" id="bVizi"></div></div>
     <div class="panel cmd"  id="pCmd"><div class="label">Fretboard commands</div><div class="body" id="bCmd"></div></div>
+    <div class="panel strum" id="pStrum"><div class="label">Strumming Pattern</div><div class="body" id="bStrum"></div></div>
   </div>
 
   <!-- Floating song sheet panel -->
@@ -320,6 +325,15 @@
   function showPanel(id, bodyId, text){
     document.getElementById(bodyId).textContent = text;
     document.getElementById(id).classList.add('show');
+  }
+  function showStrumPanel(sp){
+    if (!sp) return;
+    const body = document.getElementById('bStrum');
+    body.innerHTML =
+      '<span class="strum-arrows">' + sp.arrows + '</span>' +
+      '<span class="strum-counts">' + sp.counts + '</span>' +
+      '"' + sp.name + '" pattern — you can practice it on the Strumming stage too, if you\'d like.';
+    document.getElementById('pStrum').classList.add('show');
   }
 
   // Route METRONOME:BPM commands to the shared floating widget
@@ -445,6 +459,14 @@
     if (cmd)  { showPanel('pCmd','bCmd', cmd); applyMetronomeCommand(cmd); }
     setStatus('');
     await playBlob(blob);
+    // If this tab was opened from the Soloing panel (window.open, not a same-tab
+    // navigation), tell that tab Vizi's spoken intro is done so it can resume
+    // any backing track it paused while she was talking.
+    try {
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ type: 'vizi-intro-done' }, '*');
+      }
+    } catch(e){}
     currentMode = 'talk';
     setStatus('Ready');
   }
@@ -469,6 +491,7 @@
 
   function startSongPoll(){
     if (songPollTimer) clearInterval(songPollTimer);
+    checkSongReady(); // run immediately — setInterval alone waits a full tick first
     songPollTimer = setInterval(checkSongReady, POLL_SONG_MS);
   }
 
@@ -493,8 +516,13 @@
         const promptRes  = await fetch(`${RAILWAY_URL}/session-prompt/${songSessionId}`);
         const promptData = await promptRes.json();
 
+        if (promptData.strumPattern) showStrumPanel(promptData.strumPattern);
+
         if (promptData.ready && promptData.message){
           currentMode = 'song';
+          setBtn('thinking');
+          btn.innerHTML = 'Vizi is<br>preparing…';
+          setStatus('Reading your song…');
           const ttsRes = await fetch(RAILWAY_URL + '/claude-tts', {
             method:'POST', headers:{ 'Content-Type':'application/json' },
             body: JSON.stringify({ message: promptData.message, mode: 'song' })
@@ -509,7 +537,13 @@
               btn.innerHTML = 'Tap to hear<br>Vizi intro';
               setStatus('Song ready — tap the button to hear Vizi');
               songBanner.textContent += ' — tap button to hear intro';
+            } else {
+              setBtn(''); btn.innerHTML = 'Hold<br>to Talk';
+              setStatus('Could not load song intro — hold to talk instead');
             }
+          } else {
+            setBtn(''); btn.innerHTML = 'Hold<br>to Talk';
+            setStatus('Could not load song intro — hold to talk instead');
           }
         }
       } else if (data.status === 'error'){
@@ -919,7 +953,29 @@
           'Suggest 60 BPM — do not send a METRONOME command. ' +
           'Keep your spoken response to 3 sentences.'
       })(),
-      'soloing':     'The student wants to solo over ' + exerciseName + '. Light up the scale on the fretboard using a SCALE command. Briefly explain which notes to target (especially the root and fifth), suggest a simple starting phrase, and invite them to start experimenting. Keep the instruction to 2-3 sentences.'
+      'soloing': (()=>{
+        // exerciseName format: "Key | Scale Label | scale cmd | Track Title (BPM)"
+        const parts = exerciseName.split('|').map(s => s.trim());
+        const keyPart = parts[0] || 'the selected key';
+        const scaleLabel = parts[1] || 'the selected scale';
+        const scaleCmdRaw = parts[2] || '';
+        const trackPart = parts[3] || '';
+        const scaleCmd = scaleCmdRaw ? ('SCALE ' + scaleCmdRaw + ' ALL') : '';
+        const bpmMatch = trackPart.match(/\((\d+)\s*BPM\)/i);
+        const bpm = bpmMatch ? bpmMatch[1] : null;
+
+        let instr = 'The student is soloing in ' + keyPart + ' using the ' + scaleLabel + '. ';
+        if (scaleCmd) instr += 'Light it now: ' + scaleCmd + '. ';
+        instr += 'Briefly explain which notes to target (especially the root and fifth), suggest a simple starting phrase like root-third-fifth, and remind them there are no wrong notes in this scale. ';
+        if (trackPart && trackPart !== 'no backing track selected') {
+          instr += 'They are playing along with "' + trackPart + '". ';
+        }
+        if (bpm) {
+          instr += 'Tell them to set the metronome in the nav bar to ' + bpm + ' BPM to stay in sync with the track — do not send a METRONOME command. ';
+        }
+        instr += 'Keep your spoken response to 2-3 sentences.';
+        return instr;
+      })()
     };
 
     const specificInstruction = stageInstructions[stageId] ||
