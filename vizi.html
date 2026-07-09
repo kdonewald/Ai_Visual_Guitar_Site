@@ -966,6 +966,7 @@
 
         let instr = 'The student is soloing in ' + keyPart + ' using the ' + scaleLabel + '. ';
         if (scaleCmd) instr += 'Light it now: ' + scaleCmd + '. ';
+        instr += 'This is their first message in Soloing mode, so briefly mention that the fretboard just lit up five colored shapes of this same scale (Blue, Green, Gold, Purple, Cyan) — tell them to pick one color to start with rather than trying to play all five at once. ';
         instr += 'Briefly explain which notes to target (especially the root and fifth), suggest a simple starting phrase like root-third-fifth, and remind them there are no wrong notes in this scale. ';
         if (trackPart && trackPart !== 'no backing track selected') {
           instr += 'They are playing along with "' + trackPart + '". ';
@@ -1006,12 +1007,18 @@
     pendingIntroText = null;
     pendingIntroCmd  = null;
 
+    // Route to the dedicated system prompt for stages that have one — otherwise
+    // this always fell back to the generic reminder rules, which is why
+    // stage-specific behavior (like Soloing's shape/color conventions) never
+    // actually applied to this launch message.
+    const requestMode = (stageId === 'soloing' || stageId === 'strumming') ? stageId : 'talk';
+
     try {
       setStatus('Loading your exercise…');
       const res = await fetch(RAILWAY_URL + '/claude-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, mode: 'talk' })
+        body: JSON.stringify({ message, mode: requestMode })
       });
       if (res.ok && !(res.headers.get('content-type')||'').includes('application/json')){
         pendingIntroText = dec(res.headers.get('X-Vizi-Text'));
