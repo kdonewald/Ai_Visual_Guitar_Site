@@ -315,14 +315,16 @@
   const viziVid    = document.getElementById('viziVid');
   const uploadBtn  = document.getElementById('uploadBtn');
   const stopTrackBtn = document.getElementById('stopTrackBtn');
+  // Captured once, early — checkExerciseParams() strips ?stage= from the URL via
+  // history.replaceState once it's done, so anything needing this value later
+  // must read it now rather than re-parsing location.search.
+  const initialStageParam = new URLSearchParams(window.location.search).get('stage');
 
   // Only relevant when this tab was opened from the Soloing panel (window.open,
   // not a same-tab navigation) — showing a "stop backing track" button anywhere
   // else would just be confusing since nothing is playing there.
   (function initStopTrackBtn(){
-    const params  = new URLSearchParams(window.location.search);
-    const stageId = params.get('stage');
-    if (stageId !== 'soloing' || !window.opener || window.opener.closed) return;
+    if (initialStageParam !== 'soloing' || !window.opener || window.opener.closed) return;
 
     stopTrackBtn.style.display = '';
     stopTrackBtn.addEventListener('click', () => {
@@ -1078,7 +1080,15 @@
     window.history.replaceState({}, '', cleanUrl);
   })();
 
-  loadSongSheet();
+  // Only relevant when this page load is actually about a song: either no
+  // stage param at all (a bare vizi.html visit, or the redirect straight from
+  // songs.html after upload, which carries no query string), or an explicit
+  // ?stage=song. If the student clicked into some other stage (Soloing, Chords,
+  // etc.), skip this — otherwise leftover sessionStorage song data from an
+  // earlier visit makes this button incorrectly appear on unrelated stages.
+  if (!initialStageParam || initialStageParam === 'song') {
+    loadSongSheet();
+  }
 </script>
 <script src="metronome-widget-v2.js?v=1782833134"></script>
 </body>

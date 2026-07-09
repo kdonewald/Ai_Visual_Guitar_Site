@@ -3529,6 +3529,9 @@
       }
 
       const p = new URLSearchParams({stage:'soloing', exercise});
+      // window.open() must stay synchronous, in the same tick as the click —
+      // delaying it (e.g. inside a setTimeout) risks popup blockers treating it
+      // as no longer tied to a user gesture.
       window.open('vizi.html?' + p.toString(), '_blank');
 
       // Same messaging pattern as the Songs "Send to Vizi" flow: green while
@@ -3536,9 +3539,15 @@
       // to ready state after a moment so it can be used again (unlike Songs,
       // this page doesn't navigate away — the student may want to send another
       // key/scale combo without reloading).
-      askBtn.classList.remove('sending');
-      askBtn.textContent = '✓ Sent to Vizi!';
-      setTimeout(refreshAskBtnState, 1200);
+      // Unlike Songs, there's no real async wait here (window.open returns
+      // instantly), so without an artificial delay the "sending" and "sent"
+      // states would both apply in the same paint frame and the green state
+      // would never actually be visible — this setTimeout is what makes it real.
+      setTimeout(() => {
+        askBtn.classList.remove('sending');
+        askBtn.textContent = '✓ Sent to Vizi!';
+        setTimeout(refreshAskBtnState, 1200);
+      }, 500);
     });
     exList.appendChild(askBtn);
     refreshAskBtnState();
