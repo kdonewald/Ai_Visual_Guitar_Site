@@ -3528,26 +3528,18 @@
         });
       }
 
-      const p = new URLSearchParams({stage:'soloing', exercise});
-      // window.open() must stay synchronous, in the same tick as the click —
-      // delaying it (e.g. inside a setTimeout) risks popup blockers treating it
-      // as no longer tied to a user gesture.
-      window.open('vizi.html?' + p.toString(), '_blank');
-
-      // Same messaging pattern as the Songs "Send to Vizi" flow: green while
-      // sending, back to normal once the "sent" confirmation shows, then reset
-      // to ready state after a moment so it can be used again (unlike Songs,
-      // this page doesn't navigate away — the student may want to send another
-      // key/scale combo without reloading).
-      // Unlike Songs, there's no real async wait here (window.open returns
-      // instantly), so without an artificial delay the "sending" and "sent"
-      // states would both apply in the same paint frame and the green state
-      // would never actually be visible — this setTimeout is what makes it real.
+      // The browser switches focus to the new tab the instant window.open() is
+      // called — so the green "sending" state has to actually render and be
+      // seen BEFORE that happens, not after. A short delay here (well within
+      // normal popup-blocker tolerance for a delay chained off a real click)
+      // is what makes the green state visible at all.
       setTimeout(() => {
+        const p = new URLSearchParams({stage:'soloing', exercise});
+        window.open('vizi.html?' + p.toString(), '_blank');
         askBtn.classList.remove('sending');
         askBtn.textContent = '✓ Sent to Vizi!';
         setTimeout(refreshAskBtnState, 1200);
-      }, 500);
+      }, 550);
     });
     exList.appendChild(askBtn);
     refreshAskBtnState();
@@ -3558,21 +3550,26 @@
     // duplicate listeners.
     if (!window._viziSoloResumeListenerAdded){
       window._viziSoloResumeListenerAdded = true;
+
+      function resumeBackingTrack(){
+        if (!soloAudioEl || !soloAudioEl.paused) return;
+        soloAudioEl.play().catch(() => {});
+        const activeTitle = selectedTrack ? selectedTrack.title : null;
+        document.querySelectorAll('.solo-track-btn').forEach(b => {
+          const titleEl = b.querySelector('.solo-track-title');
+          if (titleEl && activeTitle && titleEl.textContent === activeTitle) {
+            b.classList.add('playing');
+            const icon = b.querySelector('.solo-track-icon');
+            if (icon) icon.textContent = '■';
+          }
+        });
+      }
+
       window.addEventListener('message', (event) => {
         if (!event.data) return;
 
         if (event.data.type === 'vizi-intro-done'){
-          if (!soloAudioEl || !soloAudioEl.paused) return;
-          soloAudioEl.play().catch(() => {});
-          const activeTitle = selectedTrack ? selectedTrack.title : null;
-          document.querySelectorAll('.solo-track-btn').forEach(b => {
-            const titleEl = b.querySelector('.solo-track-title');
-            if (titleEl && activeTitle && titleEl.textContent === activeTitle) {
-              b.classList.add('playing');
-              const icon = b.querySelector('.solo-track-icon');
-              if (icon) icon.textContent = '■';
-            }
-          });
+          resumeBackingTrack();
         }
 
         if (event.data.type === 'vizi-stop-backing-track'){
@@ -3584,6 +3581,10 @@
               if (icon) icon.textContent = '▶';
             });
           }
+        }
+
+        if (event.data.type === 'vizi-resume-backing-track'){
+          resumeBackingTrack();
         }
       });
     }

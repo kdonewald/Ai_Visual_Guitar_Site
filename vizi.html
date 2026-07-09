@@ -116,6 +116,8 @@
   }
   .stop-track-btn:hover{background:rgba(224,85,64,0.08);border-color:#e05540}
   .stop-track-btn:disabled{opacity:.5;cursor:not-allowed}
+  .stop-track-btn.resume-state{border-color:rgba(61,186,114,0.4);color:var(--vizi, #3dba72)}
+  .stop-track-btn.resume-state:hover{background:rgba(61,186,114,0.08);border-color:var(--vizi, #3dba72)}
   @keyframes pulse-btn{0%,100%{opacity:1}50%{opacity:.6}}
 
   /* ── song banner ── */
@@ -326,19 +328,30 @@
   (function initStopTrackBtn(){
     if (initialStageParam !== 'soloing' || !window.opener || window.opener.closed) return;
 
+    // Assume playing when this button first appears — the backing track only
+    // pauses automatically while Vizi's intro is speaking, then auto-resumes,
+    // so by the time a student would notice this button, it's normally playing.
+    let trackIsPlaying = true;
+
+    function render(){
+      stopTrackBtn.textContent = trackIsPlaying ? '⏹ Stop Backing Track' : '▶ Resume Backing Track';
+      stopTrackBtn.classList.toggle('resume-state', !trackIsPlaying);
+    }
+
     stopTrackBtn.style.display = '';
+    render();
+
     stopTrackBtn.addEventListener('click', () => {
+      const goingToStop = trackIsPlaying;
       try {
         if (window.opener && !window.opener.closed) {
-          window.opener.postMessage({ type: 'vizi-stop-backing-track' }, '*');
+          window.opener.postMessage({ type: goingToStop ? 'vizi-stop-backing-track' : 'vizi-resume-backing-track' }, '*');
         }
       } catch(e){}
+      trackIsPlaying = !trackIsPlaying;
       stopTrackBtn.disabled = true;
-      stopTrackBtn.textContent = '⏹ Stopped';
-      setTimeout(() => {
-        stopTrackBtn.disabled = false;
-        stopTrackBtn.textContent = '⏹ Stop Backing Track';
-      }, 1500);
+      render();
+      setTimeout(() => { stopTrackBtn.disabled = false; }, 600);
     });
   })();
   const songBanner = document.getElementById('songBanner');
