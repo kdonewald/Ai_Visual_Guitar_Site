@@ -4,6 +4,12 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Lessons — Ai Visual Guitar</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="/icons/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0f1117">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
   :root{
@@ -1264,7 +1270,7 @@
     {
       id:'strumming', num:5, label:'Strumming Patterns',
       desc:"Combine the timing and chords you've built into real strumming patterns.",
-      videoUrl:'https://youtube.com/shorts/ef8jjRBnnGY',
+      videoUrl:'', // add YouTube link when ready — stage strumming
       tips:[
         "Keep your strumming arm moving down-up-down-up constantly, even over silent beats.",
         "A relaxed wrist makes a better strum than a tense, forced one.",
@@ -1306,7 +1312,7 @@
     {
       id:'soloing', num:7, label:'Soloing',
       desc:'Warm up with scales and start playing single-note lines and simple solos.',
-      videoUrl:'https://youtube.com/shorts/vWEf7WYWE8I', // add YouTube link when ready — stage soloing
+      videoUrl:'', // add YouTube link when ready — stage soloing
       tips:[
         "Practice scales slowly with a metronome before chasing speed.",
         "Alternate picking (down-up-down-up) builds speed more reliably than all downstrokes.",
@@ -1324,7 +1330,7 @@
     {
       id:'tab', num:8, label:'Read & Play Tab',
       desc:'Paste any guitar tab and Vizi will light up each note on your fretboard as you play through it.',
-      videoUrl:'https://youtube.com/shorts/vv82RVqZb58', isTab:true,
+      videoUrl:'', isTab:true,
       tips:['Tab shows fret numbers on each string — 0 means open string.','Read tab left to right, top string to bottom string.'],
       exercises:[]
     }
@@ -3288,17 +3294,10 @@
 
   const TRACKS_BASE = 'https://aivisualguitar.com/';
   let soloAudioEl = null;
-  // Persistent across repeated renderSoloingPanel() calls (e.g. reopening the
-  // panel) so the guarded message listener below always sees current values.
-  let selectedTrack = null;      // { title, chords, bpm, file }
-  let selectedScale = null;      // { label, desc, cmd }
-  let selectedKeyName = null;    // e.g. 'E Minor'
-  let askBtn = null;             // reassigned each render, referenced by refreshAskBtnState
 
   function renderSoloingPanel(def){
     exList.innerHTML = '';
     if (soloAudioEl){ soloAudioEl.pause(); soloAudioEl = null; }
-    selectedTrack = null; selectedScale = null; selectedKeyName = null;
 
     // ── Inject CSS once ──────────────────────────────────────
     if (!document.getElementById('soloCSS')){
@@ -3361,36 +3360,26 @@
           cursor:pointer; text-align:center; transition:all .18s;
         }
         .solo-ask-vizi:hover{ background:rgba(79,142,247,.2); color:#fff; border-color:#fff; }
+        .solo-hold-reminder{
+          display:flex; align-items:center; gap:.6rem;
+          padding:.7rem .9rem; border-radius:10px;
+          background:rgba(232,160,32,0.10); border:1.5px solid rgba(232,160,32,0.4);
+          margin:.75rem 0 .25rem; font-size:.88rem; color:var(--text);
+        }
+        .solo-hold-reminder .shr-icon{ font-size:1.1rem; flex-shrink:0; }
+        .solo-hold-reminder b{ color:var(--gold, #e8a020); }
       `;
       document.head.appendChild(st);
     }
 
+    // Static reminder — not spoken by Vizi, since that would require an extra
+    // round-trip before the student has even picked a track or scale yet.
+    const holdReminder = document.createElement('div');
+    holdReminder.className = 'solo-hold-reminder';
+    holdReminder.innerHTML = '<span class="shr-icon">💡</span><span>Tap <b>Hold On</b> in the nav bar before you start, so the scale stays lit while you play.</span>';
+    exList.appendChild(holdReminder);
+
     let openKey = null;
-
-    function refreshAskBtnState(){
-      if (!askBtn) return;
-      const ready = !!selectedScale;
-      askBtn.disabled = !ready;
-      askBtn.style.opacity = ready ? '1' : '.45';
-      askBtn.style.cursor = ready ? 'pointer' : 'not-allowed';
-      if (!ready){
-        askBtn.textContent = 'Pick a scale to send your solo to Vizi →';
-      } else if (!selectedTrack){
-        askBtn.textContent = 'Send Solo to Vizi →';
-      } else {
-        askBtn.textContent = 'Send Solo to Vizi →';
-      }
-    }
-
-    function buildSoloExercise(){
-      const keyPart = selectedKeyName || 'a key';
-      const scalePart = selectedScale ? selectedScale.label : 'a scale';
-      const scaleCmdPart = selectedScale ? selectedScale.cmd : '';
-      const trackPart = selectedTrack
-        ? selectedTrack.title + (selectedTrack.bpm ? ' (' + selectedTrack.bpm + ' BPM)' : ' (no fixed tempo)')
-        : 'no backing track selected';
-      return keyPart + ' | ' + scalePart + ' | ' + scaleCmdPart + ' | ' + trackPart;
-    }
 
     function openSection(key){
       openKey = key;
@@ -3457,9 +3446,6 @@
           });
           btn.classList.add('playing');
           btn.querySelector('.solo-track-icon').textContent = '■';
-          selectedTrack = track;
-          selectedKeyName = keyName;
-          refreshAskBtnState();
         });
         trackList.appendChild(btn);
       });
@@ -3479,9 +3465,6 @@
           body.querySelectorAll('.solo-scale-btn').forEach(b => b.classList.remove('active'));
           sb.classList.add('active');
           lightScaleOnFretboard(scale.cmd);
-          selectedScale = scale;
-          selectedKeyName = keyName;
-          refreshAskBtnState();
         });
         scaleRow.appendChild(sb);
       });
@@ -3489,51 +3472,11 @@
       exList.appendChild(body);
     });
 
-    // Send Solo to Vizi button — large, prominent
-    // Opens in a NEW TAB (not window.location.href) so the backing track keeps
-    // playing in this tab while the student talks to Vizi in the other one —
-    // but we pause it for the duration of Vizi's spoken intro so the two don't
-    // compete, then resume it once she's done (signaled back via postMessage).
-    askBtn = document.createElement('button'); askBtn.className = 'solo-ask-vizi';
-    askBtn.addEventListener('click', () => {
-      if (askBtn.disabled) return;
-      const exercise = buildSoloExercise();
-
-      if (soloAudioEl && !soloAudioEl.paused) {
-        soloAudioEl.pause();
-        document.querySelectorAll('.solo-track-btn').forEach(b => {
-          b.classList.remove('playing');
-          const icon = b.querySelector('.solo-track-icon');
-          if (icon) icon.textContent = '▶';
-        });
-      }
-
-      const p = new URLSearchParams({stage:'soloing', exercise});
-      window.open('vizi.html?' + p.toString(), '_blank');
-    });
+    // Ask Vizi button — large, prominent
+    const askBtn = document.createElement('button'); askBtn.className = 'solo-ask-vizi';
+    askBtn.textContent = 'Ask Vizi for Guidance →';
+    askBtn.addEventListener('click', () => goToVizi('soloing', 'Backing Track Solo'));
     exList.appendChild(askBtn);
-    refreshAskBtnState();
-
-    // Resume the backing track once Vizi's spoken intro finishes in the new tab.
-    // Guarded so reopening this panel within the same page load doesn't stack
-    // duplicate listeners.
-    if (!window._viziSoloResumeListenerAdded){
-      window._viziSoloResumeListenerAdded = true;
-      window.addEventListener('message', (event) => {
-        if (!event.data || event.data.type !== 'vizi-intro-done') return;
-        if (!soloAudioEl || !soloAudioEl.paused) return;
-        soloAudioEl.play().catch(() => {});
-        const activeTitle = selectedTrack ? selectedTrack.title : null;
-        document.querySelectorAll('.solo-track-btn').forEach(b => {
-          const titleEl = b.querySelector('.solo-track-title');
-          if (titleEl && activeTitle && titleEl.textContent === activeTitle) {
-            b.classList.add('playing');
-            const icon = b.querySelector('.solo-track-icon');
-            if (icon) icon.textContent = '■';
-          }
-        });
-      });
-    }
   }
 
   // ── Tab reader ───────────────────────────────────────────────
