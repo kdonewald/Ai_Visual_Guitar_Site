@@ -3682,6 +3682,11 @@
           cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:.4rem;}
         .tb-action-btn.play{background:var(--green);color:#fff;box-shadow:0 3px 10px rgba(61,186,114,.3);}
         .tb-action-btn.play:hover{background:#2ea860;}
+        .tb-action-btn.play.sending{background:var(--gold);box-shadow:0 3px 10px rgba(232,160,32,.3);}
+        .tb-action-btn.play.failed{background:var(--red);box-shadow:0 3px 10px rgba(224,85,64,.3);}
+        .tb-action-btn.play:disabled{opacity:.9;cursor:not-allowed;}
+        .tb-spinner{width:13px;height:13px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;display:inline-block;animation:tb-spin .7s linear infinite;vertical-align:-2px;margin-right:.4rem;}
+        @keyframes tb-spin{to{transform:rotate(360deg)}}
         .tb-action-btn.send{background:var(--blue);color:#fff;box-shadow:0 3px 10px rgba(79,142,247,.25);}
         .tb-action-btn.send:hover{background:#3a7ee0;}
         .tb-action-btn.clr{background:transparent;color:var(--text-mid);border:1.5px solid var(--border);font-size:.82rem;}
@@ -3834,7 +3839,14 @@
     }
 
     // ── Show: hand the whole sequence to the fretboard, no JS timing ──
-    async function sendFretboardCmd(cmd){ try{ await fetch(RAILWAY_URL+'/fretboard-command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:cmd})}); }catch(e){} }
+    async function sendFretboardCmd(cmd){
+      try{
+        const res = await fetch(RAILWAY_URL+'/fretboard-command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:cmd})});
+        return res.ok;
+      }catch(e){
+        return false;
+      }
+    }
 
     function allBeats(){ const beats=[]; for(let m=0;m<2;m++) for(let b=0;b<4;b++){ const notes=[]; for(let s=0;s<6;s++) if(grid[m][b][s]!==null) notes.push({s,f:grid[m][b][s]}); beats.push({m,b,notes}); } return beats; }
 
@@ -3853,8 +3865,28 @@
     playBtn.addEventListener('click',async()=>{
       const cmd=fullSequenceCmd();
       if(!cmd){ status.textContent='Add some notes first'; return; }
-      status.textContent='Sent to fretboard — follow the LEDs at your own pace.';
-      await sendFretboardCmd(cmd);
+
+      playBtn.disabled=true;
+      playBtn.classList.remove('failed');
+      playBtn.classList.add('sending');
+      playBtn.innerHTML='<span class="tb-spinner"></span>Sending…';
+      status.textContent='Sending to fretboard…';
+
+      const ok = await sendFretboardCmd(cmd);
+
+      playBtn.classList.remove('sending');
+      playBtn.disabled=false;
+
+      if(ok){
+        playBtn.innerHTML='&#10003; Sent!';
+        status.textContent='Sent to fretboard — follow the LEDs at your own pace.';
+        setTimeout(()=>{ playBtn.innerHTML='&#9654; Show'; },1500);
+      } else {
+        playBtn.classList.add('failed');
+        playBtn.innerHTML='&#9888; Try Again';
+        status.textContent='Could not reach the fretboard — check your connection and try again.';
+        setTimeout(()=>{ playBtn.classList.remove('failed'); playBtn.innerHTML='&#9654; Show'; },2500);
+      }
     });
   }
 
