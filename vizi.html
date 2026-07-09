@@ -1083,10 +1083,14 @@
         setStatus(shortName + ' ready \u2014 tap to hear Vizi');
         applyMetronomeCommand(pendingIntroCmd || '');
       } else {
-        setStatus('Ready — ask Vizi about this exercise');
+        setBtn('');
+        btn.innerHTML = 'Hold<br>to Talk';
+        setStatus('Could not reach Vizi — hold to talk instead');
       }
     } catch(e){
-      setStatus('Ready — ask Vizi about this exercise');
+      setBtn('');
+      btn.innerHTML = 'Hold<br>to Talk';
+      setStatus('Could not reach Vizi — hold to talk instead');
     }
 
     const cleanUrl = window.location.pathname;
