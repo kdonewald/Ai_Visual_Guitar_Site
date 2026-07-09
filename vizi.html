@@ -277,6 +277,7 @@
     <div class="panel vizi" id="pVizi"><div class="label">Vizi</div><div class="body" id="bVizi"></div></div>
     <div class="panel cmd"  id="pCmd"><div class="label">Fretboard commands</div><div class="body" id="bCmd"></div></div>
     <div class="panel strum" id="pStrum"><div class="label">Strumming Pattern</div><div class="body" id="bStrum"></div></div>
+    <div class="panel cmd" id="pTiming"><div class="label">Latency (debug)</div><div class="body" id="bTiming" style="font-family:monospace; font-size:12px; line-height:1.6;"></div></div>
   </div>
 
   <!-- Floating song sheet panel -->
@@ -309,6 +310,10 @@
   const RAILWAY_URL  = 'https://vizi-tts-proxy-production.up.railway.app';
   const TARGET_RATE  = 16000;
   const POLL_SONG_MS = 2000;
+
+  // Wake the Railway container as soon as the page loads, so the first real
+  // interaction doesn't pay the cold-start tax. Fire-and-forget.
+  fetch(RAILWAY_URL + '/health').catch(()=>{});
 
   const btn        = document.getElementById('talkBtn');
   const statusEl   = document.getElementById('status');
@@ -461,44 +466,110 @@
   }
   function dec(v){ try { return v ? decodeURIComponent(v) : ''; } catch(_){ return v||''; } }
 
-  async function playBlob(blob){
+  // Rotating status text — cycles through a few phrases during a wait instead
+  // of sitting on one static line. Returns a stop function; always call it
+  // once the wait is over (success, error, or exception).
+  function startStatusRotation(phrases, intervalMs){
+    let i = 0;
+    setStatus(phrases[0]);
+    const id = setInterval(() => { i = (i+1) % phrases.length; setStatus(phrases[i]); }, intervalMs || 900);
+    return () => clearInterval(id);
+  }
+  const THINKING_PHRASES = [
+    'Working that out…',
+    'Thinking it through…',
+    'Putting an answer together…'
+  ];
+  const EXERCISE_PHRASES = [
+    'Working out a good example…',
+    'Putting this together for you…',
+    'Almost ready…'
+  ];
+  const TAB_PHRASES = [
+    'Working through your tab…',
+    'Putting this together…',
+    'Almost ready…'
+  ];
+
+  function renderTimingPanel(t){
+    const row = (label, ms) => `<div>${label}: <b>${ms==null ? '—' : Math.round(ms)+'ms'}</b></div>`;
+    const overhead = (t.serverTotal!=null && t.stt!=null && t.claude!=null && t.tts!=null)
+      ? t.serverTotal - t.stt - t.claude - t.tts : null;
+    const html =
+      row('Client encode (release → request sent)', t.encodeMs) +
+      row('Upload + server processing (request sent → headers back)', t.uploadPlusServerMs) +
+      row('&nbsp;&nbsp;↳ STT', t.stt) +
+      row('&nbsp;&nbsp;↳ Claude', t.claude) +
+      row('&nbsp;&nbsp;↳ TTS', t.tts) +
+      row('&nbsp;&nbsp;↳ server overhead / network', overhead) +
+      row('Audio download', t.downloadMs) +
+      row('Audio decode', t.decodeMs) +
+      '<hr style="opacity:.3">' +
+      row('TOTAL — release to sound', t.totalMs);
+    document.getElementById('bTiming').innerHTML = html;
+    document.getElementById('pTiming').classList.add('show');
+    console.log('[Vizi latency]', t);
+  }
+
+  async function playBlob(blob, timing){
     try {
       await ensureAudioCtx();
       const arr = await blob.arrayBuffer();
       const buf = await audioCtx.decodeAudioData(arr);
+      if (timing) timing.decodeMs = performance.now() - timing._tBlobDone;
       const src = audioCtx.createBufferSource();
       src.buffer = buf; src.connect(audioCtx.destination);
       showTalking(); src.start();
+      if (timing) {
+        timing.totalMs = performance.now() - timing._tRelease;
+        renderTimingPanel(timing);
+      }
       await new Promise(r => { src.onended = r; });
     } catch(e){}
     finally { showIdle(); }
   }
 
-  async function sendToVizi(b64){
-    setBtn('thinking'); btn.innerHTML = 'Vizi is<br>Thinking'; setStatus('Vizi is thinking…');
+  async function sendToVizi(b64, tRelease, tEncoded){
+    setBtn('thinking'); btn.innerHTML = 'Vizi is<br>Thinking';
+    const stopRotation = startStatusRotation(THINKING_PHRASES, 900);
+    const tBeforeFetch = performance.now();
     try {
       const res = await fetch(RAILWAY_URL + '/stt-claude-tts', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
         body: JSON.stringify({ audio:b64, sampleRate:TARGET_RATE, mode:currentMode })
       });
+      const tHeaders = performance.now();
       const ct = (res.headers.get('content-type') || '');
       if (ct.includes('application/json')){
         const j = await res.json();
+        stopRotation();
         setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus(j.empty ? "Didn't catch that — try again" : 'Error: ' + (j.error||'unknown'));
         return;
       }
       const transcript = dec(res.headers.get('X-Vizi-Transcript'));
       const text       = dec(res.headers.get('X-Vizi-Text'));
       const commands   = dec(res.headers.get('X-Vizi-Commands'));
+      let serverTiming = {};
+      try { serverTiming = JSON.parse(dec(res.headers.get('X-Vizi-Timing')) || '{}'); } catch(e){}
       if (transcript) showPanel('pYou','bYou', transcript);
       if (text)       showPanel('pVizi','bVizi', text);
       if (commands)   { showPanel('pCmd','bCmd', commands); applyMetronomeCommand(commands); }
       const blob = await res.blob();
+      const tBlobDone = performance.now();
+      stopRotation();
       setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('');
-      await playBlob(blob);
+      const timing = (tRelease != null) ? {
+        _tRelease: tRelease, _tBlobDone: tBlobDone,
+        encodeMs: tEncoded - tRelease,
+        uploadPlusServerMs: tHeaders - tBeforeFetch,
+        downloadMs: tBlobDone - tHeaders,
+        stt: serverTiming.stt, claude: serverTiming.claude, tts: serverTiming.tts,
+        serverTotal: serverTiming.total
+      } : null;
+      await playBlob(blob, timing);
       if (currentMode === 'song') currentMode = 'talk';
       if (!pendingIntroBlob) setStatus('Ready');
-    } catch(e){ setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Could not reach Vizi — check connection'); }
+    } catch(e){ stopRotation(); setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Could not reach Vizi — check connection'); }
   }
 
   async function playPendingIntro(){
@@ -630,10 +701,12 @@
     e.preventDefault();
     if (pendingIntroBlob) return;
     if (!recording) return;
+    const tRelease = performance.now();
     setListening(false);
     const b64 = stopCapture();
+    const tEncoded = performance.now();
     if (!b64){ setBtn(''); setStatus('Nothing recorded — hold a moment longer'); return; }
-    sendToVizi(b64);
+    sendToVizi(b64, tRelease, tEncoded);
   }
 
   btn.addEventListener('pointerdown', press);
@@ -839,7 +912,7 @@
 
     setBtn('thinking');
     btn.innerHTML = 'Vizi is<br>preparing…';
-    setStatus('Loading your tab exercise…');
+    const stopRotation = startStatusRotation(TAB_PHRASES, 900);
 
     songBanner.textContent = '📐 Tab Exercise — tap button to hear Vizi';
     songBanner.classList.add('show');
@@ -854,6 +927,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: msg, mode: 'talk' })
       });
+      stopRotation();
       if (res.ok && !(res.headers.get('content-type')||'').includes('application/json')){
         pendingIntroText = dec(res.headers.get('X-Vizi-Text'));
         pendingIntroCmd  = dec(res.headers.get('X-Vizi-Commands'));
@@ -867,6 +941,7 @@
         setStatus('Ready — ask Vizi about your tab');
       }
     } catch(e){
+      stopRotation();
       setBtn('');
       btn.innerHTML = 'Hold<br>to Talk';
       setStatus('Ready — ask Vizi about your tab');
@@ -882,7 +957,7 @@
 
     setBtn('thinking');
     btn.innerHTML = 'Vizi is<br>preparing…';
-    setStatus('Getting your exercise ready…');
+    const stopRotation = startStatusRotation(EXERCISE_PHRASES, 900);
 
     if (stageId === 'song') {
       const ub = document.getElementById('uploadBtn');
@@ -1067,12 +1142,12 @@
     const requestMode = (stageId === 'soloing' || stageId === 'strumming') ? stageId : 'talk';
 
     try {
-      setStatus('Loading your exercise…');
       const res = await fetch(RAILWAY_URL + '/claude-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, mode: requestMode })
       });
+      stopRotation();
       if (res.ok && !(res.headers.get('content-type')||'').includes('application/json')){
         pendingIntroText = dec(res.headers.get('X-Vizi-Text'));
         pendingIntroCmd  = dec(res.headers.get('X-Vizi-Commands'));
@@ -1088,6 +1163,7 @@
         setStatus('Could not reach Vizi — hold to talk instead');
       }
     } catch(e){
+      stopRotation();
       setBtn('');
       btn.innerHTML = 'Hold<br>to Talk';
       setStatus('Could not reach Vizi — hold to talk instead');
