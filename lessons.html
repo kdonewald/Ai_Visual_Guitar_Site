@@ -4385,12 +4385,24 @@ function renderStaticDiagram(){
       if (gi<1){ const div=document.createElement('div'); div.className='static-divider'; container.appendChild(div); }
     });
   } else {
+    // slots is ALWAYS stored at a fixed native resolution (2 per beat for
+    // standard patterns) regardless of which duration button is selected —
+    // the duration only controls how many of those native slots to show per
+    // beat, never how the array itself is indexed.
+    const nativeSlotsPerBeat = slots.length / ts.beats;
     for (let b=0; b<ts.beats; b++){
       const cell=document.createElement('div'); cell.className='static-beat';
       const num=document.createElement('div'); num.className='static-beat-num'; num.textContent=b+1;
       cell.appendChild(num);
       const grp=document.createElement('div'); grp.className='static-beat-group';
-      for (let s=0; s<subdivisions; s++) grp.appendChild(makeStaticStroke(slots[b*subdivisions+s]||' '));
+      const baseIdx = b*nativeSlotsPerBeat;
+      if (subdivisions>=2){
+        // Eighth (or finer): show every native slot in this beat
+        for (let s=0; s<nativeSlotsPerBeat; s++) grp.appendChild(makeStaticStroke(slots[baseIdx+s]||' '));
+      } else {
+        // Quarter, Half, Whole: one representative stroke per beat — the downbeat
+        grp.appendChild(makeStaticStroke(slots[baseIdx]||' '));
+      }
       cell.appendChild(grp); container.appendChild(cell);
       if (b<ts.beats-1){ const div=document.createElement('div'); div.className='static-divider'; container.appendChild(div); }
     }
@@ -4435,11 +4447,10 @@ function buildGrid(){
       cell.appendChild(strokes); grid.appendChild(cell);
     });
   } else {
-    // slotsPerBeat: whole=all in 1 cell, half=2 cells total, quarter=1/beat, eighth=2/beat
-    const slotsPerBeat = subdivisions===0 ? 0
-                       : subdivisions===-1 ? 0
-                       : subdivisions===1  ? 1
-                       : 2; // eighth
+    // slots is ALWAYS stored at a fixed native resolution (2 per beat for
+    // standard patterns) regardless of which duration button is selected —
+    // see the matching note in renderStaticDiagram.
+    const nativeSlotsPerBeat = slots.length / ts.beats;
     if (subdivisions===0){
       // Whole note — one single cell spanning all beats
       const cell=document.createElement('div'); cell.className='beat-cell';
@@ -4450,23 +4461,25 @@ function buildGrid(){
       strokes.appendChild(makeSlot(0));
       cell.appendChild(strokes); grid.appendChild(cell);
     } else if (subdivisions===-1){
-      // Half notes — two cells
+      // Half notes — two cells, each representing half the measure's beats
+      const beatsPerHalf = ts.beats/2;
       for (let h=0; h<2; h++){
         const cell=document.createElement('div'); cell.className='beat-cell'; cell.style.flex='2';
         const num=document.createElement('div'); num.className='beat-number';
         num.textContent = h===0?'1-2':'3-4';
         cell.appendChild(num);
         const strokes=document.createElement('div'); strokes.className='beat-strokes';
-        strokes.appendChild(makeSlot(h));
+        strokes.appendChild(makeSlot(h*beatsPerHalf*nativeSlotsPerBeat));
         cell.appendChild(strokes); grid.appendChild(cell);
       }
     } else {
+      const slotsPerBeat = subdivisions>=2 ? nativeSlotsPerBeat : 1;
       for (let b=0; b<ts.beats; b++){
         const cell=document.createElement('div'); cell.className='beat-cell';
         const num=document.createElement('div'); num.className='beat-number'; num.textContent=b+1;
         cell.appendChild(num);
         const strokes=document.createElement('div'); strokes.className='beat-strokes';
-        for (let s=0; s<slotsPerBeat; s++) strokes.appendChild(makeSlot(b*slotsPerBeat+s));
+        for (let s=0; s<slotsPerBeat; s++) strokes.appendChild(makeSlot(b*nativeSlotsPerBeat+s));
         cell.appendChild(strokes); grid.appendChild(cell);
       }
     }
