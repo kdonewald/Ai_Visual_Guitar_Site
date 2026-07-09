@@ -3528,18 +3528,21 @@
         });
       }
 
-      // The browser switches focus to the new tab the instant window.open() is
-      // called — so the green "sending" state has to actually render and be
-      // seen BEFORE that happens, not after. A short delay here (well within
-      // normal popup-blocker tolerance for a delay chained off a real click)
-      // is what makes the green state visible at all.
+      // window.open() steals focus to the new tab the instant it's called —
+      // so BOTH the green "sending" state and the "sent" confirmation have to
+      // fully play out and actually be seen BEFORE that call happens, not
+      // after. Once the tab switch happens, nothing further on this page is
+      // visible until the student manually comes back to this tab.
       setTimeout(() => {
-        const p = new URLSearchParams({stage:'soloing', exercise});
-        window.open('vizi.html?' + p.toString(), '_blank');
         askBtn.classList.remove('sending');
         askBtn.textContent = '✓ Sent to Vizi!';
-        setTimeout(refreshAskBtnState, 1200);
-      }, 550);
+
+        setTimeout(() => {
+          const p = new URLSearchParams({stage:'soloing', exercise});
+          window.open('vizi.html?' + p.toString(), '_blank');
+          setTimeout(refreshAskBtnState, 1200);
+        }, 400);
+      }, 500);
     });
     exList.appendChild(askBtn);
     refreshAskBtnState();
