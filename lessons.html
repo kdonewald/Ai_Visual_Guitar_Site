@@ -199,7 +199,7 @@
   }
   .ts-header-label{
     font-family:'DM Mono',monospace;font-size:.83rem;letter-spacing:.12em;
-    text-transform:uppercase;color:var(--text-light);margin-bottom:.5rem;display:block;
+    text-transform:uppercase;color:var(--text);font-weight:700;margin-bottom:.5rem;display:block;
   }
   .ts-tabs{display:flex;gap:.4rem;}
   .ts-tab{
@@ -227,10 +227,6 @@
   }
   .ts-explainer-title{font-size:.88rem;font-weight:600;color:var(--text);margin-bottom:.25rem;}
   .ts-explainer-body{font-size:.86rem;color:var(--text-mid);line-height:1.55;}
-  .ts-explainer-songs{
-    font-family:'DM Mono',monospace;font-size:.85rem;letter-spacing:.04em;
-    color:var(--text-light);margin-top:.35rem;display:block;
-  }
 
   /* ── Foot tap row ── */
   .foot-tap-row{
@@ -270,7 +266,7 @@
   }
   .pattern-header-label{
     font-family:'DM Mono',monospace;font-size:.83rem;letter-spacing:.12em;
-    text-transform:uppercase;color:var(--text-light);margin-bottom:.45rem;display:block;
+    text-transform:uppercase;color:var(--text);font-weight:700;margin-bottom:.45rem;display:block;
   }
   .pattern-tabs{display:flex;gap:.3rem;overflow-x:auto;}
   .pattern-tab{
@@ -344,10 +340,13 @@
     background:var(--slot-up-bg);color:#90bff0;
     border-color:var(--slot-up-border);
   }
-  .static-stroke.skip{
-    background:rgba(255,255,255,0.06);
-    color:rgba(255,255,255,0.65);
-    border:1.5px dashed rgba(255,255,255,0.18);
+  .static-stroke.silent-down{
+    background:rgba(255,112,85,0.10);color:rgba(255,112,85,0.55);
+    border:1.5px dashed rgba(255,112,85,0.3);
+  }
+  .static-stroke.silent-up{
+    background:rgba(144,191,240,0.10);color:rgba(144,191,240,0.55);
+    border:1.5px dashed rgba(144,191,240,0.3);
   }
   .static-divider{
     width:1.5px;background:rgba(255,255,255,0.18);
@@ -409,6 +408,17 @@
     color:#90bff0;
     border-style:solid;
   }
+  /* Silent — hand still moves through this position, just doesn't strike */
+  .stroke-slot.silent-down{
+    background:rgba(255,112,85,0.08);
+    border:1.5px dashed rgba(255,112,85,0.3);
+    color:rgba(255,112,85,0.5);
+  }
+  .stroke-slot.silent-up{
+    background:rgba(144,191,240,0.08);
+    border:1.5px dashed rgba(144,191,240,0.3);
+    color:rgba(144,191,240,0.5);
+  }
   /* Active beat highlight */
   .stroke-slot.active-beat{
     box-shadow:0 0 0 2.5px var(--gold),0 0 16px rgba(232,160,32,0.5);
@@ -428,6 +438,7 @@
   .leg-dot.down{background:#ff7055;}
   .leg-dot.up{background:#90bff0;}
   .leg-dot.off{background:rgba(255,255,255,0.15);border:1px dashed rgba(255,255,255,0.65);}
+  .leg-dot.silent{background:rgba(255,112,85,0.28);}
 
   /* ── Beat indicator ── */
   .beat-indicator{
@@ -459,19 +470,6 @@
   .bpm-value{
     font-family:'DM Mono',monospace;font-size:.82rem;font-weight:500;
     color:var(--text);width:4.2rem;text-align:right;flex-shrink:0;
-  }
-  .pill-btns{display:flex;gap:.3rem;}
-  .pill-btn{
-    flex:1;padding:.35rem .3rem;border-radius:6px;
-    border:1.5px solid var(--cream-dark);background:var(--cream);
-    font-family:'DM Mono',monospace;font-size:.86rem;font-weight:500;
-    color:var(--text-mid);cursor:pointer;transition:all .18s;
-    white-space:nowrap;text-align:center;
-  }
-  .pill-btn:hover{border-color:var(--blue);}
-  .pill-btn.active-feel{
-    border-color:var(--blue);background:rgba(27,79,138,0.09);
-    color:var(--blue);font-weight:600;
   }
 
   .play-row{display:flex;align-items:center;justify-content:center;margin-top:.2rem;}
@@ -4035,15 +4033,11 @@ function initStrumPlayer(mountId){
     <ul class="custom-hint-steps">
       <li>
         <span class="hint-badge down">↓</span>
-        <span>Tap once — sets a <strong>down</strong> stroke</span>
+        <span>Your hand always alternates <strong>down, up, down, up</strong> — each slot's direction is fixed</span>
       </li>
       <li>
         <span class="hint-badge up">↑</span>
-        <span>Tap again — sets an <strong>up</strong> stroke</span>
-      </li>
-      <li>
-        <span class="hint-badge skip"> </span>
-        <span>Tap again — clears the slot (silence)</span>
+        <span>Tap a slot to <strong>strike</strong> it — tap again to make it <strong>silent</strong> (the hand still moves, just doesn't hit the strings)</span>
       </li>
     </ul>
   </div>
@@ -4062,7 +4056,7 @@ function initStrumPlayer(mountId){
   <div class="legend">
     <span><div class="leg-dot down"></div>Down ↓</span>
     <span><div class="leg-dot up"></div>Up ↑</span>
-    <span><div class="leg-dot off"></div>Skip</span>
+    <span><div class="leg-dot silent"></div>Hand moves, no strike</span>
   </div>
 
   <!-- Beat indicator -->
@@ -4075,16 +4069,6 @@ function initStrumPlayer(mountId){
       <span class="ctrl-label">BPM</span>
       <input type="range" class="bpm-slider" id="bpmSlider" min="40" max="160" value="70"/>
       <span class="bpm-value" id="bpmValue">70 BPM</span>
-    </div>
-
-    <div class="ctrl-row">
-      <span class="ctrl-label">Duration</span>
-      <div class="pill-btns" id="feelBtns">
-        <button class="pill-btn" data-feel="0">Whole</button>
-        <button class="pill-btn" data-feel="-1">Half</button>
-        <button class="pill-btn" data-feel="1">Quarter</button>
-        <button class="pill-btn active-feel" data-feel="2">Eighth</button>
-      </div>
     </div>
 
     <div class="play-row">
@@ -4103,8 +4087,7 @@ const TIME_SIGS = {
     beats: 4,
     footLabels: ['1','2','3','4'],
     explainerTitle: '4 beats per measure — the most common time in music',
-    explainerBody: 'Count: 1 – 2 – 3 – 4, then repeat. Your foot taps four times per measure. Beat 1 is the strongest. The vast majority of songs you know are in 4/4.',
-    songs: 'Wonderwall · Let Her Go · Brown Eyed Girl · almost everything else',
+    explainerBody: 'Count: 1 & 2 & 3 & 4 &, then repeat. Your foot taps four times per measure. Beat 1 is the strongest. The vast majority of songs you know are in 4/4.',
     patterns: [
       { label: 'D D D D',      slots: ['D',' ','D',' ','D',' ','D',' '] },
       { label: 'D U D U D U D U', slots: ['D','U','D','U','D','U','D','U'] },
@@ -4116,8 +4099,7 @@ const TIME_SIGS = {
     beats: 3,
     footLabels: ['1','2','3'],
     explainerTitle: '3 beats per measure — the waltz feel',
-    explainerBody: 'Count: 1 – 2 – 3, then repeat. Your foot taps three times. Beat 1 is strong, 2 and 3 are lighter. It has a gentle swaying quality — like rocking side to side.',
-    songs: 'Happy Birthday · Take Me Out to the Ballroom · The Entertainer',
+    explainerBody: 'Count: 1 & 2 & 3 &, then repeat. Your foot taps three times. Beat 1 is strong, 2 and 3 are lighter. It has a gentle swaying quality — like rocking side to side.',
     patterns: [
       { label: 'D  DU DU', slots: ['D',' ','D','U','D','U'] },
       { label: 'D  D  D',  slots: ['D',' ','D',' ','D',' '] },
@@ -4129,7 +4111,6 @@ const TIME_SIGS = {
     footLabels: ['ONE – and – a','TWO – and – a'],
     explainerTitle: '6 notes per measure — but your foot only taps twice',
     explainerBody: 'There are 6 eighth notes but they split into two groups of three. Your foot taps on note 1 and note 4 — so you feel 2 big beats, each with a triplet lilt. Say it out loud: ONE-and-a, TWO-and-a.',
-    songs: 'House of the Rising Sun · Nothing Else Matters · We Are the Champions',
     patterns: [
       { label: 'DUD DUD', slots: ['D','U','D','D','U','D'], groups:[[0,1,2],[3,4,5]] },
       { label: 'D D D D', slots: ['D',' ','D','D',' ','D'], groups:[[0,1,2],[3,4,5]] },
@@ -4145,7 +4126,6 @@ let currentTS = '44';
 let currentPatternIdx = 0;
 let slots = [];
 let bpm = 70;
-let subdivisions = 2;
 let currentBeat = -1;  // always counts quarter-note beats 0..beats-1
 let isPlaying = false;
 let currentSlot = -1;
@@ -4195,10 +4175,7 @@ function playStrum(time, type, isDownbeat){
 // ═══════════════════════════════════════════════════
 function secPerSlot(){
   if (currentTS==='68') return 60/bpm/3;
-  if (subdivisions===0)  return 60/bpm * TIME_SIGS[currentTS].beats; // whole = full measure
-  if (subdivisions===-1) return 60/bpm * (TIME_SIGS[currentTS].beats/2); // half
-  if (subdivisions===1)  return 60/bpm;       // quarter
-  return 60/bpm/2;                            // eighth
+  return 60/bpm/2; // every slot is always half a beat — the hand moves at a fixed eighth-note rate
 }
 
 function scheduleNotes(){
@@ -4211,48 +4188,21 @@ function scheduleNotes(){
     const cap = idx, capT = nextNoteTime;
     const delay = Math.max(0,(capT-ctx.currentTime)*1000);
     const beats = TIME_SIGS[currentTS] ? TIME_SIGS[currentTS].beats : 4;
-    const quarterSec = 60/bpm; // always one quarter note in seconds
 
-    // How many quarter-note beats does this slot span?
-    const beatsThisSlot = currentTS==='68' ? 1
-      : subdivisions===0  ? beats      // whole = full measure
-      : subdivisions===-1 ? beats/2    // half  = half measure (2 in 4/4, 1.5 in 3/4)
-      : subdivisions===1  ? 1          // quarter = 1 beat
-      : 0.5;                           // eighth = half a beat (2 slots per beat)
+    // Every slot is always half a beat — the hand moves at a fixed
+    // eighth-note rate, always. Foot tap only fires on the downbeat slot
+    // of each pair (every other slot).
+    const beatAtThisSlot = Math.floor(currentSlotIndex/2) % beats;
+    const shouldTickFoot = (currentSlotIndex % 2 === 0);
 
-    // Beat number of the FIRST beat in this slot, derived from slot index — never drifts
-    // For eighth notes 2 slots = 1 beat, so beatOffset advances every 2 slots
-    const slotsBeatRatio = subdivisions===2 ? 0.5 : beatsThisSlot; // beats per slot
-    const firstBeatOfSlot = Math.round(currentSlotIndex * slotsBeatRatio) % beats;
+    const capSlot = cap, capBeat = beatAtThisSlot;
+    setTimeout(()=>{
+      if (!isPlaying) return;
+      currentSlot = capSlot;
+      if (shouldTickFoot) currentBeat = capBeat;
+      updateHighlights();
+    }, delay);
 
-    // For eighth notes: 2 slots per beat, only fire foot tap on first slot of each beat pair
-    const isEighth = (subdivisions===2);
-    const shouldTickFoot = !isEighth || (currentSlotIndex % 2 === 0);
-    const beatAtThisSlot = isEighth ? Math.floor(currentSlotIndex/2) % beats : firstBeatOfSlot;
-
-    if (isEighth){
-      // Eighth: one slot = one strum, foot only taps every other slot
-      const capSlot = cap, capBeat = beatAtThisSlot;
-      setTimeout(()=>{
-        if (!isPlaying) return;
-        currentSlot = capSlot;
-        if (shouldTickFoot) currentBeat = capBeat;
-        updateHighlights();
-      }, delay);
-    } else {
-      // Whole/half/quarter: fire one tick per beat within the slot
-      for (let b=0; b<Math.round(beatsThisSlot); b++){
-        const beatNum = (firstBeatOfSlot + b) % beats;
-        const beatDelay = delay + b * quarterSec * 1000;
-        const capSlot = cap, capBeat = beatNum;
-        setTimeout(()=>{
-          if (!isPlaying) return;
-          currentSlot = capSlot;
-          currentBeat = capBeat;
-          updateHighlights();
-        }, beatDelay);
-      }
-    }
     nextNoteTime += secPerSlot();
     currentSlotIndex++;
   }
@@ -4288,11 +4238,7 @@ function updateHighlights(){
   const dots = document.querySelectorAll('.beat-dot');
   dots.forEach((dot,i)=>{
     dot.classList.remove('active','downbeat');
-    const slotsPerBt = subdivisions<=0?1:subdivisions===1?1:2;
-    const beatIdx = currentTS==='68' ? (currentSlot<3?0:1)
-                  : subdivisions===0  ? 0
-                  : subdivisions===-1 ? currentSlot
-                  : Math.floor(currentSlot/slotsPerBt);
+    const beatIdx = currentTS==='68' ? (currentSlot<3?0:1) : Math.floor(currentSlot/2);
     if (i===beatIdx) dot.classList.add(beatIdx===0?'downbeat':'active');
   });
   const taps = document.querySelectorAll('.foot-tap');
@@ -4311,8 +4257,7 @@ function renderExplainer(){
   const ts = TIME_SIGS[currentTS];
   document.getElementById('tsExplainer').innerHTML =
     '<div class="ts-explainer-title">'+ts.explainerTitle+'</div>'+
-    '<div class="ts-explainer-body">'+ts.explainerBody+'</div>'+
-    '<span class="ts-explainer-songs">🎸 '+ts.songs+'</span>';
+    '<div class="ts-explainer-body">'+ts.explainerBody+'</div>';
 }
 
 function renderFootTaps(){
@@ -4360,10 +4305,20 @@ function renderCustomHint(){
     : 'Lights up as it plays';
 }
 
-function makeStaticStroke(val){
+function makeStaticStroke(val, idx){
   const el = document.createElement('div');
-  el.className = 'static-stroke '+(val==='D'?'down':val==='U'?'up':'skip');
-  el.textContent = val==='D'?'D':val==='U'?'U':' ';
+  const impliedDown = (idx % 2 === 0); // fixed: even position = down motion, odd = up motion
+  if (val==='D' || val==='U'){
+    el.className = 'static-stroke '+(val==='D'?'down':'up');
+    el.textContent = val;
+  } else {
+    // Silent — the hand still swings through this position at the steady
+    // eighth-note rate, it just doesn't strike the strings. Faded arrow in
+    // the position's fixed direction, not a blank box, so the diagram shows
+    // the hand never actually stops moving.
+    el.className = 'static-stroke silent '+(impliedDown?'silent-down':'silent-up');
+    el.textContent = impliedDown?'↓':'↑';
+  }
   return el;
 }
 
@@ -4380,41 +4335,22 @@ function renderStaticDiagram(){
       const lblEl = document.createElement('div'); lblEl.className='bracket-label'; lblEl.textContent=lbl;
       grp.appendChild(lblEl);
       const strokes = document.createElement('div'); strokes.className='bracket-strokes';
-      groups[gi].forEach(idx=>strokes.appendChild(makeStaticStroke(slots[idx]||' ')));
+      groups[gi].forEach(idx=>strokes.appendChild(makeStaticStroke(slots[idx]||' ', idx)));
       grp.appendChild(strokes); container.appendChild(grp);
       if (gi<1){ const div=document.createElement('div'); div.className='static-divider'; container.appendChild(div); }
     });
   } else {
-    if (subdivisions===0){
-      // Whole note — one single cell spanning the entire measure
+    // Always the fixed native resolution now — 2 positions per beat (down
+    // on the beat, up on the "and"), no Duration-based branching.
+    for (let b=0; b<ts.beats; b++){
       const cell=document.createElement('div'); cell.className='static-beat';
-      const num=document.createElement('div'); num.className='static-beat-num'; num.textContent='1';
+      const num=document.createElement('div'); num.className='static-beat-num'; num.textContent=b+1;
       cell.appendChild(num);
       const grp=document.createElement('div'); grp.className='static-beat-group';
-      grp.appendChild(makeStaticStroke(slots[0]||' '));
+      grp.appendChild(makeStaticStroke(slots[b*2]||' ', b*2));
+      grp.appendChild(makeStaticStroke(slots[b*2+1]||' ', b*2+1));
       cell.appendChild(grp); container.appendChild(cell);
-    } else if (subdivisions===-1){
-      // Half notes — two cells, each spanning half the measure
-      for (let h=0; h<2; h++){
-        const cell=document.createElement('div'); cell.className='static-beat';
-        const num=document.createElement('div'); num.className='static-beat-num';
-        num.textContent = h===0 ? '1' : String(Math.round(ts.beats/2)+1);
-        cell.appendChild(num);
-        const grp=document.createElement('div'); grp.className='static-beat-group';
-        grp.appendChild(makeStaticStroke(slots[h]||' '));
-        cell.appendChild(grp); container.appendChild(cell);
-        if (h<1){ const div=document.createElement('div'); div.className='static-divider'; container.appendChild(div); }
-      }
-    } else {
-      for (let b=0; b<ts.beats; b++){
-        const cell=document.createElement('div'); cell.className='static-beat';
-        const num=document.createElement('div'); num.className='static-beat-num'; num.textContent=b+1;
-        cell.appendChild(num);
-        const grp=document.createElement('div'); grp.className='static-beat-group';
-        for (let s=0; s<subdivisions; s++) grp.appendChild(makeStaticStroke(slots[b*subdivisions+s]||' '));
-        cell.appendChild(grp); container.appendChild(cell);
-        if (b<ts.beats-1){ const div=document.createElement('div'); div.className='static-divider'; container.appendChild(div); }
-      }
+      if (b<ts.beats-1){ const div=document.createElement('div'); div.className='static-divider'; container.appendChild(div); }
     }
   }
 }
@@ -4427,18 +4363,26 @@ function buildGrid(){
 
   function makeSlot(idx){
     const val = slots[idx]||' ';
+    const impliedDown = (idx % 2 === 0); // fixed: even position = down, odd = up
     const slot = document.createElement('div');
-    const cls = val==='D'?'down':val==='U'?'up':'';
-    slot.className = 'stroke-slot'+(cls?' '+cls:'')+(editable?' editable':' locked');
+    let cls;
+    if (val==='D') cls='down';
+    else if (val==='U') cls='up';
+    else cls = impliedDown ? 'silent-down' : 'silent-up'; // hand still moves, just doesn't strike
+    slot.className = 'stroke-slot '+cls+(editable?' editable':' locked');
     slot.dataset.idx = idx;
-    slot.textContent = val==='D'?'↓':val==='U'?'↑':' ';
+    slot.textContent = val==='D'?'↓':val==='U'?'↑':(impliedDown?'↓':'↑');
     if (editable){
+      // Simple toggle now, not a 3-way cycle — direction is fixed by
+      // position, the student is only choosing struck vs silent.
       slot.addEventListener('click',()=>{
         const cur=slots[idx]||' ';
-        slots[idx]=cur===' '?'D':cur==='D'?'U':' ';
+        const impliedVal = impliedDown ? 'D' : 'U';
+        slots[idx] = (cur===' ') ? impliedVal : ' ';
         const v=slots[idx];
-        slot.className='stroke-slot'+(v==='D'?' down':v==='U'?' up':'')+' editable';
-        slot.textContent=v==='D'?'↓':v==='U'?'↑':' ';
+        const newCls = v===' ' ? (impliedDown?'silent-down':'silent-up') : (impliedDown?'down':'up');
+        slot.className='stroke-slot '+newCls+' editable';
+        slot.textContent = v===' ' ? (impliedDown?'↓':'↑') : (impliedDown?'↓':'↑');
         renderStaticDiagram();
         updatePlayBtn();
       });
@@ -4457,40 +4401,16 @@ function buildGrid(){
       cell.appendChild(strokes); grid.appendChild(cell);
     });
   } else {
-    // slotsPerBeat: whole=all in 1 cell, half=2 cells total, quarter=1/beat, eighth=2/beat
-    const slotsPerBeat = subdivisions===0 ? 0
-                       : subdivisions===-1 ? 0
-                       : subdivisions===1  ? 1
-                       : 2; // eighth
-    if (subdivisions===0){
-      // Whole note — one single cell spanning all beats
+    // Always the fixed native resolution — one cell per beat, 2 slots each
+    // (down on the beat, up on the "and"). No more Duration branching.
+    for (let b=0; b<ts.beats; b++){
       const cell=document.createElement('div'); cell.className='beat-cell';
-      cell.style.flex='4';
-      const num=document.createElement('div'); num.className='beat-number'; num.textContent='1 — whole note';
+      const num=document.createElement('div'); num.className='beat-number'; num.textContent=b+1;
       cell.appendChild(num);
       const strokes=document.createElement('div'); strokes.className='beat-strokes';
-      strokes.appendChild(makeSlot(0));
+      strokes.appendChild(makeSlot(b*2));
+      strokes.appendChild(makeSlot(b*2+1));
       cell.appendChild(strokes); grid.appendChild(cell);
-    } else if (subdivisions===-1){
-      // Half notes — two cells
-      for (let h=0; h<2; h++){
-        const cell=document.createElement('div'); cell.className='beat-cell'; cell.style.flex='2';
-        const num=document.createElement('div'); num.className='beat-number';
-        num.textContent = h===0?'1-2':'3-4';
-        cell.appendChild(num);
-        const strokes=document.createElement('div'); strokes.className='beat-strokes';
-        strokes.appendChild(makeSlot(h));
-        cell.appendChild(strokes); grid.appendChild(cell);
-      }
-    } else {
-      for (let b=0; b<ts.beats; b++){
-        const cell=document.createElement('div'); cell.className='beat-cell';
-        const num=document.createElement('div'); num.className='beat-number'; num.textContent=b+1;
-        cell.appendChild(num);
-        const strokes=document.createElement('div'); strokes.className='beat-strokes';
-        for (let s=0; s<slotsPerBeat; s++) strokes.appendChild(makeSlot(b*slotsPerBeat+s));
-        cell.appendChild(strokes); grid.appendChild(cell);
-      }
     }
   }
   buildBeatIndicator();
@@ -4499,10 +4419,7 @@ function buildGrid(){
 function buildBeatIndicator(){
   const container = document.getElementById('beatIndicator');
   container.innerHTML = '';
-  const count = currentTS==='68' ? 2
-              : subdivisions===0  ? 1
-              : subdivisions===-1 ? 2
-              : TIME_SIGS[currentTS].beats;
+  const count = currentTS==='68' ? 2 : TIME_SIGS[currentTS].beats;
   for (let i=0; i<count; i++){
     const dot=document.createElement('div'); dot.className='beat-dot'; container.appendChild(dot);
   }
@@ -4518,53 +4435,17 @@ function updatePlayBtn(){
 }
 
 function syncSlotsLength(){
-  if (isCustom()){
-    // Custom patterns: the student is building their own from scratch, so a
-    // simple pad/trim with blanks to match the selected duration's editable
-    // slot count is correct and expected here.
-    let needed;
-    if (currentTS==='68'){
-      needed = 6; // 6/8 always 6 eighth notes
-    } else {
-      const beats = TIME_SIGS[currentTS].beats;
-      if      (subdivisions===0)  needed = 1;           // whole note
-      else if (subdivisions===-1) needed = 2;           // half notes
-      else if (subdivisions===1)  needed = beats;       // quarter notes
-      else                        needed = beats * 2;   // eighth notes (default)
-    }
-    while (slots.length<needed) slots.push(' ');
-    while (slots.length>needed) slots.pop();
-    return;
-  }
+  // The hand always moves at a fixed eighth-note rate — 8 positions per
+  // measure in 4/4, 6 in 3/4, 6 in 6/8 (triplet feel). That's now the only
+  // resolution that exists; there's no more Duration selector changing how
+  // many slots are shown. This function just makes sure a Custom pattern's
+  // editable slot count matches that fixed length — built-in/preset patterns
+  // are already authored at exactly this length and never need resizing.
+  if (!isCustom()) return;
 
-  // Built-in/preset patterns (D D D D, D U D U, etc.) are authored at a fixed
-  // native resolution (2 slots per beat). The old logic here just chopped
-  // slots off the END of the array when shrinking for a coarser duration —
-  // for an 8-slot 'D D D D' pattern in Quarter mode that kept slots[0..3]
-  // ('D',' ','D',' '), discarding the real downbeats at indices 4-7 entirely
-  // and leaving visible gaps.
-  //
-  // The fix keeps the pattern's actual strokes in sequence (ignoring rests
-  // entirely) and lays them out one per slot on the coarser grid — NOT by
-  // sampling a fixed position (e.g. "always the downbeat of each pair"),
-  // since that collapses genuinely alternating patterns incorrectly: for
-  // 'D U D U D U D U', the downbeat of every pair is 'D' (U always falls on
-  // the offbeat), so downbeat-sampling would wrongly produce 'D D D D' at
-  // Quarter resolution instead of the correct alternating 'D U D U'.
-  if (currentTS==='68') return; // 6/8 doesn't use the duration selector at all
-
-  const beats = TIME_SIGS[currentTS].beats;
-  if (subdivisions===2) return; // eighth = native resolution, nothing to resample
-
-  let needed;
-  if      (subdivisions===0)  needed = 1;      // whole note
-  else if (subdivisions===-1) needed = 2;      // half notes
-  else                        needed = beats;  // quarter notes
-
-  const strokesOnly = slots.filter(v => v==='D' || v==='U');
-  const resampled = [];
-  for (let i=0; i<needed; i++) resampled.push(strokesOnly[i] || ' ');
-  slots = resampled;
+  const needed = currentTS==='68' ? 6 : TIME_SIGS[currentTS].beats * 2;
+  while (slots.length<needed) slots.push(' ');
+  while (slots.length>needed) slots.pop();
 }
 
 function renderAll(){
@@ -4604,24 +4485,6 @@ document.getElementById('playBtn').addEventListener('click',()=>{
 document.getElementById('bpmSlider').addEventListener('input',e=>{
   bpm=parseInt(e.target.value);
   document.getElementById('bpmValue').textContent=bpm+' BPM';
-});
-
-document.querySelectorAll('[data-feel]').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    const feel = parseInt(btn.dataset.feel);
-    // feel: 0=whole(1 slot/measure), -1=half(2 slots), 1=quarter(4 slots), 2=eighth(8 slots)
-    // Reload preset slots fresh for new duration — no scaling needed
-    if (!isCustom()){
-      const ts = TIME_SIGS[currentTS];
-      // Reset to preset default then let syncSlotsLength pad/trim
-      slots = [...ts.patterns[currentPatternIdx].slots];
-    }
-    document.querySelectorAll('[data-feel]').forEach(b=>b.classList.remove('active-feel'));
-    btn.classList.add('active-feel');
-    subdivisions = feel===0 ? 0 : feel===-1 ? -1 : feel;
-    syncSlotsLength(); renderPatternTabs(); renderCustomHint();
-    renderStaticDiagram(); buildGrid(); updatePlayBtn();
-  });
 });
 
 // ═══════════════════════════════════════════════════
