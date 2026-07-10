@@ -261,7 +261,10 @@ nav .nav-links, .site-nav .nav-links {
       const btn = document.getElementById('vm-hold-toggle');
       if (!btn) return;
       const goingOn = btn.dataset.state !== 'on'; // currently off (or unknown) → this click turns it on
-      btn.textContent = '…'; btn.style.opacity = '.5'; btn.disabled = true;
+      btn.textContent = goingOn ? 'Turning On…' : 'Turning Off…';
+      btn.style.opacity = '.5'; btn.disabled = true;
+      const MIN_VISIBLE_MS = 1200; // keep the transient text up long enough to actually read
+      const startedAt = Date.now();
       try {
         const msg = goingOn
           ? 'Please return the HOLD ON command to the fretboard immediately.'
@@ -272,6 +275,8 @@ nav .nav-links, .site-nav .nav-links {
         });
         btn.dataset.state = goingOn ? 'on' : 'off';
       } catch(e){}
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < MIN_VISIBLE_MS) await new Promise(r => setTimeout(r, MIN_VISIBLE_MS - elapsed));
       btn.style.opacity = ''; btn.disabled = false;
       renderHoldToggle();
     }
