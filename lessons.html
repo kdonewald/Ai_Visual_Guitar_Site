@@ -4542,21 +4542,28 @@ function syncSlotsLength(){
   // slots off the END of the array when shrinking for a coarser duration —
   // for an 8-slot 'D D D D' pattern in Quarter mode that kept slots[0..3]
   // ('D',' ','D',' '), discarding the real downbeats at indices 4-7 entirely
-  // and leaving visible gaps. The fix: resample by keeping every Nth element
-  // (the actual downbeat of each group) instead of truncating raw positions.
+  // and leaving visible gaps.
+  //
+  // The fix keeps the pattern's actual strokes in sequence (ignoring rests
+  // entirely) and lays them out one per slot on the coarser grid — NOT by
+  // sampling a fixed position (e.g. "always the downbeat of each pair"),
+  // since that collapses genuinely alternating patterns incorrectly: for
+  // 'D U D U D U D U', the downbeat of every pair is 'D' (U always falls on
+  // the offbeat), so downbeat-sampling would wrongly produce 'D D D D' at
+  // Quarter resolution instead of the correct alternating 'D U D U'.
   if (currentTS==='68') return; // 6/8 doesn't use the duration selector at all
 
   const beats = TIME_SIGS[currentTS].beats;
-  const nativeSlotsPerBeat = slots.length / beats;
-  if (subdivisions===2 || nativeSlotsPerBeat<=1) return; // eighth = native resolution, nothing to resample
+  if (subdivisions===2) return; // eighth = native resolution, nothing to resample
 
-  let groupSize;
-  if      (subdivisions===0)  groupSize = beats * nativeSlotsPerBeat;      // whole = entire measure
-  else if (subdivisions===-1) groupSize = (beats/2) * nativeSlotsPerBeat; // half
-  else                        groupSize = nativeSlotsPerBeat;             // quarter = 1 beat's worth
+  let needed;
+  if      (subdivisions===0)  needed = 1;      // whole note
+  else if (subdivisions===-1) needed = 2;      // half notes
+  else                        needed = beats;  // quarter notes
 
+  const strokesOnly = slots.filter(v => v==='D' || v==='U');
   const resampled = [];
-  for (let i=0; i<slots.length; i+=groupSize) resampled.push(slots[i]);
+  for (let i=0; i<needed; i++) resampled.push(strokesOnly[i] || ' ');
   slots = resampled;
 }
 
