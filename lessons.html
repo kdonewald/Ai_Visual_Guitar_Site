@@ -2727,6 +2727,11 @@
     ];
     const CURRENT_FIRMWARE_CHORDS = new Set(['A','A6','A7','AM','AM/F#','AM6','AM7','AM7/G','B','B6','B7','BM','BM6','BM7','C','C/B','C/G','C6','C7','CM','CM6','CM7','D','D/A','D/F#','D6','D7','DM','DM6','DM7','E','E6','E7','EM','EM/B','EM/G','EM6','EM7','F','F/A','F6','F7','FM','FM6','G','G/B','G/F#','G6','G7','GM','GM6','GM7']);
     function gridCellStatus(qualityKey, rootClean){
+      // F major and F minor are stored alongside the true open chords, but their
+      // actual fingerings are the full E-shape barre at fret 1 (index finger
+      // across 3-4 strings) — genuinely barre technique, not an open shape.
+      // Always show them as barre regardless of the lookup table.
+      if (rootClean === 'F' && (qualityKey === 'Major' || qualityKey === 'Minor')) return 'barre';
       const suffixes = {Major:'',Minor:'M',Dom7:'7',Maj7:'M7',Min7:null,Sus2:'SUS2',Sus4:'SUS4',
                          Six:'6',Dim:'DIM',MSix:'M6',Add9:'ADD9',Dom9:'9',Maj9:'MAJ9',Aug:'AUG'};
       const suf = suffixes[qualityKey];
@@ -2767,14 +2772,13 @@
         const cell=document.createElement('div'); cell.className='oq-cell '+status;
         cell.textContent = status==='unavailable' ? '·' : dualRoot(r.clean);
         const label = gridChordLabel(q.key, r.clean);
-        const scaleAppliesToRow = diatonicSet && (q.key==='Major'||q.key==='Minor');
-        const inScale = scaleAppliesToRow && diatonicSet.some(d=>{
+        const inScale = diatonicSet && (q.key==='Major'||q.key==='Minor') && diatonicSet.some(d=>{
           const info = diatonicInfo(d);
           if (info.isDim) return false;
           if (info.isMinor !== q.isMinor) return false;
           return info.root === r.clean;
         });
-        if (scaleAppliesToRow && !inScale) cell.classList.add('oq-not-in-scale');
+        if (diatonicSet && !inScale) cell.classList.add('oq-not-in-scale');
         const inProg = cpProgression.some(p=>p.label===label);
         if (inProg) cell.classList.add('in-progression');
         if (status !== 'unavailable'){
@@ -2807,7 +2811,7 @@
 
     if (diatonicSet){
       const hint=document.createElement('div'); hint.className='cp-filter-hint'; hint.style.marginTop='.6rem';
-      hint.innerHTML='Chords <span style="font-weight:700;">not</span> in this scale are faded in the Major and Minor rows below, so what belongs stands out clearly.';
+      hint.innerHTML='Everything below is faded except the Major and Minor chords that actually belong to this scale.';
       ocBody.appendChild(hint);
     }
 
