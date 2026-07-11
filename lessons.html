@@ -857,11 +857,11 @@
 
   /* Chord grid */
   .oq-grid-wrap{overflow-x:auto;margin-bottom:.6rem;-webkit-overflow-scrolling:touch;}
-  .oq-grid{display:grid;grid-template-columns:52px repeat(12,34px);gap:2px;width:max-content;}
+  .oq-grid{display:grid;grid-template-columns:52px 34px 52px 34px 34px 52px 34px 52px 34px 34px 52px 34px 52px;gap:2px;width:max-content;}
   .oq-corner{background:transparent;}
   .oq-root-head{
-    font-family:'DM Mono',monospace;font-size:.72rem;font-weight:600;color:var(--text-mid);
-    text-align:center;padding:.3rem 0;
+    font-family:'DM Mono',monospace;font-size:.64rem;font-weight:600;color:var(--text-mid);
+    text-align:center;padding:.3rem 0;letter-spacing:-.02em;
   }
   .oq-quality-label{
     font-family:'DM Sans',sans-serif;font-size:.76rem;font-weight:700;color:var(--text);
@@ -869,7 +869,7 @@
   }
   .oq-cell{
     height:32px;border-radius:5px;border:1.5px solid var(--cream-dark);
-    font-family:'DM Mono',monospace;font-size:.72rem;font-weight:600;
+    font-family:'DM Mono',monospace;font-size:.64rem;font-weight:600;letter-spacing:-.02em;
     display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;
     background:var(--white);color:var(--text);
   }
@@ -2610,6 +2610,8 @@
     // Roman-numeral scale summary below and the main quality grid further down.
     const ENHARMONIC = {'Bb':'A#','Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#'};
     const normRoot = r => ENHARMONIC[r] || r;
+    const DUAL_NAME = {'A#':'A#/Bb','C#':'C#/Db','D#':'D#/Eb','F#':'F#/Gb','G#':'G#/Ab'};
+    function dualRoot(root){ const s = normRoot(root); return DUAL_NAME[s] || s; }
     function diatonicInfo(d){
       const isDim = d.includes('dim');
       const isMinor = !isDim && d.endsWith('m');
@@ -2658,7 +2660,7 @@
         let numeral=BASE_NUMERALS[i];
         if(info.isDim) numeral=numeral.toLowerCase()+' (dim)';
         else if(info.isMinor) numeral=numeral.toLowerCase();
-        const chordName=d; // e.g. 'Dm', 'F#dim', 'C'
+        const chordName = dualRoot(info.root) + (info.isDim ? ' dim' : info.isMinor ? 'm' : '');
         const cell=document.createElement('div'); cell.className='oq-numeral-chord';
         if(info.isDim) cell.classList.add('dim-unavailable');
         cell.innerHTML='<span class="oq-numeral-name">'+chordName+'</span><span class="oq-numeral-label">'+numeral+'</span>';
@@ -2754,7 +2756,7 @@
     const grid=document.createElement('div'); grid.className='oq-grid';
     grid.appendChild(Object.assign(document.createElement('div'),{className:'oq-corner'}));
     GRID_ROOTS.forEach(r=>{
-      const h=document.createElement('div'); h.className='oq-root-head'; h.textContent=r.clean;
+      const h=document.createElement('div'); h.className='oq-root-head'; h.textContent=dualRoot(r.clean);
       grid.appendChild(h);
     });
     GRID_QUALITIES.forEach(q=>{
@@ -2763,7 +2765,7 @@
       GRID_ROOTS.forEach(r=>{
         const status = gridCellStatus(q.key, r.clean);
         const cell=document.createElement('div'); cell.className='oq-cell '+status;
-        cell.textContent = status==='unavailable' ? '·' : r.clean;
+        cell.textContent = status==='unavailable' ? '·' : dualRoot(r.clean);
         const label = gridChordLabel(q.key, r.clean);
         const scaleAppliesToRow = diatonicSet && (q.key==='Major'||q.key==='Minor');
         const inScale = scaleAppliesToRow && diatonicSet.some(d=>{
