@@ -833,14 +833,14 @@
   }
   .oq-numeral-row{display:flex;gap:.35rem;margin-top:.75rem;flex-wrap:nowrap;overflow-x:auto;}
   .oq-numeral-chord{
-    flex:1;min-width:44px;display:flex;flex-direction:column;align-items:center;gap:.25rem;
+    flex:1;min-width:56px;display:flex;flex-direction:column;align-items:center;gap:.25rem;
     padding:.5rem .3rem;border-radius:8px;cursor:pointer;transition:all .15s;
     background:rgba(255,255,255,0.04);border:1.5px solid var(--cream-dark);
   }
   .oq-numeral-chord:hover{border-color:var(--teal);}
   .oq-numeral-chord.dim-unavailable{cursor:not-allowed;opacity:.45;}
   .oq-numeral-name{font-family:'DM Mono',monospace;font-size:.85rem;font-weight:700;color:var(--text);}
-  .oq-numeral-label{font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:700;color:var(--teal);}
+  .oq-numeral-label{font-family:'DM Sans',sans-serif;font-size:.74rem;font-weight:700;color:var(--teal);white-space:nowrap;}
 
   /* Chord type tabs */
   .cp-tabs{
@@ -2654,7 +2654,7 @@
       DIATONIC[cpActiveScale].forEach((d,i)=>{
         const info=diatonicInfo(d);
         let numeral=BASE_NUMERALS[i];
-        if(info.isDim) numeral=numeral.toLowerCase()+'°';
+        if(info.isDim) numeral=numeral.toLowerCase()+' (dim)';
         else if(info.isMinor) numeral=numeral.toLowerCase();
         const chordName=d; // e.g. 'Dm', 'F#dim', 'C'
         const cell=document.createElement('div'); cell.className='oq-numeral-chord';
@@ -2706,6 +2706,14 @@
       { key:'Min7',  label:'Min 7',  isMinor:true  },
       { key:'Sus2',  label:'Sus2',   isMinor:false },
       { key:'Sus4',  label:'Sus4',   isMinor:false },
+      // Less common — ordered by real-world frequency for beginner/intermediate players
+      { key:'Six',   label:'6th',    isMinor:false },
+      { key:'Dim',   label:'Dim',    isMinor:false },
+      { key:'MSix',  label:'m6',     isMinor:true  },
+      { key:'Add9',  label:'Add9',   isMinor:false },
+      { key:'Dom9',  label:'9th',    isMinor:false },
+      { key:'Maj9',  label:'Maj 9',  isMinor:false },
+      { key:'Aug',   label:'Aug',    isMinor:false },
     ];
     const GRID_ROOTS = [
       {clean:'A',display:'A'},{clean:'A#',display:'A#/Bb'},{clean:'B',display:'B'},
@@ -2715,16 +2723,19 @@
     ];
     const CURRENT_FIRMWARE_CHORDS = new Set(['A','A6','A7','AM','AM/F#','AM6','AM7','AM7/G','B','B6','B7','BM','BM6','BM7','C','C/B','C/G','C6','C7','CM','CM6','CM7','D','D/A','D/F#','D6','D7','DM','DM6','DM7','E','E6','E7','EM','EM/B','EM/G','EM6','EM7','F','F/A','F6','F7','FM','FM6','G','G/B','G/F#','G6','G7','GM','GM6','GM7']);
     function gridCellStatus(qualityKey, rootClean){
-      const suffixes = {Major:'',Minor:'M',Dom7:'7',Maj7:'M7',Min7:null,Sus2:'SUS2',Sus4:'SUS4'};
+      const suffixes = {Major:'',Minor:'M',Dom7:'7',Maj7:'M7',Min7:null,Sus2:'SUS2',Sus4:'SUS4',
+                         Six:'6',Dim:'DIM',MSix:'M6',Add9:'ADD9',Dom9:'9',Maj9:'MAJ9',Aug:'AUG'};
       const suf = suffixes[qualityKey];
       if (suf === null) return 'unavailable'; // Min7 — no such family exists in current firmware
       const name = (rootClean + suf).toUpperCase();
       if (CURRENT_FIRMWARE_CHORDS.has(name)) return 'open';
       if (qualityKey === 'Major' || qualityKey === 'Minor') return 'barre'; // barre always covers all 12 roots for these two
-      return 'unavailable';
+      return 'unavailable'; // no barre fallback exists for any other quality, sharps included
     }
     function gridChordLabel(qualityKey, root){
-      const names = {Major:root+' Major',Minor:root+' Minor',Dom7:root+'7',Maj7:root+'maj7',Min7:root+'m7',Sus2:root+'sus2',Sus4:root+'sus4'};
+      const names = {Major:root+' Major',Minor:root+' Minor',Dom7:root+'7',Maj7:root+'maj7',Min7:root+'m7',
+                      Sus2:root+'sus2',Sus4:root+'sus4',Six:root+'6',Dim:root+' Diminished',MSix:root+'m6',
+                      Add9:root+'add9',Dom9:root+'9',Maj9:root+'maj9',Aug:root+' Augmented'};
       return names[qualityKey];
     }
 
