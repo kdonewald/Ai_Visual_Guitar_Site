@@ -846,6 +846,42 @@
   .cp-tab.active{ border-color:var(--red);background:rgba(217,64,37,0.07);color:var(--red);font-weight:600; }
 
   /* Chord grid */
+  .oq-grid-wrap{overflow-x:auto;margin-bottom:.6rem;-webkit-overflow-scrolling:touch;}
+  .oq-grid{display:grid;grid-template-columns:52px repeat(12,34px);gap:2px;width:max-content;}
+  .oq-corner{background:transparent;}
+  .oq-root-head{
+    font-family:'DM Mono',monospace;font-size:.72rem;font-weight:600;color:var(--text-mid);
+    text-align:center;padding:.3rem 0;
+  }
+  .oq-quality-label{
+    font-family:'DM Sans',sans-serif;font-size:.76rem;font-weight:700;color:var(--text);
+    display:flex;align-items:center;padding:0 .3rem;white-space:nowrap;
+  }
+  .oq-cell{
+    height:32px;border-radius:5px;border:1.5px solid var(--cream-dark);
+    font-family:'DM Mono',monospace;font-size:.72rem;font-weight:600;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;
+    background:var(--white);color:var(--text);
+  }
+  .oq-cell.open{border-color:rgba(61,186,114,0.4);background:rgba(61,186,114,0.08);color:var(--green);}
+  .oq-cell.open:hover{border-color:var(--green);background:rgba(61,186,114,0.16);}
+  .oq-cell.barre{border-color:var(--red);background:rgba(224,85,64,0.1);color:var(--red);font-weight:700;}
+  .oq-cell.barre:hover{background:rgba(224,85,64,0.18);}
+  .oq-cell.unavailable{
+    border-color:var(--cream-dark);background:rgba(255,255,255,0.03);
+    color:var(--text-light);opacity:.4;cursor:not-allowed;
+  }
+  .oq-cell.in-progression{box-shadow:0 0 0 2px var(--gold) inset;}
+  .oq-legend{display:flex;gap:.9rem;flex-wrap:wrap;font-size:.78rem;color:var(--text-mid);margin-bottom:.75rem;}
+  .oq-legend span{display:flex;align-items:center;gap:.3rem;}
+  .oq-legend-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
+  .oq-slash-row{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.75rem;padding-top:.75rem;border-top:1.5px solid var(--cream-dark);}
+  .oq-slash-btn{
+    padding:.4rem .7rem;border-radius:7px;border:1.5px solid rgba(61,186,114,0.4);
+    background:rgba(61,186,114,0.08);color:var(--green);font-family:'DM Mono',monospace;
+    font-size:.83rem;font-weight:600;cursor:pointer;transition:all .15s;
+  }
+  .oq-slash-btn:hover{background:rgba(61,186,114,0.16);}
   .cp-chord-grid{
     display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;
     margin-bottom:.6rem;
@@ -2607,21 +2643,44 @@
       renderChordsPanel();
     });
 
-    const tabs=document.createElement('div'); tabs.className='cp-tabs';
-    Object.keys(ALL_CHORDS).forEach(tab=>{
-      const btn=document.createElement('button'); btn.className='cp-tab'+(tab===cpActiveTab?' active':'');
-      btn.textContent=tab;
-      btn.addEventListener('click',()=>{ cpActiveTab=tab; renderChordsPanel(); });
-      tabs.appendChild(btn);
-    });
-    ocBody.appendChild(tabs);
+    // ── Always-open chord grid: quality rows x 12 roots ──
+    // Status per cell verified directly against current (unmerged) firmware's
+    // CHORD_DICT — 'open' = real open chord exists, 'barre' = no open shape
+    // but barre chords cover it (major/minor only, all 12 roots), 'unavailable'
+    // = no path to the fretboard exists yet on this firmware at all.
+    // NOTE: Min7 is entirely 'unavailable' — current firmware has no distinct
+    // minor-7th chord family; only a Major-7 family exists internally.
+    const GRID_QUALITIES = [
+      { key:'Major', label:'Major',  isMinor:false },
+      { key:'Minor', label:'Minor',  isMinor:true  },
+      { key:'Dom7',  label:'7th',    isMinor:false },
+      { key:'Maj7',  label:'Maj 7',  isMinor:false },
+      { key:'Min7',  label:'Min 7',  isMinor:true  },
+      { key:'Sus2',  label:'Sus2',   isMinor:false },
+      { key:'Sus4',  label:'Sus4',   isMinor:false },
+    ];
+    const GRID_ROOTS = [
+      {clean:'A',display:'A'},{clean:'A#',display:'A#/Bb'},{clean:'B',display:'B'},
+      {clean:'C',display:'C'},{clean:'C#',display:'C#/Db'},{clean:'D',display:'D'},
+      {clean:'D#',display:'D#/Eb'},{clean:'E',display:'E'},{clean:'F',display:'F'},
+      {clean:'F#',display:'F#/Gb'},{clean:'G',display:'G'},{clean:'G#',display:'G#/Ab'},
+    ];
+    const CURRENT_FIRMWARE_CHORDS = new Set(['A','A6','A7','AM','AM/F#','AM6','AM7','AM7/G','B','B6','B7','BM','BM6','BM7','C','C/B','C/G','C6','C7','CM','CM6','CM7','D','D/A','D/F#','D6','D7','DM','DM6','DM7','E','E6','E7','EM','EM/B','EM/G','EM6','EM7','F','F/A','F6','F7','FM','FM6','G','G/B','G/F#','G6','G7','GM','GM6','GM7']);
+    function gridCellStatus(qualityKey, rootClean){
+      const suffixes = {Major:'',Minor:'M',Dom7:'7',Maj7:'M7',Min7:null,Sus2:'SUS2',Sus4:'SUS4'};
+      const suf = suffixes[qualityKey];
+      if (suf === null) return 'unavailable'; // Min7 — no such family exists in current firmware
+      const name = (rootClean + suf).toUpperCase();
+      if (CURRENT_FIRMWARE_CHORDS.has(name)) return 'open';
+      if (qualityKey === 'Major' || qualityKey === 'Minor') return 'barre'; // barre always covers all 12 roots for these two
+      return 'unavailable';
+    }
+    function gridChordLabel(qualityKey, root){
+      const names = {Major:root+' Major',Minor:root+' Minor',Dom7:root+'7',Maj7:root+'maj7',Min7:root+'m7',Sus2:root+'sus2',Sus4:root+'sus4'};
+      return names[qualityKey];
+    }
 
-    const chordGrid=document.createElement('div'); chordGrid.className='cp-chord-grid';
     const diatonicSet=cpActiveScale?DIATONIC[cpActiveScale]:null;
-    const filterActive=!!cpActiveScale;
-    // Enharmonic normalization — DIATONIC entries and button names don't always
-    // agree on sharp vs flat spelling (e.g. D Minor's diatonic VI is written
-    // 'Bb', not 'A#') — normalize both sides to sharps before comparing.
     const ENHARMONIC = {'Bb':'A#','Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#'};
     const normRoot = r => ENHARMONIC[r] || r;
     function diatonicInfo(d){
@@ -2631,64 +2690,70 @@
       if (isMinor) root = root.slice(0,-1);
       return { root: normRoot(root), isMinor, isDim };
     }
-    function buttonRoot(n, tab){
-      let s = n.split('/')[0]; // take the first spelling BEFORE any other stripping — fixes buttons like 'A#/Bb' never matching anything
-      if      (tab==='Minor')     s = s.replace(/m$/,'');
-      else if (tab==='Major 7th') s = s.replace('maj7','');
-      else if (tab==='Minor 7th') s = s.replace('m7','');
-      return normRoot(s);
-    }
-    const tabIsMinor = cpActiveTab==='Minor' || cpActiveTab==='Minor 7th';
-    ALL_CHORDS[cpActiveTab].forEach(({n,open})=>{
-      const btn=document.createElement('button');
-      const nRoot = buttonRoot(n, cpActiveTab);
-      const inScale = diatonicSet && diatonicSet.some(d=>{
-        const info = diatonicInfo(d);
-        if (info.isDim) return false; // no diminished chords offered in Open Chords at all
-        if (info.isMinor !== tabIsMinor) return false;
-        return info.root === nRoot;
-      });
-      const inProg=cpProgression.some(p=>p.label===n);
-      let cls='cp-chord-btn';
-      if(filterActive){
-        // Scale filter is active: exactly 3 states, color is the only signal.
-        if(inScale)      cls += open ? ' in-scale' : ' in-scale-barre';
-        else             cls += ' filter-dim';
-      } else if(!open){
-        // No filter active: baseline "this is a barre chord" indicator, unrelated to scale filtering.
-        cls += ' barre-chord';
-      }
-      if(inProg) cls += ' in-progression';
-      btn.className=cls;
-      btn.textContent=n;
-      if(inProg){
-        const badge=document.createElement('span'); badge.className='cp-badge';
-        badge.textContent=cpProgression.filter(p=>p.label===n).length;
-        btn.appendChild(badge);
-      }
-      if(!open){
-        // Barre chords still clickable — route to Vizi as barre chord
-        btn.title='Barre chord — tap to send to Vizi';
-        btn.addEventListener('click',()=>{
-          const cleanN=n.replace('/','').split('/')[0];
-          cpSelectedChord={label:n, cmd:'CHORD '+cleanN, type:'barre'};
-          showChordActions(exList);
-        });
-      } else {
-        btn.addEventListener('click',()=>{
-          cpSelectedChord={label:n, cmd:OPEN_VOICINGS[n]||'CHORD '+n, type:'open'};
-          showChordActions(exList);
-        });
-      }
-      chordGrid.appendChild(btn);
-    });
-    ocBody.appendChild(chordGrid);
 
-    if(!cpActiveScale){
-      const barreNote=document.createElement('div');
-      barreNote.style.cssText='font-size:.82rem;color:var(--text-light);margin-bottom:.85rem;text-align:center;';
-      barreNote.textContent='Greyed = barre chord — tap to send to Vizi, or use the Barre section below for more control';
-      ocBody.appendChild(barreNote);
+    const legend=document.createElement('div'); legend.className='oq-legend';
+    legend.innerHTML =
+      '<span><span class="oq-legend-dot" style="background:rgba(61,186,114,0.4)"></span>Open chord</span>'+
+      '<span><span class="oq-legend-dot" style="background:var(--red)"></span>Barre chord (major/minor only)</span>'+
+      '<span><span class="oq-legend-dot" style="background:rgba(255,255,255,0.15)"></span>Not available yet</span>';
+    ocBody.appendChild(legend);
+
+    const gridWrap=document.createElement('div'); gridWrap.className='oq-grid-wrap';
+    const grid=document.createElement('div'); grid.className='oq-grid';
+    grid.appendChild(Object.assign(document.createElement('div'),{className:'oq-corner'}));
+    GRID_ROOTS.forEach(r=>{
+      const h=document.createElement('div'); h.className='oq-root-head'; h.textContent=r.clean;
+      grid.appendChild(h);
+    });
+    GRID_QUALITIES.forEach(q=>{
+      const lbl=document.createElement('div'); lbl.className='oq-quality-label'; lbl.textContent=q.label;
+      grid.appendChild(lbl);
+      GRID_ROOTS.forEach(r=>{
+        const status = gridCellStatus(q.key, r.clean);
+        const cell=document.createElement('div'); cell.className='oq-cell '+status;
+        cell.textContent = status==='unavailable' ? '·' : r.clean;
+        const label = gridChordLabel(q.key, r.clean);
+        const inScale = diatonicSet && (q.key==='Major'||q.key==='Minor') && diatonicSet.some(d=>{
+          const info = diatonicInfo(d);
+          if (info.isDim) return false;
+          if (info.isMinor !== q.isMinor) return false;
+          return info.root === r.clean;
+        });
+        if (inScale) cell.style.boxShadow = '0 0 0 2px var(--teal) inset';
+        const inProg = cpProgression.some(p=>p.label===label);
+        if (inProg) cell.classList.add('in-progression');
+        if (status !== 'unavailable'){
+          cell.addEventListener('click',()=>{
+            cpSelectedChord = {label, cmd:'CHORD '+r.clean.replace('#',''), type: status};
+            showChordActions(exList);
+          });
+        }
+        grid.appendChild(cell);
+      });
+    });
+    gridWrap.appendChild(grid);
+    ocBody.appendChild(gridWrap);
+
+    // ── Slash chords — song-specific bass-note voicings, not a full 12-root column ──
+    const slashChords = ['AM/F#','AM7/G','C/B','C/G','D/A','D/F#','EM/B','EM/G','F/A','G/B','G/F#'];
+    const slashLabel=document.createElement('div'); slashLabel.style.cssText='font-size:.8rem;color:var(--text-mid);margin-top:.5rem;';
+    slashLabel.textContent='Slash chords — specific useful voicings, not a full root set:';
+    ocBody.appendChild(slashLabel);
+    const slashRow=document.createElement('div'); slashRow.className='oq-slash-row';
+    slashChords.forEach(sc=>{
+      const btn=document.createElement('button'); btn.className='oq-slash-btn'; btn.textContent=sc;
+      btn.addEventListener('click',()=>{
+        cpSelectedChord={label:sc, cmd:'CHORD '+sc, type:'open'};
+        showChordActions(exList);
+      });
+      slashRow.appendChild(btn);
+    });
+    ocBody.appendChild(slashRow);
+
+    if (diatonicSet){
+      const hint=document.createElement('div'); hint.className='cp-filter-hint'; hint.style.marginTop='.6rem';
+      hint.innerHTML='<span style="color:var(--teal);font-weight:700;">Teal outline</span> = this chord is in the selected scale.';
+      ocBody.appendChild(hint);
     }
 
     } // end open-chords section
