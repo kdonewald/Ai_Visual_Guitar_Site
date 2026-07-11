@@ -295,6 +295,14 @@
   .custom-hint.show{display:block;}
   .custom-hint-title{font-size:.84rem;font-weight:600;color:var(--teal);margin-bottom:.3rem;}
   .custom-hint-steps{list-style:none;display:flex;flex-direction:column;gap:.2rem;}
+  .apply-chords-hint{
+    background:rgba(42,172,184,0.06);border:1.5px solid rgba(42,172,184,0.22);
+    border-radius:10px;padding:.85rem 1rem;margin:.9rem 0;
+  }
+  .apply-chords-title{font-size:.84rem;font-weight:700;color:var(--teal);margin-bottom:.55rem;}
+  .apply-chords-step{font-size:.88rem;color:var(--text);line-height:1.5;margin-bottom:.5rem;}
+  .apply-chords-step:last-child{margin-bottom:0;}
+  .apply-chords-step b{color:var(--teal);}
   .custom-hint-steps li{
     font-size:.85rem;color:var(--text-mid);line-height:1.45;
     display:flex;align-items:center;gap:.5rem;
@@ -850,9 +858,9 @@
     position:relative;
   }
   .cp-chord-btn:hover{ border-color:var(--gold);background:rgba(232,160,32,0.06); }
-  .cp-chord-btn.in-scale{ border-color:rgba(42,172,184,0.6);background:rgba(42,172,184,0.12); }
+  .cp-chord-btn.in-scale{ border-color:var(--teal);background:rgba(42,172,184,0.18);color:var(--teal);font-weight:700; }
   .cp-chord-btn.in-scale-barre{ border-color:var(--red);background:rgba(224,85,64,0.12);color:var(--red);font-weight:700; }
-  .cp-chord-btn.filter-dim{ color:var(--text-light);background:var(--cream);opacity:.6; }
+  .cp-chord-btn.filter-dim{ color:var(--text-light);background:rgba(255,255,255,0.04);opacity:.55; }
   .cp-chord-btn.in-progression{
     border-color:var(--gold);background:rgba(232,160,32,0.1);
   }
@@ -2611,9 +2619,35 @@
     const chordGrid=document.createElement('div'); chordGrid.className='cp-chord-grid';
     const diatonicSet=cpActiveScale?DIATONIC[cpActiveScale]:null;
     const filterActive=!!cpActiveScale;
+    // Enharmonic normalization — DIATONIC entries and button names don't always
+    // agree on sharp vs flat spelling (e.g. D Minor's diatonic VI is written
+    // 'Bb', not 'A#') — normalize both sides to sharps before comparing.
+    const ENHARMONIC = {'Bb':'A#','Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#'};
+    const normRoot = r => ENHARMONIC[r] || r;
+    function diatonicInfo(d){
+      const isDim = d.includes('dim');
+      const isMinor = !isDim && d.endsWith('m');
+      let root = d.replace('dim','');
+      if (isMinor) root = root.slice(0,-1);
+      return { root: normRoot(root), isMinor, isDim };
+    }
+    function buttonRoot(n, tab){
+      let s = n.split('/')[0]; // take the first spelling BEFORE any other stripping — fixes buttons like 'A#/Bb' never matching anything
+      if      (tab==='Minor')     s = s.replace(/m$/,'');
+      else if (tab==='Major 7th') s = s.replace('maj7','');
+      else if (tab==='Minor 7th') s = s.replace('m7','');
+      return normRoot(s);
+    }
+    const tabIsMinor = cpActiveTab==='Minor' || cpActiveTab==='Minor 7th';
     ALL_CHORDS[cpActiveTab].forEach(({n,open})=>{
       const btn=document.createElement('button');
-      const inScale=diatonicSet&&diatonicSet.some(d=>d.replace('dim','').replace('m','')===n.replace('m','').replace('maj7','').replace('7','').replace('/','').split('/')[0]);
+      const nRoot = buttonRoot(n, cpActiveTab);
+      const inScale = diatonicSet && diatonicSet.some(d=>{
+        const info = diatonicInfo(d);
+        if (info.isDim) return false; // no diminished chords offered in Open Chords at all
+        if (info.isMinor !== tabIsMinor) return false;
+        return info.root === nRoot;
+      });
       const inProg=cpProgression.some(p=>p.label===n);
       let cls='cp-chord-btn';
       if(filterActive){
@@ -4074,6 +4108,14 @@ function initStrumPlayer(mountId){
     <span><div class="leg-dot down"></div>Down ↓</span>
     <span><div class="leg-dot up"></div>Up ↑</span>
     <span><div class="leg-dot silent"></div>Hand moves, no strike</span>
+  </div>
+
+  <!-- Applying the pattern to real chords -->
+  <div class="apply-chords-hint">
+    <div class="apply-chords-title">Now try it on real chords</div>
+    <div class="apply-chords-step"><b>Step 1</b> — Play this pattern using one chord (try E or G) — get it feeling smooth before moving on.</div>
+    <div class="apply-chords-step"><b>Step 2</b> — Alternate every measure: first measure use E or G, second measure use C. Repeat back and forth.</div>
+    <div class="apply-chords-step"><b>Step 3</b> — Alternate every measure: first measure use E or G, second measure use C, third measure use D, then back to the first chord. Loop it until the switches feel automatic.</div>
   </div>
 
   <!-- Beat indicator -->
