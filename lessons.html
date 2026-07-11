@@ -821,7 +821,7 @@
   .cp-scale-btn:hover{ border-color:var(--teal);color:var(--teal); }
   .cp-scale-btn.active{ border-color:var(--teal);background:rgba(42,172,184,0.08);color:var(--teal);font-weight:600; }
   .cp-filter-hint{
-    font-size:.83rem;color:var(--text-light);margin-top:.35rem;
+    font-size:.88rem;font-weight:600;color:var(--text);margin-top:.5rem;
   }
 
   /* Chord type tabs */
@@ -2394,6 +2394,7 @@
   let cpPlayTimer = null;
   let cpActiveTab = 'Major';
   let cpActiveScale = null;
+  let cpFilterPickerOpen = false; // true = picker grid expanded but no scale chosen yet ("Pick the scale" state)
   let cpBarreShape = null;
   let cpBarreRoot = null;
   let cpTriadGroup = null;
@@ -2533,44 +2534,6 @@
       return;
     }
 
-    // ── Scale filter toggle ──
-    const filterHead=document.createElement('div'); filterHead.className='cp-section-head';
-    filterHead.innerHTML='<span class="cp-section-icon">🎵</span><span>Scale Filter</span>';
-    const filterToggle=document.createElement('button'); filterToggle.className='cp-section-toggle';
-    filterToggle.textContent=cpActiveScale?'On — '+cpActiveScale:'Off';
-    filterToggle.style.color=cpActiveScale?'var(--teal)':'';
-    filterToggle.style.borderColor=cpActiveScale?'var(--teal)':'';
-    filterHead.appendChild(filterToggle);
-    exList.appendChild(filterHead);
-
-    const filterPanel=document.createElement('div');
-    filterPanel.className='cp-scale-filter'+(cpActiveScale?' show':'');
-    filterPanel.id='cpScaleFilter';
-    const filterLabel=document.createElement('span'); filterLabel.className='cp-scale-filter-label';
-    filterLabel.textContent='Show only chords from this scale';
-    filterPanel.appendChild(filterLabel);
-    const scaleGrid=document.createElement('div'); scaleGrid.className='cp-scale-grid';
-    Object.keys(DIATONIC).forEach(scale=>{
-      const btn=document.createElement('button'); btn.className='cp-scale-btn'+(cpActiveScale===scale?' active':'');
-      btn.textContent=scale;
-      btn.addEventListener('click',()=>{
-        cpActiveScale=cpActiveScale===scale?null:scale;
-        renderChordsPanel();
-      });
-      scaleGrid.appendChild(btn);
-    });
-    filterPanel.appendChild(scaleGrid);
-    if(cpActiveScale){
-      const hint=document.createElement('div'); hint.className='cp-filter-hint';
-      hint.innerHTML='Lit up = part of '+cpActiveScale+'. <span style="color:var(--red);font-weight:700;">Red</span> = part of the scale, but not a true open chord — it\'s a barre chord. Greyed out = not part of the chosen scale, but still tappable.';
-      filterPanel.appendChild(hint);
-    }
-    exList.appendChild(filterPanel);
-
-    filterToggle.addEventListener('click',()=>{
-      filterPanel.classList.toggle('show');
-    });
-
     // ── SECTION 1: Open Chords ──
     const ocHead=document.createElement('div');
     ocHead.className='cp-section-head'+(cpOpenSection==='open-chords'?' open':'');
@@ -2582,6 +2545,60 @@
     exList.appendChild(ocBody);
 
     if(cpOpenSection==='open-chords'){
+    // ── Scale filter toggle — lives only inside Open Chords, since that's
+    // the only place its highlighting actually does anything. Real 3-state
+    // button, properly tracked (not just a label mismatch): Off -> tap ->
+    // Pick the scale -> tap a key -> On — [Scale] -> tap again -> Off,
+    // filter fully cleared.
+    const filterHead=document.createElement('div'); filterHead.className='cp-section-head';
+    filterHead.innerHTML='<span class="cp-section-icon">🎵</span><span>Scale Filter</span>';
+    const filterToggle=document.createElement('button'); filterToggle.className='cp-section-toggle';
+    filterToggle.textContent = cpActiveScale ? 'On — '+cpActiveScale : (cpFilterPickerOpen ? 'Pick the scale' : 'Off');
+    filterToggle.style.color = (cpActiveScale||cpFilterPickerOpen) ? 'var(--teal)' : '';
+    filterToggle.style.borderColor = (cpActiveScale||cpFilterPickerOpen) ? 'var(--teal)' : '';
+    filterHead.appendChild(filterToggle);
+    ocBody.appendChild(filterHead);
+
+    const filterPanel=document.createElement('div');
+    filterPanel.className='cp-scale-filter'+((cpActiveScale||cpFilterPickerOpen)?' show':'');
+    filterPanel.id='cpScaleFilter';
+    const filterLabel=document.createElement('span'); filterLabel.className='cp-scale-filter-label';
+    filterLabel.textContent='Show only the open chords from this scale';
+    filterPanel.appendChild(filterLabel);
+    const scaleGrid=document.createElement('div'); scaleGrid.className='cp-scale-grid';
+    Object.keys(DIATONIC).forEach(scale=>{
+      const btn=document.createElement('button'); btn.className='cp-scale-btn'+(cpActiveScale===scale?' active':'');
+      btn.textContent=scale;
+      btn.addEventListener('click',()=>{
+        cpActiveScale=cpActiveScale===scale?null:scale;
+        cpFilterPickerOpen=false;
+        renderChordsPanel();
+      });
+      scaleGrid.appendChild(btn);
+    });
+    filterPanel.appendChild(scaleGrid);
+    if(cpActiveScale){
+      const hint=document.createElement('div'); hint.className='cp-filter-hint';
+      hint.innerHTML='<span style="color:var(--red);font-weight:700;">Red</span> = part of the scale, but not a true open chord — it\'s a barre chord.';
+      filterPanel.appendChild(hint);
+    }
+    ocBody.appendChild(filterPanel);
+
+    filterToggle.addEventListener('click',()=>{
+      if(cpActiveScale){
+        // On -> Off: clear the filter entirely, back to ready state
+        cpActiveScale=null;
+        cpFilterPickerOpen=false;
+      } else if(cpFilterPickerOpen){
+        // Pick the scale -> Off: collapse without choosing
+        cpFilterPickerOpen=false;
+      } else {
+        // Off -> Pick the scale
+        cpFilterPickerOpen=true;
+      }
+      renderChordsPanel();
+    });
+
     const tabs=document.createElement('div'); tabs.className='cp-tabs';
     Object.keys(ALL_CHORDS).forEach(tab=>{
       const btn=document.createElement('button'); btn.className='cp-tab'+(tab===cpActiveTab?' active':'');
