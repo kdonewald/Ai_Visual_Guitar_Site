@@ -1,6 +1,6 @@
 /**
  * Vizi Metronome — inline nav controls v3
- * Row 1: [Home] [Hold On] [Hold Off] [Reset]
+ * Row 1: [Home] [Hold On/Off] [Theory On/Off] [Metro] [Reset]
  * Row 2: [3/4] [4/4] [−] [BPM] [+] [▶]  — full width, no slider, no tap
  * Hold-to-repeat with acceleration on − and + buttons.
  * API: window.viziMetro = { setBpm, getBpm, start, stop, setBeats }
@@ -73,6 +73,14 @@ nav .nav-links, .site-nav .nav-links {
 #vm-hold-toggle[data-state="off"]:hover { border-color: var(--gold, #e8a020); background: rgba(232,160,32,0.12); }
 #vm-hold-toggle[data-state="on"] { border-color: rgba(224,85,64,0.3); color: rgba(224,85,64,0.85); }
 #vm-hold-toggle[data-state="on"]:hover { border-color: rgba(224,85,64,0.7); color: #e05540; background: rgba(224,85,64,0.08); }
+
+/* Theory/Fingering toggle — single button, style driven by data-state.
+   data-state="off" = finger-color mode is active, button offers "Theory On" (gold).
+   data-state="on"  = theory-color mode is active, button offers "Theory Off" (red). */
+#vm-theory-toggle[data-state="off"] { border-color: rgba(232,160,32,0.4); color: var(--gold, #e8a020); }
+#vm-theory-toggle[data-state="off"]:hover { border-color: var(--gold, #e8a020); background: rgba(232,160,32,0.12); }
+#vm-theory-toggle[data-state="on"] { border-color: rgba(224,85,64,0.3); color: rgba(224,85,64,0.85); }
+#vm-theory-toggle[data-state="on"]:hover { border-color: rgba(224,85,64,0.7); color: #e05540; background: rgba(224,85,64,0.08); }
 
 /* Metronome toggle */
 #vm-metro-toggle { border-color: rgba(45,212,191,0.35); color: rgba(45,212,191,0.85); }
@@ -172,6 +180,15 @@ nav .nav-links, .site-nav .nav-links {
     holdToggleBtn.title = 'Toggle fretboard LED hold';
     holdToggleBtn.textContent = 'Hold On';
 
+    // Single toggle button — label/color flips between "Theory On" and "Theory Off",
+    // same pattern as the hold toggle. Sends COLOR T / COLOR F.
+    const theoryToggleBtn = document.createElement('button');
+    theoryToggleBtn.id = 'vm-theory-toggle';
+    theoryToggleBtn.className = 'nav-ctrl-btn';
+    theoryToggleBtn.dataset.state = 'off'; // 'off' = finger-color mode, button offers "Theory On"
+    theoryToggleBtn.title = 'Toggle root/3rd/5th theory coloring';
+    theoryToggleBtn.textContent = 'Theory On';
+
     const metroToggleBtn = document.createElement('button');
     metroToggleBtn.id = 'vm-metro-toggle';
     metroToggleBtn.className = 'nav-ctrl-btn';
@@ -199,7 +216,7 @@ nav .nav-links, .site-nav .nav-links {
       <button id="vm-play">▶</button>
     `;
 
-    return { homeBtn, holdToggleBtn, metroToggleBtn, resetBtn, metroRow };
+    return { homeBtn, holdToggleBtn, theoryToggleBtn, metroToggleBtn, resetBtn, metroRow };
   }
 
   function init() {
@@ -208,12 +225,13 @@ nav .nav-links, .site-nav .nav-links {
     const navLinks = nav && nav.querySelector('.nav-links');
     if (!nav || !navLinks) { setTimeout(init, 100); return; }
 
-    const { homeBtn, holdToggleBtn, metroToggleBtn, resetBtn, metroRow } = buildElements();
+    const { homeBtn, holdToggleBtn, theoryToggleBtn, metroToggleBtn, resetBtn, metroRow } = buildElements();
 
     // Clear existing nav-links children, replace with our row 1
     navLinks.innerHTML = '';
     navLinks.appendChild(homeBtn);
     navLinks.appendChild(holdToggleBtn);
+    navLinks.appendChild(theoryToggleBtn);
     navLinks.appendChild(metroToggleBtn);
     navLinks.appendChild(resetBtn);
 
@@ -292,14 +310,50 @@ nav .nav-links, .site-nav .nav-links {
         });
       } catch(e){}
       btn.textContent = orig; btn.style.opacity = '';
-      // RESET clears holdMode on the fretboard itself — mirror that in the UI.
+      // RESET clears holdMode AND theoryColorMode on the fretboard itself — mirror both in the UI.
       const holdBtn = document.getElementById('vm-hold-toggle');
       if (holdBtn){ holdBtn.dataset.state = 'off'; renderHoldToggle(); }
+      const theoryBtn = document.getElementById('vm-theory-toggle');
+      if (theoryBtn){ theoryBtn.dataset.state = 'off'; renderTheoryToggle(); }
     }
 
-    document.getElementById('vm-hold-toggle').addEventListener('click', sendHoldToggle);
-    document.getElementById('vm-reset')      .addEventListener('click', sendReset);
+    // ── Theory/Fingering toggle ──────────────────────────────
+    // "off" → button offers "Theory On" (gold). "on" → button offers "Theory Off" (red).
+    function renderTheoryToggle(){
+      const theoryBtn = document.getElementById('vm-theory-toggle');
+      if (!theoryBtn) return;
+      theoryBtn.textContent = theoryBtn.dataset.state === 'on' ? 'Theory Off' : 'Theory On';
+    }
+
+    async function sendTheoryToggle() {
+      const btn = document.getElementById('vm-theory-toggle');
+      if (!btn) return;
+      const goingOn = btn.dataset.state !== 'on'; // currently off (or unknown) → this click turns it on
+      btn.textContent = goingOn ? 'Turning On…' : 'Turning Off…';
+      btn.style.opacity = '.5'; btn.disabled = true;
+      const MIN_VISIBLE_MS = 1200; // keep the transient text up long enough to actually read
+      const startedAt = Date.now();
+      try {
+        const msg = goingOn
+          ? 'Please return the COLOR T command to the fretboard immediately.'
+          : 'Please return the COLOR F command to the fretboard immediately.';
+        await fetch(VM_RAILWAY_URL + '/claude-tts', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ message: msg, mode: 'talk' })
+        });
+        btn.dataset.state = goingOn ? 'on' : 'off';
+      } catch(e){}
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < MIN_VISIBLE_MS) await new Promise(r => setTimeout(r, MIN_VISIBLE_MS - elapsed));
+      btn.style.opacity = ''; btn.disabled = false;
+      renderTheoryToggle();
+    }
+
+    document.getElementById('vm-hold-toggle')  .addEventListener('click', sendHoldToggle);
+    document.getElementById('vm-theory-toggle').addEventListener('click', sendTheoryToggle);
+    document.getElementById('vm-reset')        .addEventListener('click', sendReset);
     renderHoldToggle();
+    renderTheoryToggle();
 
     // ── Metronome show/hide ─────────────────────────────────────
     const metroToggleBtn = document.getElementById('vm-metro-toggle');
