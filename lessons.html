@@ -594,7 +594,7 @@
     cursor:pointer;transition:all .15s;text-align:left;width:100%;
   }
   .cb-type-row:hover{ border-color:var(--teal); }
-  .cb-type-row.selected{ border-color:var(--teal);background:rgba(42,172,184,0.08); }
+  .cb-type-row.selected{ border:2px solid var(--teal);background:rgba(42,172,184,0.1);box-shadow:0 0 0 1px rgba(42,172,184,0.25); }
   .cb-type-row-name{
     font-family:'DM Mono',monospace;font-size:.88rem;font-weight:600;
     color:var(--text-mid);min-width:4.2rem;
@@ -602,12 +602,12 @@
   .cb-type-row.selected .cb-type-row-name{ color:var(--teal);font-weight:700; }
   .cb-type-row-pattern{
     font-family:'DM Mono',monospace;font-size:.8rem;letter-spacing:.06em;
-    color:var(--text-light);
+    color:var(--text);
   }
   .cb-type-row.selected .cb-type-row-pattern{ color:var(--teal); }
-  .cb-type-row-pattern-label{ opacity:.7; }
+  .cb-type-row-pattern-label{ opacity:.75; }
   .cb-type-note{
-    font-size:.78rem;color:var(--text-light);line-height:1.5;
+    font-size:.78rem;color:var(--text);line-height:1.5;
     padding:0 .2rem;margin-top:-.1rem;
   }
 
