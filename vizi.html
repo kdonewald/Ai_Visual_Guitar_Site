@@ -947,8 +947,28 @@
       'chords': (()=>{
         const isArpeggio = exerciseName.includes('Arpeggio');
         const isProgression = exerciseName.startsWith('Progression:') || exerciseName.startsWith('Progression step:');
-        const isTriad = exerciseName.includes('Triad');
+        const isBarreDemo = exerciseName.includes('— Barre Demo');
+        const isTriadDemo = exerciseName.includes('— Triad Demo');
+        const isTriad = !isTriadDemo && exerciseName.includes('Triad');
         const isBarre = exerciseName.includes('Shape)');
+
+        if(isBarreDemo){
+          const parts = exerciseName.replace(' — Barre Demo','').trim().split(' '); // e.g. ["E","Shape","Minor"]
+          const shape = parts[0];
+          const isMinor = parts[parts.length-1].toUpperCase()==='MINOR';
+          const cmd = shape+' SHAPE PLAY'+(isMinor?' MINOR':'');
+          return 'The student picked the '+shape+' shape barre chord ('+(isMinor?'minor':'major')+') to see how it works up and down the neck. Explain that this starts as the open '+shape+' shape, then the exact same finger shape slides up the neck one fret at a time — same fingers, new root chord every position. Send the demo now: '+cmd+'. Keep to 2-3 sentences.';
+        }
+
+        if(isTriadDemo){
+          const parts = exerciseName.replace(' — Triad Demo','').replace(' String','').trim().split(' ');
+          const isMinor = parts[parts.length-1].toUpperCase()==='MINOR';
+          const stringLabel = parts.slice(0,-1).join(' '); // e.g. "Low E" or "High E" or "A"
+          const STRING_KEY_MAP = {'LOW E':'LE','HIGH E':'HE','A':'A','D':'D','G':'G','B':'B'};
+          const stringKey = STRING_KEY_MAP[stringLabel.toUpperCase()] || 'HE';
+          const cmd = 'TRIAD '+stringKey+' PLAY'+(isMinor?' MINOR':'');
+          return 'The student picked triads on the '+stringLabel+' string ('+(isMinor?'minor':'major')+') to see how they work up and down the neck. Explain that this is the same 3-note triad shape sliding through all 12 roots, one fret at a time, on the '+stringLabel+' string. Send the demo now: '+cmd+'. Keep to 2-3 sentences.';
+        }
 
         if(isProgression){
           const progStr = exerciseName.replace('Progression:','').replace('Progression step:','').trim();

@@ -2706,18 +2706,12 @@
   }
 
   // ── DEMO: Barre Chords / Triads sliding chromatically up the neck ──
+  // Hold is intentionally NOT managed here — this stage never turns Hold on
+  // automatically (that's only chord-theory, Warmup, and Soloing), so it's
+  // off by default and stays that way unless the student uses the nav bar
+  // themselves. No need to touch it from this feature at all.
   const BARRE_SHAPES_DEMO = ['E','A','C','G','D'];
   const TRIAD_STRINGS_DEMO = [['LE','Low E'],['A','A'],['D','D'],['G','G'],['B','B'],['HE','High E']];
-
-  function syncNavToggleOff(id, offText){
-    let tries = 0;
-    const attempt = () => {
-      const btn = document.getElementById(id);
-      if(btn){ btn.dataset.state='off'; btn.textContent=offText; }
-      else if(tries < 20){ tries++; setTimeout(attempt, 150); }
-    };
-    attempt();
-  }
 
   function renderDemoSection(container){
     const demoLabel = document.createElement('span'); demoLabel.className='choice-panel-label cp-label-bright';
@@ -2725,7 +2719,7 @@
     container.appendChild(demoLabel);
 
     const demoInfo = document.createElement('div'); demoInfo.className='cp-demo-note';
-    demoInfo.textContent = 'Hold is automatically turned off before each demo so you can watch it move through the frets. Tap Hold On in the nav bar to freeze it on any position.';
+    demoInfo.textContent = 'See how barre chords and triads work up and down the fretboard.';
     container.appendChild(demoInfo);
 
     const modeRow = document.createElement('div'); modeRow.className='cp-demo-mode-row';
@@ -2752,7 +2746,7 @@
         btn.textContent = shape+' Shape';
         btn.addEventListener('click',()=>{
           demoShape = shape;
-          if(shape==='C' || shape==='G') playDemoBarre(shape, false);
+          if(shape==='C' || shape==='G') goToDemoBarre(shape, false);
           renderChordsPanel();
         });
         shapeRow.appendChild(btn);
@@ -2763,8 +2757,6 @@
         const note = document.createElement('div'); note.className='cp-demo-note';
         note.textContent = 'C and G shapes don\'t have a minor version, so this plays the major shape.';
         container.appendChild(note);
-        const status = document.createElement('div'); status.className='cb-fret-status'; status.id='cpDemoStatus';
-        container.appendChild(status);
       } else if(demoShape){
         const qLabel = document.createElement('span'); qLabel.className='choice-panel-label cp-label-bright';
         qLabel.textContent = 'Major or minor?';
@@ -2773,12 +2765,10 @@
         [['Major',false],['Minor',true]].forEach(([text,isMinor])=>{
           const btn = document.createElement('button'); btn.className='cp-demo-choice-btn';
           btn.textContent = text;
-          btn.addEventListener('click',()=>playDemoBarre(demoShape, isMinor));
+          btn.addEventListener('click',()=>goToDemoBarre(demoShape, isMinor));
           qRow.appendChild(btn);
         });
         container.appendChild(qRow);
-        const status = document.createElement('div'); status.className='cb-fret-status'; status.id='cpDemoStatus';
-        container.appendChild(status);
       }
     }
 
@@ -2804,39 +2794,26 @@
         [['Major',false],['Minor',true]].forEach(([text,isMinor])=>{
           const btn = document.createElement('button'); btn.className='cp-demo-choice-btn';
           btn.textContent = text;
-          btn.addEventListener('click',()=>playDemoTriad(demoString, isMinor));
+          btn.addEventListener('click',()=>goToDemoTriad(demoString, isMinor));
           qRow.appendChild(btn);
         });
         container.appendChild(qRow);
-        const status = document.createElement('div'); status.className='cb-fret-status'; status.id='cpDemoStatus';
-        container.appendChild(status);
       }
     }
   }
 
-  async function playDemoBarre(shape, isMinor){
-    const statusEl = document.getElementById('cpDemoStatus');
-    if(statusEl){ statusEl.textContent='Turning off Hold...'; statusEl.style.color='var(--gold)'; }
-    await sendFretboardCommandDirect('HOLD OFF');
-    syncNavToggleOff('vm-hold-toggle','Hold On');
-    const qualityText = isMinor ? 'minor' : 'major';
-    if(statusEl){ statusEl.textContent='Playing '+shape+' shape '+qualityText+' — sliding up the neck...'; statusEl.style.color='var(--gold)'; }
-    const cmd = shape+' SHAPE PLAY'+(isMinor?' MINOR':'');
-    await sendFretboardCommandDirect(cmd);
-    if(statusEl){ statusEl.textContent='Done — tap a shape above to play it again'; statusEl.style.color='var(--green)'; }
+  // Both hand off to Vizi (same pattern as every other action in this stage)
+  // so she narrates what's about to happen and sends the actual command
+  // herself, in one turn, rather than the app silently firing it.
+  function goToDemoBarre(shape, isMinor){
+    const exercise = shape+' Shape '+(isMinor?'Minor':'Major')+' — Barre Demo';
+    goToVizi('chords', exercise);
   }
 
-  async function playDemoTriad(stringKey, isMinor){
-    const statusEl = document.getElementById('cpDemoStatus');
-    if(statusEl){ statusEl.textContent='Turning off Hold...'; statusEl.style.color='var(--gold)'; }
-    await sendFretboardCommandDirect('HOLD OFF');
-    syncNavToggleOff('vm-hold-toggle','Hold On');
+  function goToDemoTriad(stringKey, isMinor){
     const label = (TRIAD_STRINGS_DEMO.find(([k])=>k===stringKey)||[null,stringKey])[1];
-    const qualityText = isMinor ? 'minor' : 'major';
-    if(statusEl){ statusEl.textContent='Playing '+label+' triads '+qualityText+' — sliding through all 12 roots...'; statusEl.style.color='var(--gold)'; }
-    const cmd = 'TRIAD '+stringKey+' PLAY'+(isMinor?' MINOR':'');
-    await sendFretboardCommandDirect(cmd);
-    if(statusEl){ statusEl.textContent='Done — tap a string above to play it again'; statusEl.style.color='var(--green)'; }
+    const exercise = label+' String '+(isMinor?'Minor':'Major')+' — Triad Demo';
+    goToVizi('chords', exercise);
   }
 
 
