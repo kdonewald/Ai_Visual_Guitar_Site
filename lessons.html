@@ -96,6 +96,15 @@
 
   /* choice panel */
   .choice-panel-label{font-family:'DM Mono',monospace;font-size:.87rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-mid);margin-bottom:.75rem;display:block;font-weight:500;}
+  .choice-panel-label.cp-label-bright{color:var(--text);font-weight:700;}
+  .cp-chord-reset-btn{
+    display:block;margin:.75rem 0 1rem;padding:.5rem 1rem;
+    font-family:'DM Mono',monospace;font-size:.8rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--text-mid);background:transparent;border:1.5px solid var(--cream-dark);border-radius:8px;
+    cursor:pointer;transition:all .18s;
+  }
+  .cp-chord-reset-btn:hover{border-color:var(--red);color:var(--red);}
+  .cp-slash-explainer{font-size:.84rem;color:var(--text-mid);line-height:1.55;margin-bottom:.75rem;}
   .choice-grid{display:grid;gap:.55rem;margin-bottom:1rem;}
   .choice-grid.cols-2{grid-template-columns:1fr 1fr}
   .choice-grid.cols-3{grid-template-columns:1fr 1fr 1fr}
@@ -1106,6 +1115,7 @@
   }
   .cp-chord-note-btn:hover{ border-color:var(--red);color:var(--red); }
   .cp-chord-note-btn.active{ border-color:var(--red);background:rgba(217,64,37,0.07);color:var(--red); }
+  .cp-slash-note-btn{ font-size:.72rem; }
   .cp-voicings-list{ display:flex;flex-direction:column;gap:.4rem;margin-bottom:.85rem; }
   .cp-voicing-item{
     display:flex;align-items:center;gap:.6rem;
@@ -1285,7 +1295,7 @@
     },
     {
       id:'chords', num:4, label:'Chords',
-      desc:'Open chords, barre chords, and triads — explore any chord, build progressions, and filter by scale.',
+      desc:'',
       videoUrl:'https://youtube.com/shorts/tVfIc41nhLc',       // main stage intro — open chords + chord builder
       barreVideoUrl:'https://youtube.com/shorts/Mfh0b5IEh8M',  // barre chords section intro
       triadVideoUrl:'https://youtube.com/shorts/MCxritexm9M',  // triads section intro
@@ -2382,17 +2392,6 @@
 
 
   // Diatonic chord sets — which chords naturally belong to each scale
-  const DIATONIC = {
-    'G Major':  ['G','Am','Bm','C','D','Em','F#dim'],
-    'C Major':  ['C','Dm','Em','F','G','Am','Bdim'],
-    'D Major':  ['D','Em','F#m','G','A','Bm','C#dim'],
-    'A Major':  ['A','Bm','C#m','D','E','F#m','G#dim'],
-    'E Major':  ['E','F#m','G#m','A','B','C#m','D#dim'],
-    'A Minor':  ['Am','Bdim','C','Dm','Em','F','G'],
-    'E Minor':  ['Em','F#dim','G','Am','Bm','C','D'],
-    'D Minor':  ['Dm','Edim','F','Gm','Am','Bb','C'],
-  };
-
   // Open chord voicings
   const OPEN_VOICINGS = {
     'A':'CHORD A','C':'CHORD C','D':'CHORD D','E':'CHORD E',
@@ -2406,57 +2405,12 @@
     'E7':'CHORD E7','A7':'CHORD A7','B7':'CHORD B7',
   };
 
-  // All 12 chromatic chords per type
-  const ALL_CHORDS = {
-    'Major': [
-      {n:'A',open:true},{n:'A#/Bb',open:false},{n:'B',open:false},
-      {n:'C',open:true},{n:'C#/Db',open:false},{n:'D',open:true},
-      {n:'D#/Eb',open:false},{n:'E',open:true},{n:'F',open:false},
-      {n:'F#/Gb',open:false},{n:'G',open:true},{n:'G#/Ab',open:false},
-    ],
-    'Minor': [
-      {n:'Am',open:true},{n:'A#m/Bbm',open:false},{n:'Bm',open:false},
-      {n:'Cm',open:false},{n:'C#m/Dbm',open:false},{n:'Dm',open:true},
-      {n:'D#m/Ebm',open:false},{n:'Em',open:true},{n:'Fm',open:false},
-      {n:'F#m/Gbm',open:false},{n:'Gm',open:false},{n:'G#m/Abm',open:false},
-    ],
-    'Major 7th': [
-      {n:'Amaj7',open:true},{n:'Bbmaj7',open:false},{n:'Bmaj7',open:false},
-      {n:'Cmaj7',open:true},{n:'Dmaj7',open:true},{n:'Emaj7',open:true},
-      {n:'Fmaj7',open:true},{n:'Gmaj7',open:true},{n:'G#maj7',open:false},
-    ],
-    'Minor 7th': [
-      {n:'Am7',open:true},{n:'Bm7',open:false},{n:'Cm7',open:false},
-      {n:'Dm7',open:true},{n:'Em7',open:true},{n:'Fm7',open:false},{n:'Gm7',open:false},
-    ],
-  };
-
-  const BARRE_SHAPES = ['E Shape','A Shape','C Shape','G Shape','D Shape'];
-  const CHROMATIC_ROOTS = ['C','C#/Db','D','D#/Eb','E','F','F#/Gb','G','G#/Ab','A','A#/Bb','B'];
-  const TRIAD_GROUPS_CP = [
-    { label:'Root on High E', key:'hie', group:'high' },
-    { label:'Root on B',      key:'b',   group:'high' },
-    { label:'Root on G',      key:'g',   group:'high' },
-    { label:'Root on D',      key:'d',   group:'low'  },
-    { label:'Root on A',      key:'a',   group:'low'  },
-    { label:'Root on Low E',  key:'le',  group:'low'  },
-  ];
-
   // Progression state
-  let cpView = 'byType'; // 'byType' or 'byChord'
-  let cpByChordNote = null;
+  let cpByChordSelection = null; // a plain note (e.g. 'G') or a slash chord (e.g. 'C/G')
   let cpProgression = [];
   let cpLooping = false;
   let cpPlayTimer = null;
-  let cpActiveTab = 'Major';
-  let cpActiveScale = null;
-  let cpFilterPickerOpen = false; // true = picker grid expanded but no scale chosen yet ("Pick the scale" state)
-  let cpBarreShape = null;
-  let cpBarreRoot = null;
-  let cpTriadGroup = null;
-  let cpTriadRoot = null;
   let cpSelectedChord = null;
-  let cpOpenSection = 'open-chords'; // which accordion section is open
 
 
   // ── BY CHORD VIEW ────────────────────────────────────────────
@@ -2495,33 +2449,80 @@
     return voicings;
   }
 
+  // Slash chords — song-specific bass-note voicings, appended to the end of the same picker
+  // rather than broken out as a separate grid. Each one has exactly one real voicing.
+  const SLASH_CHORDS_CP = ['AM/F#','AM7/G','C/B','C/G','D/A','D/F#','EM/B','EM/G','F/A','G/B','G/F#'];
+
   function renderByChordView(container){
-    // Note picker
-    const noteLabel=document.createElement('span'); noteLabel.className='choice-panel-label';
-    noteLabel.textContent='Choose a note — see every way to play it';
+    // Note + slash-chord picker
+    const noteLabel=document.createElement('span'); noteLabel.className='choice-panel-label cp-label-bright';
+    noteLabel.textContent='Choose a chord and see different ways to play it on the fretboard';
     container.appendChild(noteLabel);
 
     const noteGrid=document.createElement('div'); noteGrid.className='cp-chord-note-grid';
     ALL_NOTES_CP.forEach(note=>{
       const btn=document.createElement('button');
-      btn.className='cp-chord-note-btn'+(cpByChordNote===note?' active':'');
+      btn.className='cp-chord-note-btn'+(cpByChordSelection===note?' active':'');
       btn.textContent=note;
       btn.addEventListener('click',()=>{
-        cpByChordNote=note;
+        cpByChordSelection=note;
+        renderChordsPanel();
+      });
+      noteGrid.appendChild(btn);
+    });
+    SLASH_CHORDS_CP.forEach(sc=>{
+      const btn=document.createElement('button');
+      btn.className='cp-chord-note-btn cp-slash-note-btn'+(cpByChordSelection===sc?' active':'');
+      btn.textContent=sc;
+      btn.addEventListener('click',()=>{
+        cpByChordSelection=sc;
         renderChordsPanel();
       });
       noteGrid.appendChild(btn);
     });
     container.appendChild(noteGrid);
 
-    if(!cpByChordNote) return;
+    // Reset — collapses everything back to the empty, nothing-selected state
+    const resetBtn=document.createElement('button'); resetBtn.className='cp-chord-reset-btn';
+    resetBtn.textContent='Reset';
+    resetBtn.addEventListener('click',()=>{
+      cpByChordSelection=null;
+      cpSelectedChord=null;
+      renderChordsPanel();
+    });
+    container.appendChild(resetBtn);
 
-    // Voicings list
-    const voicings = getVoicings(cpByChordNote);
+    if(!cpByChordSelection) return;
+
+    const isSlash = SLASH_CHORDS_CP.includes(cpByChordSelection);
+
     const listLabel=document.createElement('span'); listLabel.className='choice-panel-label';
-    listLabel.textContent='All ways to play '+cpByChordNote;
+    listLabel.textContent='Different ways to play '+cpByChordSelection;
     container.appendChild(listLabel);
 
+    if(isSlash){
+      const sc=cpByChordSelection;
+      const explainer=document.createElement('div'); explainer.className='cp-slash-explainer';
+      explainer.textContent="A slash chord is a regular chord played over a different bass note — the letter before the slash is the chord, the letter after is the bass note. It's one specific voicing, not a full chord family, so there's only one way to play it here.";
+      container.appendChild(explainer);
+
+      const list=document.createElement('div'); list.className='cp-voicings-list';
+      const item=document.createElement('div'); item.className='cp-voicing-item';
+      const tag=document.createElement('span'); tag.className='cp-voicing-tag open'; tag.textContent='open';
+      const name=document.createElement('span'); name.className='cp-voicing-name'; name.textContent=sc;
+      const arr=document.createElement('span'); arr.className='cp-voicing-arrow'; arr.textContent='›';
+      item.appendChild(tag); item.appendChild(name); item.appendChild(arr);
+      item.addEventListener('click',()=>{
+        cpSelectedChord={label:sc, cmd:'CHORD '+sc, type:'open'};
+        showChordActions(container.parentElement||exList);
+      });
+      list.appendChild(item);
+      container.appendChild(list);
+      return;
+    }
+
+    // Voicings list for a plain note
+    const voicings = getVoicings(cpByChordSelection);
     const list=document.createElement('div'); list.className='cp-voicings-list';
     voicings.forEach(v=>{
       const item=document.createElement('div'); item.className='cp-voicing-item';
@@ -2556,446 +2557,8 @@
   function renderChordsPanel(){
     exList.innerHTML='';
 
-    // ── View toggle: By Type / By Chord ──
-    const viewToggle=document.createElement('div'); viewToggle.className='cp-view-toggle';
-    const byTypeBtn=document.createElement('button'); byTypeBtn.className='cp-view-btn'+(cpView==='byType'?' active':''); byTypeBtn.textContent='By Type';
-    const byChordBtn=document.createElement('button'); byChordBtn.className='cp-view-btn'+(cpView==='byChord'?' active':''); byChordBtn.textContent='By Chord';
-    byTypeBtn.addEventListener('click',()=>{ cpView='byType'; renderChordsPanel(); });
-    byChordBtn.addEventListener('click',()=>{ cpView='byChord'; renderChordsPanel(); });
-    viewToggle.appendChild(byTypeBtn); viewToggle.appendChild(byChordBtn);
-    exList.appendChild(viewToggle);
+    renderByChordView(exList);
 
-    // By Chord view — show note picker and all voicings
-    if(cpView==='byChord'){
-      renderByChordView(exList);
-      // Still show action panel + progression at bottom
-      const actionWrap2=document.createElement('div');
-      actionWrap2.className='cp-chord-actions'; actionWrap2.id='cpChordActions';
-      const selName2=document.createElement('div'); selName2.className='cp-selected-chord'; selName2.id='cpSelName';
-      selName2.textContent=cpSelectedChord?cpSelectedChord.label:'';
-      const actBtns2=document.createElement('div'); actBtns2.className='cp-action-btns';
-      const sendBtn2=document.createElement('button'); sendBtn2.className='cp-action-btn send'; sendBtn2.textContent='🎸 Light Chord';
-      const progBtn2=document.createElement('button'); progBtn2.className='cp-action-btn prog'; progBtn2.textContent='+ Add to Progression';
-      const arpBtn2=document.createElement('button'); arpBtn2.className='cp-action-btn arp'; arpBtn2.textContent='🎵 Arpeggio';
-      actBtns2.appendChild(sendBtn2); actBtns2.appendChild(progBtn2); actBtns2.appendChild(arpBtn2);
-      actionWrap2.appendChild(selName2); actionWrap2.appendChild(actBtns2);
-      if(cpSelectedChord) actionWrap2.classList.add('show');
-      exList.appendChild(actionWrap2);
-      sendBtn2.addEventListener('click',()=>{ if(cpSelectedChord) goToVizi('chords',cpSelectedChord.label+' — Chord'); });
-      arpBtn2.addEventListener('click',()=>{ if(cpSelectedChord) goToVizi('chords',cpSelectedChord.label+' — Arpeggio'); });
-      progBtn2.addEventListener('click',()=>{ if(cpSelectedChord){ cpProgression.push({...cpSelectedChord}); updateProgBar(); }});
-      // Add progression builder
-      const progSec2=buildProgSection();
-      exList.appendChild(progSec2);
-      return;
-    }
-
-    // ── SECTION 1: Open Chords ──
-    const ocHead=document.createElement('div');
-    ocHead.className='cp-section-head'+(cpOpenSection==='open-chords'?' open':'');
-    ocHead.innerHTML='<span class="cp-section-icon">🎸</span><span class="cp-section-label">Open Chords</span><span class="cp-section-chevron">▾</span>';
-    ocHead.addEventListener('click',()=>{ cpOpenSection=cpOpenSection==='open-chords'?null:'open-chords'; renderChordsPanel(); });
-    exList.appendChild(ocHead);
-
-    const ocBody=document.createElement('div'); ocBody.className='cp-section-body'+(cpOpenSection==='open-chords'?' open':'');
-    exList.appendChild(ocBody);
-
-    if(cpOpenSection==='open-chords'){
-    // ── Scale filter toggle — lives only inside Open Chords, since that's
-    // the only place its highlighting actually does anything. Real 3-state
-    // button, properly tracked (not just a label mismatch): Off -> tap ->
-    // Pick the scale -> tap a key -> On — [Scale] -> tap again -> Off,
-    // filter fully cleared.
-    // Enharmonic normalization + diatonic-quality helper — shared by the
-    // Roman-numeral scale summary below and the main quality grid further down.
-    const ENHARMONIC = {'Bb':'A#','Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#'};
-    const normRoot = r => ENHARMONIC[r] || r;
-    const DUAL_NAME = {'A#':'A#/Bb','C#':'C#/Db','D#':'D#/Eb','F#':'F#/Gb','G#':'G#/Ab'};
-    function dualRoot(root){ const s = normRoot(root); return DUAL_NAME[s] || s; }
-    function diatonicInfo(d){
-      const isDim = d.includes('dim');
-      const isMinor = !isDim && d.endsWith('m');
-      let root = d.replace('dim','');
-      if (isMinor) root = root.slice(0,-1);
-      return { root: normRoot(root), isMinor, isDim };
-    }
-    const filterHead=document.createElement('div'); filterHead.className='cp-section-head';
-    filterHead.innerHTML='<span class="cp-section-icon">🎵</span><span>Scale Filter</span>';
-    const filterToggle=document.createElement('button'); filterToggle.className='cp-section-toggle';
-    filterToggle.textContent = cpActiveScale ? 'On — '+cpActiveScale : (cpFilterPickerOpen ? 'Pick the scale' : 'Off');
-    filterToggle.style.color = (cpActiveScale||cpFilterPickerOpen) ? 'var(--teal)' : '';
-    filterToggle.style.borderColor = (cpActiveScale||cpFilterPickerOpen) ? 'var(--teal)' : '';
-    filterHead.appendChild(filterToggle);
-    ocBody.appendChild(filterHead);
-
-    const filterPanel=document.createElement('div');
-    filterPanel.className='cp-scale-filter'+((cpActiveScale||cpFilterPickerOpen)?' show':'');
-    filterPanel.id='cpScaleFilter';
-    const filterLabel=document.createElement('span'); filterLabel.className='cp-scale-filter-label';
-    filterLabel.textContent='Show only the open chords from this scale';
-    filterPanel.appendChild(filterLabel);
-    const scaleGrid=document.createElement('div'); scaleGrid.className='cp-scale-grid';
-    Object.keys(DIATONIC).forEach(scale=>{
-      const btn=document.createElement('button'); btn.className='cp-scale-btn'+(cpActiveScale===scale?' active':'');
-      btn.textContent=scale;
-      btn.addEventListener('click',()=>{
-        cpActiveScale=cpActiveScale===scale?null:scale;
-        cpFilterPickerOpen=false;
-        renderChordsPanel();
-      });
-      scaleGrid.appendChild(btn);
-    });
-    filterPanel.appendChild(scaleGrid);
-    if(cpActiveScale){
-      const hint=document.createElement('div'); hint.className='cp-filter-hint';
-      hint.innerHTML='<span style="color:var(--red);font-weight:700;">Red</span> = part of the scale, but not a true open chord — it\'s a barre chord.';
-      filterPanel.appendChild(hint);
-
-      // Roman-numeral summary — the scale's 7 diatonic chords, in order,
-      // reusing the exact same quality-aware matching logic as the grid below.
-      const numeralRow=document.createElement('div'); numeralRow.className='oq-numeral-row';
-      const BASE_NUMERALS=['I','II','III','IV','V','VI','VII'];
-      DIATONIC[cpActiveScale].forEach((d,i)=>{
-        const info=diatonicInfo(d);
-        let numeral=BASE_NUMERALS[i];
-        if(info.isDim) numeral=numeral.toLowerCase()+' (dim)';
-        else if(info.isMinor) numeral=numeral.toLowerCase();
-        const chordName = dualRoot(info.root) + (info.isDim ? ' dim' : info.isMinor ? 'm' : '');
-        const cell=document.createElement('div'); cell.className='oq-numeral-chord';
-        if(info.isDim) cell.classList.add('dim-unavailable');
-        cell.innerHTML='<span class="oq-numeral-name">'+chordName+'</span><span class="oq-numeral-label">'+numeral+'</span>';
-        if(!info.isDim){
-          cell.title='Tap to work with this chord';
-          cell.addEventListener('click',()=>{
-            const label = info.isMinor ? info.root+' Minor' : info.root+' Major';
-            cpSelectedChord={label, cmd:'CHORD '+info.root.replace('#',''), type: gridCellStatus(info.isMinor?'Minor':'Major', info.root)};
-            showChordActions(exList);
-          });
-        } else {
-          cell.title='Diminished chords aren\'t available on the fretboard yet';
-        }
-        numeralRow.appendChild(cell);
-      });
-      filterPanel.appendChild(numeralRow);
-    }
-    ocBody.appendChild(filterPanel);
-
-    filterToggle.addEventListener('click',()=>{
-      if(cpActiveScale){
-        // On -> Off: clear the filter entirely, back to ready state
-        cpActiveScale=null;
-        cpFilterPickerOpen=false;
-      } else if(cpFilterPickerOpen){
-        // Pick the scale -> Off: collapse without choosing
-        cpFilterPickerOpen=false;
-      } else {
-        // Off -> Pick the scale
-        cpFilterPickerOpen=true;
-      }
-      renderChordsPanel();
-    });
-
-    // ── Always-open chord grid: quality rows x 12 roots ──
-    // Status per cell verified directly against current (unmerged) firmware's
-    // CHORD_DICT — 'open' = real open chord exists, 'barre' = no open shape
-    // but barre chords cover it (major/minor only, all 12 roots), 'unavailable'
-    // = no path to the fretboard exists yet on this firmware at all.
-    // NOTE: Min7 is entirely 'unavailable' — current firmware has no distinct
-    // minor-7th chord family; only a Major-7 family exists internally.
-    const GRID_QUALITIES = [
-      { key:'Major', label:'Major',  isMinor:false },
-      { key:'Minor', label:'Minor',  isMinor:true  },
-      { key:'Dom7',  label:'7th',    isMinor:false },
-      { key:'Maj7',  label:'Maj 7',  isMinor:false },
-      { key:'Min7',  label:'Min 7',  isMinor:true  },
-      { key:'Sus2',  label:'Sus2',   isMinor:false },
-      { key:'Sus4',  label:'Sus4',   isMinor:false },
-      // Less common — ordered by real-world frequency for beginner/intermediate players
-      { key:'Six',   label:'6th',    isMinor:false },
-      { key:'Dim',   label:'Dim',    isMinor:false },
-      { key:'MSix',  label:'m6',     isMinor:true  },
-      { key:'Add9',  label:'Add9',   isMinor:false },
-      { key:'Dom9',  label:'9th',    isMinor:false },
-      { key:'Maj9',  label:'Maj 9',  isMinor:false },
-      { key:'Aug',   label:'Aug',    isMinor:false },
-    ];
-    const GRID_ROOTS = [
-      {clean:'A',display:'A'},{clean:'A#',display:'A#/Bb'},{clean:'B',display:'B'},
-      {clean:'C',display:'C'},{clean:'C#',display:'C#/Db'},{clean:'D',display:'D'},
-      {clean:'D#',display:'D#/Eb'},{clean:'E',display:'E'},{clean:'F',display:'F'},
-      {clean:'F#',display:'F#/Gb'},{clean:'G',display:'G'},{clean:'G#',display:'G#/Ab'},
-    ];
-    const CURRENT_FIRMWARE_CHORDS = new Set(['A','A6','A7','AM','AM/F#','AM6','AM7','AM7/G','B','B6','B7','BM','BM6','BM7','C','C/B','C/G','C6','C7','CM','CM6','CM7','D','D/A','D/F#','D6','D7','DM','DM6','DM7','E','E6','E7','EM','EM/B','EM/G','EM6','EM7','F','F/A','F6','F7','FM','FM6','G','G/B','G/F#','G6','G7','GM','GM6','GM7']);
-    function gridCellStatus(qualityKey, rootClean){
-      // F major and F minor are stored alongside the true open chords, but their
-      // actual fingerings are the full E-shape barre at fret 1 (index finger
-      // across 3-4 strings) — genuinely barre technique, not an open shape.
-      // Always show them as barre regardless of the lookup table.
-      if (rootClean === 'F' && (qualityKey === 'Major' || qualityKey === 'Minor')) return 'barre';
-      const suffixes = {Major:'',Minor:'M',Dom7:'7',Maj7:'M7',Min7:null,Sus2:'SUS2',Sus4:'SUS4',
-                         Six:'6',Dim:'DIM',MSix:'M6',Add9:'ADD9',Dom9:'9',Maj9:'MAJ9',Aug:'AUG'};
-      const suf = suffixes[qualityKey];
-      if (suf === null) return 'unavailable'; // Min7 — no such family exists in current firmware
-      const name = (rootClean + suf).toUpperCase();
-      if (CURRENT_FIRMWARE_CHORDS.has(name)) return 'open';
-      if (qualityKey === 'Major' || qualityKey === 'Minor') return 'barre'; // barre always covers all 12 roots for these two
-      return 'unavailable'; // no barre fallback exists for any other quality, sharps included
-    }
-    function gridChordLabel(qualityKey, root){
-      const names = {Major:root+' Major',Minor:root+' Minor',Dom7:root+'7',Maj7:root+'maj7',Min7:root+'m7',
-                      Sus2:root+'sus2',Sus4:root+'sus4',Six:root+'6',Dim:root+' Diminished',MSix:root+'m6',
-                      Add9:root+'add9',Dom9:root+'9',Maj9:root+'maj9',Aug:root+' Augmented'};
-      return names[qualityKey];
-    }
-
-    const diatonicSet=cpActiveScale?DIATONIC[cpActiveScale]:null;
-
-    const legend=document.createElement('div'); legend.className='oq-legend';
-    legend.innerHTML =
-      '<span><span class="oq-legend-dot" style="background:rgba(61,186,114,0.4)"></span>Open chord</span>'+
-      '<span><span class="oq-legend-dot" style="background:var(--red)"></span>Barre chord (major/minor only)</span>'+
-      '<span><span class="oq-legend-dot" style="background:rgba(255,255,255,0.15)"></span>Not available yet</span>';
-    ocBody.appendChild(legend);
-
-    const gridWrap=document.createElement('div'); gridWrap.className='oq-grid-wrap';
-    const grid=document.createElement('div'); grid.className='oq-grid';
-    grid.appendChild(Object.assign(document.createElement('div'),{className:'oq-corner'}));
-    GRID_ROOTS.forEach(r=>{
-      const h=document.createElement('div'); h.className='oq-root-head'; h.textContent=dualRoot(r.clean);
-      grid.appendChild(h);
-    });
-    GRID_QUALITIES.forEach(q=>{
-      const lbl=document.createElement('div'); lbl.className='oq-quality-label'; lbl.textContent=q.label;
-      grid.appendChild(lbl);
-      GRID_ROOTS.forEach(r=>{
-        const status = gridCellStatus(q.key, r.clean);
-        const cell=document.createElement('div'); cell.className='oq-cell '+status;
-        cell.textContent = status==='unavailable' ? '·' : dualRoot(r.clean);
-        const label = gridChordLabel(q.key, r.clean);
-        const inScale = diatonicSet && (q.key==='Major'||q.key==='Minor') && diatonicSet.some(d=>{
-          const info = diatonicInfo(d);
-          if (info.isDim) return false;
-          if (info.isMinor !== q.isMinor) return false;
-          return info.root === r.clean;
-        });
-        if (diatonicSet && !inScale) cell.classList.add('oq-not-in-scale');
-        const inProg = cpProgression.some(p=>p.label===label);
-        if (inProg) cell.classList.add('in-progression');
-        if (status !== 'unavailable'){
-          cell.addEventListener('click',()=>{
-            cpSelectedChord = {label, cmd:'CHORD '+r.clean.replace('#',''), type: status};
-            showChordActions(exList);
-          });
-        }
-        grid.appendChild(cell);
-      });
-    });
-    gridWrap.appendChild(grid);
-    ocBody.appendChild(gridWrap);
-
-    // ── Slash chords — song-specific bass-note voicings, not a full 12-root column ──
-    const slashChords = ['AM/F#','AM7/G','C/B','C/G','D/A','D/F#','EM/B','EM/G','F/A','G/B','G/F#'];
-    const slashLabel=document.createElement('div'); slashLabel.style.cssText='font-size:.8rem;color:var(--text-mid);margin-top:.5rem;';
-    slashLabel.textContent='Slash chords — specific useful voicings, not a full root set:';
-    ocBody.appendChild(slashLabel);
-    const slashRow=document.createElement('div'); slashRow.className='oq-slash-row';
-    slashChords.forEach(sc=>{
-      const btn=document.createElement('button'); btn.className='oq-slash-btn'; btn.textContent=sc;
-      btn.addEventListener('click',()=>{
-        cpSelectedChord={label:sc, cmd:'CHORD '+sc, type:'open'};
-        showChordActions(exList);
-      });
-      slashRow.appendChild(btn);
-    });
-    ocBody.appendChild(slashRow);
-
-    if (diatonicSet){
-      const hint=document.createElement('div'); hint.className='cp-filter-hint'; hint.style.marginTop='.6rem';
-      hint.innerHTML='Everything below is faded except the Major and Minor chords that actually belong to this scale.';
-      ocBody.appendChild(hint);
-    }
-
-    } // end open-chords section
-
-    // ── SECTION 2: Barre Chords ──
-    const bcHead=document.createElement('div');
-    bcHead.className='cp-section-head'+(cpOpenSection==='barre-chords'?' open':'');
-    bcHead.innerHTML='<span class="cp-section-icon">🤘</span><span class="cp-section-label">Barre Chords</span><span class="cp-section-chevron">▾</span>';
-    bcHead.addEventListener('click',()=>{ cpOpenSection=cpOpenSection==='barre-chords'?null:'barre-chords'; renderChordsPanel(); });
-    exList.appendChild(bcHead);
-
-    const bcBody=document.createElement('div'); bcBody.className='cp-section-body'+(cpOpenSection==='barre-chords'?' open':'');
-    exList.appendChild(bcBody);
-
-    if(cpOpenSection==='barre-chords'){
-    bcBody.appendChild(makeVideoIntroBtn('Watch Barre Chord Intro', activeStage&&activeStage.barreVideoUrl||''));
-
-    const barreWrap=document.createElement('div'); barreWrap.className='cp-barre-wrap';
-    const shapes=document.createElement('div'); shapes.className='cp-barre-shapes';
-    BARRE_SHAPES.forEach(shape=>{
-      const btn=document.createElement('button');
-      btn.className='cp-shape-btn'+(cpBarreShape===shape?' active':'');
-      btn.textContent=shape;
-      btn.addEventListener('click',()=>{ cpBarreShape=shape; cpBarreRoot=null; cpSelectedChord=null; renderChordsPanel(); });
-      shapes.appendChild(btn);
-    });
-    barreWrap.appendChild(shapes);
-
-    if(cpBarreShape){
-      const shapeLetter = cpBarreShape.charAt(0); // 'E Shape' -> 'E'
-      const supportsMinor = (shapeLetter==='E' || shapeLetter==='A' || shapeLetter==='D');
-
-      if(!cpBarreRoot){
-      const playRow=document.createElement('div');
-      playRow.style.cssText='display:flex;gap:.5rem;margin:.5rem 0 .75rem;';
-      const playStatus=document.createElement('div');
-      playStatus.style.cssText='font-size:.82rem;color:var(--text-mid);margin-bottom:.4rem;min-height:1.1em;';
-      const sendShapePlay=async (isMinor)=>{
-        playStatus.textContent='Lighting fretboard...';
-        playStatus.style.color='var(--gold)';
-        try{
-          const res=await fetch(RAILWAY_URL+'/fretboard-command',{
-            method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({command:shapeLetter+' SHAPE PLAY'+(isMinor?' MINOR':'')})
-          });
-          if(res.ok){ playStatus.textContent='Playing — watch the shape slide up the neck'; playStatus.style.color='var(--green)'; }
-          else{ playStatus.textContent='Could not reach fretboard'; playStatus.style.color='var(--red)'; }
-        }catch(e){ playStatus.textContent='Could not reach fretboard'; playStatus.style.color='var(--red)'; }
-      };
-      const playMajBtn=document.createElement('button');
-      playMajBtn.className='cp-action-btn send'; playMajBtn.textContent='▶ Play Shape Down the Fretboard';
-      playMajBtn.addEventListener('click',()=>sendShapePlay(false));
-      playRow.appendChild(playMajBtn);
-      if(supportsMinor){
-        const playMinBtn=document.createElement('button');
-        playMinBtn.className='cp-action-btn send'; playMinBtn.textContent='▶ Play Minor Version';
-        playMinBtn.addEventListener('click',()=>sendShapePlay(true));
-        playRow.appendChild(playMinBtn);
-      }
-      barreWrap.appendChild(playRow);
-      barreWrap.appendChild(playStatus);
-      }
-
-      const rootGrid=document.createElement('div'); rootGrid.className='cp-root-grid';
-      CHROMATIC_ROOTS.forEach(root=>{
-        const btn=document.createElement('button');
-        btn.className='cp-root-btn'+(cpBarreRoot===root?' active':'');
-        btn.textContent=root;
-        btn.addEventListener('click',()=>{
-          cpBarreRoot=root;
-          const cleanRoot=root.replace('/','').split('/')[0];
-          cpSelectedChord={
-            label:cleanRoot+' ('+cpBarreShape+')',
-            cmd:'CHORD '+cleanRoot,
-            type:'barre',
-            shape:cpBarreShape,
-            root:root
-          };
-          renderChordsPanel();
-          showChordActions(exList);
-        });
-        rootGrid.appendChild(btn);
-      });
-      barreWrap.appendChild(rootGrid);
-    } else {
-      const hint=document.createElement('div');
-      hint.style.cssText='font-size:.84rem;color:var(--text-light);padding:.4rem 0 .6rem;';
-      hint.textContent='Tap a shape first, then pick your root note';
-      barreWrap.appendChild(hint);
-    }
-    bcBody.appendChild(barreWrap);
-
-    } // end barre-chords section
-
-    // ── SECTION 3: Triads ──
-    const triHead=document.createElement('div');
-    triHead.className='cp-section-head'+(cpOpenSection==='triads'?' open':'');
-    triHead.innerHTML='<span class="cp-section-icon">✨</span><span class="cp-section-label">Triads</span><span class="cp-section-chevron">▾</span>';
-    triHead.addEventListener('click',()=>{ cpOpenSection=cpOpenSection==='triads'?null:'triads'; renderChordsPanel(); });
-    exList.appendChild(triHead);
-
-    const triBody=document.createElement('div'); triBody.className='cp-section-body'+(cpOpenSection==='triads'?' open':'');
-    exList.appendChild(triBody);
-
-    if(cpOpenSection==='triads'){
-    triBody.appendChild(makeVideoIntroBtn('Watch Triad Intro', activeStage&&activeStage.triadVideoUrl||''));
-
-    const triadGroupRow=document.createElement('div'); triadGroupRow.className='cp-tabs';
-    TRIAD_GROUPS_CP.forEach(grp=>{
-      const btn=document.createElement('button');
-      btn.className='cp-tab'+(cpTriadGroup===grp.key?' active':'');
-      btn.textContent=grp.label;
-      btn.addEventListener('click',()=>{ cpTriadGroup=grp.key; cpTriadRoot=null; cpSelectedChord=null; renderChordsPanel(); });
-      triadGroupRow.appendChild(btn);
-    });
-    triBody.appendChild(triadGroupRow);
-
-    if(cpTriadGroup){
-      // Maps the app's internal group key to the string name the firmware recognizes
-      // (the High-E group is stored internally as 'hie', but the firmware expects 'HE').
-      const triadFwKey = (cpTriadGroup==='hie') ? 'HE' : cpTriadGroup.toUpperCase();
-
-      if(!cpTriadRoot){
-      const playAllRow=document.createElement('div');
-      playAllRow.style.cssText='display:flex;gap:.5rem;margin:.5rem 0 .75rem;';
-      const playAllStatus=document.createElement('div');
-      playAllStatus.style.cssText='font-size:.82rem;color:var(--text-mid);margin-bottom:.4rem;min-height:1.1em;';
-      const sendTriadPlayAll=async (isMinor)=>{
-        playAllStatus.textContent='Lighting fretboard...';
-        playAllStatus.style.color='var(--gold)';
-        try{
-          const res=await fetch(RAILWAY_URL+'/fretboard-command',{
-            method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({command:'TRIAD '+triadFwKey+' PLAY'+(isMinor?' MINOR':'')})
-          });
-          if(res.ok){ playAllStatus.textContent='Playing — watch the shape slide up the neck'; playAllStatus.style.color='var(--green)'; }
-          else{ playAllStatus.textContent='Could not reach fretboard'; playAllStatus.style.color='var(--red)'; }
-        }catch(e){ playAllStatus.textContent='Could not reach fretboard'; playAllStatus.style.color='var(--red)'; }
-      };
-      const playAllMajBtn=document.createElement('button');
-      playAllMajBtn.className='cp-action-btn send'; playAllMajBtn.textContent='▶ Play Shape Down the Fretboard';
-      playAllMajBtn.addEventListener('click',()=>sendTriadPlayAll(false));
-      const playAllMinBtn=document.createElement('button');
-      playAllMinBtn.className='cp-action-btn send'; playAllMinBtn.textContent='▶ Play Minor Version';
-      playAllMinBtn.addEventListener('click',()=>sendTriadPlayAll(true));
-      playAllRow.appendChild(playAllMajBtn); playAllRow.appendChild(playAllMinBtn);
-      triBody.appendChild(playAllRow);
-      triBody.appendChild(playAllStatus);
-      }
-
-      const triadRootGrid=document.createElement('div'); triadRootGrid.className='cp-root-grid';
-      CHROMATIC_ROOTS.forEach(root=>{
-        const btn=document.createElement('button');
-        btn.className='cp-root-btn'+(cpTriadRoot===root?' active':'');
-        btn.textContent=root;
-        btn.addEventListener('click',()=>{
-          cpTriadRoot=root;
-          const cleanRoot=root.replace('/','').split('/')[0];
-          cpSelectedChord=null;
-          // Re-render panel then show type picker in correct spot
-          renderChordsPanel();
-        });
-        triadRootGrid.appendChild(btn);
-      });
-      triBody.appendChild(triadRootGrid);
-
-      // Triad type picker goes here — BEFORE action panel
-      const triadPickerMount=document.createElement('div');
-      triadPickerMount.id='cpTriadPickerMount';
-      triBody.appendChild(triadPickerMount);
-      if(cpTriadRoot){
-        const cleanRoot=cpTriadRoot.replace('/','').split('/')[0];
-        showTriadTypePicker(cleanRoot, cpTriadGroup, triadPickerMount);
-      }
-    } else {
-      const hint=document.createElement('div');
-      hint.style.cssText='font-size:.84rem;color:var(--text-mid);padding:.4rem 0 .6rem;';
-      hint.textContent='Tap a string group to choose where the root sits';
-      triBody.appendChild(hint);
-    }
-    } // end triads section
-
-    // ── Chord action panel (shows after selection) ──
     const actionWrap=document.createElement('div');
     actionWrap.className='cp-chord-actions'; actionWrap.id='cpChordActions';
     const selName=document.createElement('div'); selName.className='cp-selected-chord'; selName.id='cpSelName';
@@ -3023,7 +2586,7 @@
       updateProgBar();
     });
 
-    // ── PROGRESSION BUILDER ──
+    // -- PROGRESSION BUILDER --
     const progSec=buildProgSection();
     exList.appendChild(progSec);
   }
@@ -3052,31 +2615,6 @@
     viziBtn.addEventListener('click',()=>{ if(!cpProgression.length)return; const progStr=cpProgression.map(p=>p.label).join(' → '); goToVizi('chords','Progression: '+progStr); });
     clearBtn.addEventListener('click',()=>{ cpProgression=[]; cpPlayTimer=null; renderChordsPanel(); });
     return progSection;
-  }
-
-  function showTriadTypePicker(root, group, container){
-    container.innerHTML='';
-    const picker=document.createElement('div'); picker.id='cpTriadTypePicker';
-    picker.style.cssText='display:flex;gap:.4rem;margin:.5rem 0 .85rem;';
-    ['Major','Minor'].forEach(type=>{
-      const btn=document.createElement('button');
-      btn.style.cssText='flex:1;padding:.5rem;border-radius:8px;font-family:"DM Mono",monospace;font-size:.82rem;font-weight:600;cursor:pointer;border:1.5px solid var(--cream-dark);background:var(--white);transition:all .18s;';
-      btn.textContent=root+' '+type+' Triad';
-      btn.style.borderColor=type==='Major'?'rgba(232,160,32,0.6)':'rgba(27,79,138,0.4)';
-      btn.style.color=type==='Major'?'#BA7517':'var(--blue)';
-      btn.addEventListener('click',()=>{
-        const grpUp=(group==='hie')?'HE':group.toUpperCase();
-        cpSelectedChord={
-          label:root+' '+type+' Triad ('+group.toUpperCase()+')',
-          cmd:'TRIAD '+grpUp+' '+root+(type==='Minor'?'M':''),
-          type:'triad'
-        };
-        document.getElementById('cpSelName').textContent=cpSelectedChord.label;
-        document.getElementById('cpChordActions').classList.add('show');
-      });
-      picker.appendChild(btn);
-    });
-    container.appendChild(picker);
   }
 
   function showChordActions(container){
