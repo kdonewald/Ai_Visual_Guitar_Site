@@ -2042,7 +2042,7 @@
     const wrap = document.createElement('div'); wrap.className='cb-wrap';
 
     // ── Root note picker ──
-    const rootLabel = document.createElement('span'); rootLabel.className='choice-panel-label';
+    const rootLabel = document.createElement('span'); rootLabel.className='choice-panel-label cp-label-bright';
     rootLabel.textContent='Step 1 — Choose a root note';
     wrap.appendChild(rootLabel);
     const noteGrid = document.createElement('div'); noteGrid.className='cb-note-grid';
@@ -2056,13 +2056,16 @@
         btn.classList.add('selected');
         cbStep=0; updateBuildBtn();
         clearSteps();
+        const typeLabelEl = document.getElementById('cbStep2Label');
+        if(typeLabelEl) typeLabelEl.classList.add('cp-label-bright');
       });
       noteGrid.appendChild(btn);
     });
     wrap.appendChild(noteGrid);
 
     // ── Chord type picker ──
-    const typeLabel = document.createElement('span'); typeLabel.className='choice-panel-label';
+    const typeLabel = document.createElement('span'); typeLabel.id='cbStep2Label';
+    typeLabel.className='choice-panel-label'+(cbRoot?' cp-label-bright':'');
     typeLabel.style.marginTop='.25rem'; typeLabel.style.display='block';
     typeLabel.textContent='Step 2 — Choose a chord type';
     wrap.appendChild(typeLabel);
@@ -2099,19 +2102,69 @@
     const lightScaleBtn = document.createElement('button');
     lightScaleBtn.className='cb-vizi-btn'; lightScaleBtn.id='cbLightScaleBtn';
     lightScaleBtn.textContent='🎸 Light Scale';
-    lightScaleBtn.addEventListener('click',()=>{
-      if(!cbRoot||!cbType) return;
-      const exercise = cbRoot+' '+cbType+' — Scale Chords';
-      const p=new URLSearchParams({stage:'chord-theory',exercise});
-      window.location.href='vizi.html?'+p.toString();
-    });
+    lightScaleBtn.addEventListener('click',()=>lightScaleOnFretboardDirect());
     actionRow.appendChild(lightScaleBtn);
     wrap.appendChild(actionRow);
+
+    // Status line for the Light Scale action
+    const scaleStatus = document.createElement('div');
+    scaleStatus.className='cb-fret-status'; scaleStatus.id='cbScaleStatus';
+    wrap.appendChild(scaleStatus);
 
     exList.appendChild(wrap);
 
     // Restore state if previously built
     if(cbRoot && cbType && cbStep>0) runChordBuilderFromStep(0);
+
+    // Hold and Theory mode both need to be on before a SCALE command is sent
+    // (firmware timing limit — see R16). Since this stage's whole point is a
+    // theory-colored scale, turn both on the moment the stage opens instead
+    // of relying on a written instruction the student has to act on in time.
+    activateHoldAndTheory();
+  }
+
+  async function activateHoldAndTheory(){
+    try{
+      await fetch(RAILWAY_URL+'/fretboard-command',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({command:'HOLD ON'})
+      });
+      await fetch(RAILWAY_URL+'/fretboard-command',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({command:'COLOR THEORY'})
+      });
+    }catch(e){ /* best effort — Light Scale still works even if this silently fails */ }
+    // Keep the nav-bar toggles in sync with reality, retrying briefly since
+    // the shared widget script injects them asynchronously.
+    let tries = 0;
+    const syncNav = () => {
+      const holdBtn = document.getElementById('vm-hold-toggle');
+      const theoryBtn = document.getElementById('vm-theory-toggle');
+      if(holdBtn){ holdBtn.dataset.state='on'; holdBtn.textContent='Hold Off'; }
+      if(theoryBtn){ theoryBtn.dataset.state='on'; theoryBtn.textContent='Theory Off'; }
+      if((!holdBtn || !theoryBtn) && tries < 20){ tries++; setTimeout(syncNav, 150); }
+    };
+    syncNav();
+  }
+
+  async function lightScaleOnFretboardDirect(){
+    if(!cbRoot||!cbType) return;
+    const statusEl = document.getElementById('cbScaleStatus');
+    const scaleCmd = 'SCALE '+cbRoot+(cbType==='Minor'?'m':'')+' '+cbType.toLowerCase()+' ALL';
+    if(statusEl){ statusEl.textContent='Lighting scale...'; statusEl.style.color='var(--gold)'; }
+    try{
+      const res = await fetch(RAILWAY_URL+'/fretboard-command',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({command:scaleCmd})
+      });
+      if(res.ok){
+        if(statusEl){ statusEl.textContent='Fretboard lit — root/3rd/5th colored'; statusEl.style.color='var(--green)'; }
+      } else {
+        if(statusEl){ statusEl.textContent='Could not reach fretboard'; statusEl.style.color='var(--red)'; }
+      }
+    }catch(e){
+      if(statusEl){ statusEl.textContent='Could not reach fretboard'; statusEl.style.color='var(--red)'; }
+    }
   }
 
   function updateBuildBtn(){
@@ -2272,7 +2325,7 @@
         const body = document.createElement('div'); body.className='cb-step-body';
 
         const descEl = document.createElement('div'); descEl.className='cb-step-desc';
-        descEl.textContent = 'These ' + scaleNotes.length + ' notes are also the root of every chord built from this scale — each one below starts fresh from that note and stacks Root, 3rd, 5th using only notes already in the scale.';
+        descEl.textContent = 'Every chord in the scale comes from the same formula: 1-3-5 — 1 is the root note, 3 is the 3rd note up the scale from that root, and 5 is the 5th note up the scale from that root. These ' + scaleNotes.length + ' scale notes are also the root of every chord in the scale — each row below starts fresh from that note and stacks its own 1-3-5 using only notes already in the scale.';
         body.appendChild(descEl);
 
         const grid = document.createElement('div'); grid.className='cb-chord-grid';
@@ -2284,11 +2337,20 @@
         buildScaleChordRows(scaleNotes).forEach(row=>{
           const rootDisp = displayNote(row.root);
           const notesDisp = [row.root, row.third, row.fifth].map(displayNote).join(' ');
-          const nameDisp = rootDisp + ' ' + row.quality;
 
           const c1=document.createElement('div'); c1.className='cbcg-cell cbcg-root'; c1.textContent=rootDisp;
           const c2=document.createElement('div'); c2.className='cbcg-cell cbcg-notes'; c2.textContent=notesDisp;
-          const c3=document.createElement('div'); c3.className='cbcg-cell cbcg-name'; c3.innerHTML=colorizeQualityLabel(nameDisp);
+
+          // Built as separate DOM nodes (text node + span), not one HTML string,
+          // so the space between root and quality can never be lost.
+          const c3=document.createElement('div'); c3.className='cbcg-cell cbcg-name';
+          c3.appendChild(document.createTextNode(rootDisp + ' '));
+          const qEl = document.createElement('span');
+          if(row.quality === 'Major') qEl.className = 'cp-q-major';
+          else if(row.quality === 'Minor') qEl.className = 'cp-q-minor';
+          qEl.textContent = row.quality;
+          c3.appendChild(qEl);
+
           grid.appendChild(c1); grid.appendChild(c2); grid.appendChild(c3);
         });
         body.appendChild(grid);

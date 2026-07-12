@@ -988,13 +988,7 @@
         ? 'The student chose Mixed string groups. Give them a chord progression that moves between different string groups: G chord (6 strings), D chord (4 strings), C chord (5 strings). Show the string range for each chord using STRING commands, explain why the aim changes, and give a strumming exercise that practices the switch.'
         : 'The student chose "' + exerciseName + '". Explain which chords use this string range, show one example chord with a STRING command, then verbally suggest a BPM for the strumming exercise — do not send a METRONOME command.',
       'chord-theory': (()=>{
-        if(exerciseName.includes('Scale Chords')){
-          const parts = exerciseName.replace(' — Scale Chords','').split(' ');
-          const root = parts[0] || 'C';
-          const type = (parts[1] || 'Major').toLowerCase();
-          const scaleCmd = 'SCALE '+root+' '+type+' ALL';
-          return 'The student just built out every chord in the '+root+' '+(type==='minor'?'Minor':'Major')+' scale using the scale-chord builder and wants to see it lit on the fretboard colored by role (root/3rd/5th). Light it now: '+scaleCmd+'.';
-        } else if(exerciseName.includes('Chord Construction')){
+        if(exerciseName.includes('Chord Construction')){
           const parts = exerciseName.replace(' — Chord Construction','').split(' ');
           const root = parts[0] || 'C';
           const type = parts.slice(1).join(' ') || 'Major';
