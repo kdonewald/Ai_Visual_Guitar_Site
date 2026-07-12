@@ -1134,6 +1134,9 @@
   .cp-voicing-tag.barre{ background:rgba(27,79,138,0.12);color:var(--blue); }
   .cp-voicing-tag.triad{ background:rgba(232,160,32,0.12);color:#BA7517; }
   .cp-voicing-name{ font-size:.84rem;font-weight:500;color:var(--text);flex:1; }
+  .cp-q-major{color:var(--gold);font-weight:700;}
+  .cp-q-minor{color:var(--blue);font-weight:700;}
+  .cp-q-seventh{color:var(--teal);font-weight:700;}
   .cp-voicing-arrow{ color:var(--text-light);font-size:.8rem; }
 
   /* ── Section video intro button ── */
@@ -2453,6 +2456,16 @@
   // rather than broken out as a separate grid. Each one has exactly one real voicing.
   const SLASH_CHORDS_CP = ['AM/F#','AM7/G','C/B','C/G','D/A','D/F#','EM/B','EM/G','F/A','G/B','G/F#'];
 
+  // Colorizes the quality words inside a chord label so Major / Minor / 7th
+  // are each visually distinct at a glance (e.g. "Open G Major 7th" gets
+  // "Major" in gold and "7th" in teal).
+  function colorizeQualityLabel(label){
+    return label
+      .replace(/\bMajor\b/g, '<span class="cp-q-major">Major</span>')
+      .replace(/\bMinor\b/g, '<span class="cp-q-minor">Minor</span>')
+      .replace(/\b7th\b/g, '<span class="cp-q-seventh">7th</span>');
+  }
+
   function renderByChordView(container){
     // Note + slash-chord picker
     const noteLabel=document.createElement('span'); noteLabel.className='choice-panel-label cp-label-bright';
@@ -2527,7 +2540,7 @@
     voicings.forEach(v=>{
       const item=document.createElement('div'); item.className='cp-voicing-item';
       const tag=document.createElement('span'); tag.className='cp-voicing-tag '+v.tag; tag.textContent=v.tag;
-      const name=document.createElement('span'); name.className='cp-voicing-name'; name.textContent=v.label;
+      const name=document.createElement('span'); name.className='cp-voicing-name'; name.innerHTML=colorizeQualityLabel(v.label);
       const arr=document.createElement('span'); arr.className='cp-voicing-arrow'; arr.textContent='›';
       item.appendChild(tag); item.appendChild(name); item.appendChild(arr);
       item.addEventListener('click',()=>{
@@ -2603,16 +2616,14 @@
     loopToggle.addEventListener('click',()=>{ cpLooping=!cpLooping; loopToggle.classList.toggle('on',cpLooping); });
     loopRow.appendChild(loopLabel); loopRow.appendChild(loopToggle); progSection.appendChild(loopRow);
     const progControls=document.createElement('div'); progControls.className='cp-prog-controls';
-    const playBtn=document.createElement('button'); playBtn.className='cp-prog-btn play'; playBtn.textContent='▶ Play Progression';
-    const viziBtn=document.createElement('button'); viziBtn.className='cp-prog-btn vizi'; viziBtn.textContent='Ask Vizi →';
+    const playBtn=document.createElement('button'); playBtn.className='cp-prog-btn play'; playBtn.textContent='🎸 Light Progression';
     const clearBtn=document.createElement('button'); clearBtn.className='cp-prog-btn clear'; clearBtn.textContent='Clear';
-    playBtn.disabled=cpProgression.length<1; viziBtn.disabled=cpProgression.length<1;
-    progControls.appendChild(playBtn); progControls.appendChild(viziBtn); progControls.appendChild(clearBtn);
+    playBtn.disabled=cpProgression.length<1;
+    progControls.appendChild(playBtn); progControls.appendChild(clearBtn);
     progSection.appendChild(progControls);
     const progStatus=document.createElement('div'); progStatus.className='cp-prog-status'; progStatus.id='cpProgStatus';
     progSection.appendChild(progStatus);
     playBtn.addEventListener('click',()=>playProgression(progStatus));
-    viziBtn.addEventListener('click',()=>{ if(!cpProgression.length)return; const progStr=cpProgression.map(p=>p.label).join(' → '); goToVizi('chords','Progression: '+progStr); });
     clearBtn.addEventListener('click',()=>{ cpProgression=[]; cpPlayTimer=null; renderChordsPanel(); });
     return progSection;
   }
@@ -2649,9 +2660,7 @@
     const bar=document.getElementById('cpProgBar');
     if(bar) buildProgBar(bar);
     const playBtn=document.querySelector('.cp-prog-btn.play');
-    const viziBtn=document.querySelector('.cp-prog-btn.vizi');
     if(playBtn) playBtn.disabled=cpProgression.length<1;
-    if(viziBtn) viziBtn.disabled=cpProgression.length<1;
   }
 
   function playProgression(statusEl){
