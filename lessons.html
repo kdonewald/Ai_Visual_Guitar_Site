@@ -115,6 +115,13 @@
   .choice-btn .cb-desc{font-size:.86rem;color:var(--text-mid);line-height:1.4;margin-top:.1rem}
   .choice-btn .cb-arrow{margin-left:auto;color:var(--text-light);font-size:.8rem;flex-shrink:0}
   .choice-hint{font-size:.85rem;color:var(--text);line-height:1.55;background:rgba(79,142,247,0.08);border:1.5px solid rgba(79,142,247,0.18);border-radius:8px;padding:.75rem .95rem;margin-bottom:1rem;}
+  .stage-auto-note{
+    display:flex;align-items:center;gap:.6rem;
+    padding:.7rem .9rem;border-radius:10px;
+    background:rgba(232,160,32,0.10);border:1.5px solid rgba(232,160,32,0.4);
+    margin:.75rem 0;font-size:.88rem;color:var(--text);line-height:1.5;
+  }
+  .stage-auto-note .san-icon{ font-size:1.1rem;flex-shrink:0; }
 
   /* tuner */
   .choice-card.tuner-card{background:rgba(76,175,80,0.06);border-color:rgba(76,175,80,0.3)}
@@ -2057,6 +2064,10 @@
     exList.innerHTML = '';
     const wrap = document.createElement('div'); wrap.className='cb-wrap';
 
+    const autoNote = document.createElement('div'); autoNote.className='stage-auto-note';
+    autoNote.innerHTML = '<span class="san-icon">💡</span><span>Hold and Theory mode have both been automatically turned on for this stage. Tap <b>Hold Off</b> or <b>Theory Off</b> in the nav bar if you\'d rather turn either one off.</span>';
+    wrap.appendChild(autoNote);
+
     // ── Root note picker ──
     const rootLabel = document.createElement('span'); rootLabel.className='choice-panel-label cp-label-bright';
     rootLabel.textContent='Step 1 — Choose a root note';
@@ -2508,9 +2519,9 @@
   // Open chord voicings
   const OPEN_VOICINGS = {
     'A':'CHORD A','C':'CHORD C','D':'CHORD D','E':'CHORD E',
-    'G':'CHORD G','F':'CHORD F','B':'CHORD B',
+    'G':'CHORD G',
     'Am':'CHORD Am','Dm':'CHORD Dm','Em':'CHORD Em',
-    'Bm':'CHORD Bm','Gm':'CHORD Gm',
+    'Gm':'CHORD Gm',
     'Amaj7':'CHORD Amaj7','Cmaj7':'CHORD Cmaj7','Dmaj7':'CHORD Dmaj7',
     'Emaj7':'CHORD Emaj7','Fmaj7':'CHORD Fmaj7','Gmaj7':'CHORD Gmaj7',
     'Am7':'CHORD Am7','Dm7':'CHORD Dm7','Em7':'CHORD Em7',
@@ -2808,7 +2819,12 @@
     // Warmup: turn Hold on the moment the stage opens, not just on scale
     // choice — the student may take a while picking, and this way Hold is
     // guaranteed on well before any SCALE command could ever be sent.
-    if (stage.id === 'warmup'){ activateHoldOnly(); }
+    if (stage.id === 'warmup'){
+      activateHoldOnly();
+      const autoNote = document.createElement('div'); autoNote.className='stage-auto-note';
+      autoNote.innerHTML = '<span class="san-icon">💡</span><span>Hold has been automatically turned on for this stage, so the lights stay lit while you play. Tap <b>Hold Off</b> in the nav bar if you\'d rather turn it off.</span>';
+      exList.appendChild(autoNote);
+    }
 
     // Soloing: Bandcamp + grouped key/scale
     if (def.bandcamp){ renderSoloingPanel(def); return; }
@@ -3230,7 +3246,7 @@
     // round-trip before the student has even picked a track or scale yet.
     const holdReminder = document.createElement('div');
     holdReminder.className = 'solo-hold-reminder';
-    holdReminder.innerHTML = '<span class="shr-icon">💡</span><span>Hold turns on automatically as soon as you open this stage, so the lights stay on while you play.</span>';
+    holdReminder.innerHTML = '<span class="shr-icon">💡</span><span>Hold has been automatically turned on for this stage, so the lights stay lit while you play. Tap <b>Hold Off</b> in the nav bar if you\'d rather turn it off.</span>';
     exList.appendChild(holdReminder);
 
     let openKey = null;
