@@ -906,6 +906,17 @@
       if (ub) ub.style.display = '';
     }
 
+    // The 11 slash chords actually stored in firmware must be sent with the
+    // slash intact (e.g. "CHORD C/G") — unlike enharmonic note names like
+    // "C#/Db" where only the first name should be kept. This tells the two
+    // apart before deciding whether to strip the "/".
+    const KNOWN_SLASH_CHORDS = ['AM/F#','AM7/G','C/B','C/G','D/A','D/F#','EM/B','EM/G','F/A','G/B','G/F#'];
+    function stripToPlayableChordName(name){
+      const trimmed = (name||'').trim();
+      if (KNOWN_SLASH_CHORDS.some(sc => sc.toUpperCase() === trimmed.toUpperCase())) return trimmed;
+      return trimmed.split('/')[0];
+    }
+
     const STAGE_LABELS = {
       'tuning':       'Tuning & Setup',
       'warmup':       'Warmup with Scales',
@@ -944,7 +955,7 @@
           const isSingleStep = exerciseName.startsWith('Progression step:');
           if(isSingleStep){
             const chordPart = progStr.replace(' — Chord','').replace(' — Arpeggio','').trim();
-            const cleanCmd = chordPart.replace(/ \(.*\)/,'').replace('/','').split('/')[0];
+            const cleanCmd = stripToPlayableChordName(chordPart.replace(/ \(.*\)/,''));
             return 'Light the chord on the fretboard: CHORD '+cleanCmd+'. Say the chord name and one note — keep it to one sentence.';
           }
           return 'The student built this chord progression: '+progStr+'. Walk through each chord one at a time — light each with a CHORD command, name it, and give one tip about the transition to the next chord. Tell them which scale this progression comes from if you recognise it. Keep each chord description to one sentence.';
@@ -956,7 +967,7 @@
           const grpMatch = exerciseName.match(/\((\w+)\)/);
           const grp = grpMatch ? grpMatch[1].toUpperCase() : 'HIE';
           const rootMatch = exerciseName.match(/^(\w+(?:#\/\w+)?)\s/);
-          const root = rootMatch ? rootMatch[1].replace('/','').split('/')[0] : 'G';
+          const root = rootMatch ? stripToPlayableChordName(rootMatch[1]) : 'G';
           const quality = isMajor?'major':'minor';
           const qualityM = isMajor?'':'M';
           if(isArpTriad){
@@ -968,7 +979,7 @@
         if(isBarre){
           const shapeMatch = exerciseName.match(/\((.+Shape)\)/);
           const shapeName = shapeMatch ? shapeMatch[1] : 'E Shape';
-          const chordRoot = exerciseName.split(' ')[0].replace('/','').split('/')[0];
+          const chordRoot = stripToPlayableChordName(exerciseName.split(' ')[0]);
           const isArpBarre = isArpeggio;
           const chordCmd = 'CHORD '+chordRoot;
           if(isArpBarre){
@@ -978,7 +989,7 @@
         }
 
         const chordName = exerciseName.replace(' — Chord','').replace(' — Arpeggio','').trim();
-        const chordCmd = 'CHORD '+chordName.replace('/','').split('/')[0];
+        const chordCmd = 'CHORD '+stripToPlayableChordName(chordName);
         if(isArpeggio){
           return 'The student wants to arpeggiate '+chordName+'. Light the shape: '+chordCmd+'. Pick through the chord tones low to high using SF commands, naming Root, 3rd, and 5th as you light each one. Tell them buzzing notes reveal exactly which finger needs adjusting. Keep to 3 sentences.';
         }
