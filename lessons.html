@@ -584,17 +584,27 @@
 
   /* Chord type selector */
   .cb-type-grid{
-    display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem;
+    display:flex;flex-direction:column;gap:.4rem;
     margin-bottom:.85rem;
   }
-  .cb-type-btn{
-    padding:.45rem .2rem;border-radius:8px;
+  .cb-type-row{
+    display:grid;grid-template-columns:auto 1fr;align-items:center;gap:.85rem;
+    padding:.55rem .8rem;border-radius:8px;
     border:1.5px solid var(--cream-dark);background:var(--white);
-    font-family:'DM Mono',monospace;font-size:.85rem;font-weight:500;
-    color:var(--text-mid);cursor:pointer;transition:all .15s;text-align:center;
+    cursor:pointer;transition:all .15s;text-align:left;width:100%;
   }
-  .cb-type-btn:hover{ border-color:var(--teal);color:var(--teal); }
-  .cb-type-btn.selected{ border-color:var(--teal);background:rgba(42,172,184,0.08);color:var(--teal);font-weight:600; }
+  .cb-type-row:hover{ border-color:var(--teal); }
+  .cb-type-row.selected{ border-color:var(--teal);background:rgba(42,172,184,0.08); }
+  .cb-type-row-name{
+    font-family:'DM Mono',monospace;font-size:.88rem;font-weight:600;
+    color:var(--text-mid);min-width:4.2rem;
+  }
+  .cb-type-row.selected .cb-type-row-name{ color:var(--teal);font-weight:700; }
+  .cb-type-row-pattern{
+    font-family:'DM Mono',monospace;font-size:.8rem;letter-spacing:.06em;
+    color:var(--text-light);
+  }
+  .cb-type-row.selected .cb-type-row-pattern{ color:var(--teal); }
 
   /* Build button */
   .cb-build-btn{
@@ -2071,12 +2081,14 @@
     wrap.appendChild(typeLabel);
     const typeGrid = document.createElement('div'); typeGrid.className='cb-type-grid';
     ['Major','Minor'].forEach(type => {
-      const btn = document.createElement('button'); btn.className='cb-type-btn';
-      btn.textContent = type;
+      const btn = document.createElement('button'); btn.className='cb-type-row';
+      const nameEl = document.createElement('span'); nameEl.className='cb-type-row-name'; nameEl.textContent=type;
+      const patternEl = document.createElement('span'); patternEl.className='cb-type-row-pattern'; patternEl.textContent=CHORD_TYPES[type].formula;
+      btn.appendChild(nameEl); btn.appendChild(patternEl);
       if(cbType===type) btn.classList.add('selected');
       btn.addEventListener('click',()=>{
         cbType = type;
-        document.querySelectorAll('.cb-type-btn').forEach(b=>b.classList.remove('selected'));
+        document.querySelectorAll('.cb-type-row').forEach(b=>b.classList.remove('selected'));
         btn.classList.add('selected');
         cbStep=0; updateBuildBtn();
         clearSteps();
@@ -2123,28 +2135,37 @@
     activateHoldAndTheory();
   }
 
-  async function activateHoldAndTheory(){
+  async function sendFretboardCommandDirect(cmd){
     try{
       await fetch(RAILWAY_URL+'/fretboard-command',{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({command:'HOLD ON'})
+        body:JSON.stringify({command:cmd})
       });
-      await fetch(RAILWAY_URL+'/fretboard-command',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({command:'COLOR THEORY'})
-      });
-    }catch(e){ /* best effort — Light Scale still works even if this silently fails */ }
-    // Keep the nav-bar toggles in sync with reality, retrying briefly since
-    // the shared widget script injects them asynchronously.
+    }catch(e){ /* best effort — calling code still proceeds even if this silently fails */ }
+  }
+
+  // Keep a nav-bar toggle in sync with reality, retrying briefly since the
+  // shared widget script injects these buttons asynchronously.
+  function syncNavToggleOn(id, onText){
     let tries = 0;
-    const syncNav = () => {
-      const holdBtn = document.getElementById('vm-hold-toggle');
-      const theoryBtn = document.getElementById('vm-theory-toggle');
-      if(holdBtn){ holdBtn.dataset.state='on'; holdBtn.textContent='Hold Off'; }
-      if(theoryBtn){ theoryBtn.dataset.state='on'; theoryBtn.textContent='Theory Off'; }
-      if((!holdBtn || !theoryBtn) && tries < 20){ tries++; setTimeout(syncNav, 150); }
+    const attempt = () => {
+      const btn = document.getElementById(id);
+      if(btn){ btn.dataset.state='on'; btn.textContent=onText; }
+      else if(tries < 20){ tries++; setTimeout(attempt, 150); }
     };
-    syncNav();
+    attempt();
+  }
+
+  async function activateHoldOnly(){
+    await sendFretboardCommandDirect('HOLD ON');
+    syncNavToggleOn('vm-hold-toggle','Hold Off');
+  }
+
+  async function activateHoldAndTheory(){
+    await sendFretboardCommandDirect('HOLD ON');
+    await sendFretboardCommandDirect('COLOR THEORY');
+    syncNavToggleOn('vm-hold-toggle','Hold Off');
+    syncNavToggleOn('vm-theory-toggle','Theory Off');
   }
 
   async function lightScaleOnFretboardDirect(){
@@ -2202,7 +2223,7 @@
 
     // ── STEP 2: The scale ──
     if(fromStep <= 1){
-      await animateStep(stepsEl, 2, cbRoot+' '+cbType.split(' ')[0]+' Scale',
+      await animateStep(stepsEl, 2, 'Notes in the '+cbRoot+' '+cbType.split(' ')[0]+' Scale',
         buildScaleDesc(cbRoot, cbType, def, cbScaleNotes),
         ()=> renderAllNotes('scale'),
         fromStep===1 ? 0 : 600
@@ -2279,8 +2300,8 @@
     const typeName = type.split(' ')[0];
     return 'Starting from ' + root + ' (the Root), applying the '
       + typeName + ' formula (' + def.formula + ') gives us: '
-      + scale.join(' – ') + '.  These ' + scale.length + ' notes form the '
-      + root + ' ' + typeName + ' scale — now we pick the chord tones from it.';
+      + scale.join(' – ') + '.  These are the ' + scale.length + ' notes in the '
+      + root + ' ' + typeName + ' scale.';
   }
 
   // Given three scale-note names, work out whether stacking them as 1-3-5
@@ -2320,12 +2341,12 @@
         const step = document.createElement('div'); step.className='cb-step active';
         const head = document.createElement('div'); head.className='cb-step-head';
         const numEl = document.createElement('div'); numEl.className='cb-step-num'; numEl.textContent='3';
-        const titleEl = document.createElement('div'); titleEl.className='cb-step-title'; titleEl.textContent='Every Chord in the Scale';
+        const titleEl = document.createElement('div'); titleEl.className='cb-step-title'; titleEl.textContent='Chords in the '+cbRoot+' '+cbType.split(' ')[0]+' Scale';
         head.appendChild(numEl); head.appendChild(titleEl);
         const body = document.createElement('div'); body.className='cb-step-body';
 
         const descEl = document.createElement('div'); descEl.className='cb-step-desc';
-        descEl.textContent = 'Every chord in the scale comes from the same formula: 1-3-5 — 1 is the root note, 3 is the 3rd note up the scale from that root, and 5 is the 5th note up the scale from that root. These ' + scaleNotes.length + ' scale notes are also the root of every chord in the scale — each row below starts fresh from that note and stacks its own 1-3-5 using only notes already in the scale.';
+        descEl.textContent = 'These 7 notes are also the 1st notes (root) of every chord in this scale. Seven notes in the scale, seven chords in the scale. Each new chord starts on a different one of those notes and simply counts up two notes from there to get to the third and two from there to get to the 5th.';
         body.appendChild(descEl);
 
         const grid = document.createElement('div'); grid.className='cb-chord-grid';
@@ -2778,9 +2799,9 @@
     def.choices.forEach(ch => {
       const btn = document.createElement('button'); btn.className = 'choice-btn';
       btn.innerHTML = '<span class="cb-icon">' + ch.icon + '</span><span><span class="cb-name">' + ch.name + '</span><span class="cb-desc">' + ch.desc + '</span></span><span class="cb-arrow">&#8594;</span>';
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         if (ch.name === 'All Scales — Reference'){ renderAllScalesRef(); return; }
-        if (stage.id === 'warmup'){ goToVizi('warmup', ch.name); return; }
+        if (stage.id === 'warmup'){ await activateHoldOnly(); goToVizi('warmup', ch.name); return; }
         const ex = ch.name + ' — ' + ch.desc;
         const p = new URLSearchParams({stage:stage.id, exercise:ex});
         window.location.href = 'vizi.html?' + p.toString();
@@ -2897,6 +2918,11 @@
   // and sends SCALE [cmd] ALL to show all 5 CAGED shapes color-coded
   async function lightScaleOnFretboard(scaleCmd){
     const cmd = 'SCALE ' + scaleCmd + ' all';
+    if (soloFeedbackEl){
+      soloFeedbackEl.textContent = 'Turning on Hold...';
+      soloFeedbackEl.style.color = 'var(--gold)';
+    }
+    await activateHoldOnly();
     if (soloFeedbackEl){
       soloFeedbackEl.textContent = 'Lighting ' + scaleCmd + ' on fretboard...';
       soloFeedbackEl.style.color = 'var(--gold)';
@@ -3183,7 +3209,7 @@
     // round-trip before the student has even picked a track or scale yet.
     const holdReminder = document.createElement('div');
     holdReminder.className = 'solo-hold-reminder';
-    holdReminder.innerHTML = '<span class="shr-icon">💡</span><span>Tap <b>Hold On</b> in the nav bar before you start, so the scale stays lit while you play.</span>';
+    holdReminder.innerHTML = '<span class="shr-icon">💡</span><span>Hold turns on automatically when you pick a scale below, so the lights stay on while you play.</span>';
     exList.appendChild(holdReminder);
 
     let openKey = null;
