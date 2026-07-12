@@ -105,6 +105,31 @@
   }
   .cp-chord-reset-btn:hover{border-color:var(--red);color:var(--red);}
   .cp-slash-explainer{font-size:.84rem;color:var(--text-mid);line-height:1.55;margin-bottom:.75rem;}
+
+  /* Demo section — Barre Chords / Triads sliding animations */
+  .cp-demo-note{
+    font-size:.84rem;color:var(--text);line-height:1.55;margin-bottom:.75rem;
+  }
+  .cp-demo-mode-row{ display:flex;gap:.5rem;margin-bottom:1rem; }
+  .cp-demo-mode-btn{
+    flex:1;padding:.7rem .5rem;border-radius:10px;
+    border:1.5px solid var(--cream-dark);background:var(--white);
+    font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:700;
+    color:var(--text);cursor:pointer;transition:all .15s;text-align:center;
+  }
+  .cp-demo-mode-btn:hover{ border-color:var(--red); }
+  .cp-demo-mode-btn.active{ border-color:var(--red);background:rgba(217,64,37,0.07);color:var(--red); }
+  .cp-demo-choice-row{ display:flex;gap:.4rem;margin-bottom:.85rem;flex-wrap:wrap; }
+  .cp-demo-choice-row-wrap{ flex-wrap:wrap; }
+  .cp-demo-choice-btn{
+    flex:1;min-width:4.4rem;padding:.55rem .4rem;border-radius:8px;
+    border:1.5px solid var(--cream-dark);background:var(--white);
+    font-family:'DM Mono',monospace;font-size:.85rem;font-weight:700;
+    color:var(--text);cursor:pointer;transition:all .15s;text-align:center;
+  }
+  .cp-demo-choice-btn:hover{ border-color:var(--teal); }
+  .cp-demo-choice-btn.active{ border-color:var(--teal);background:rgba(42,172,184,0.08);color:var(--teal); }
+
   .choice-grid{display:grid;gap:.55rem;margin-bottom:1rem;}
   .choice-grid.cols-2{grid-template-columns:1fr 1fr}
   .choice-grid.cols-3{grid-template-columns:1fr 1fr 1fr}
@@ -2536,6 +2561,11 @@
   let cpPlayTimer = null;
   let cpSelectedChord = null;
 
+  // Demo section state
+  let demoMode = null;   // 'barre' | 'triad' | null
+  let demoShape = null;  // 'E'|'A'|'C'|'G'|'D'
+  let demoString = null; // 'LE'|'A'|'D'|'G'|'B'|'HE'
+
 
   // ── BY CHORD VIEW ────────────────────────────────────────────
   const ALL_NOTES_CP = ['C','C#/Db','D','D#/Eb','E','F','F#/Gb','G','G#/Ab','A','A#/Bb','B'];
@@ -2626,6 +2656,8 @@
     });
     container.appendChild(resetBtn);
 
+    renderDemoSection(container);
+
     if(!cpByChordSelection) return;
 
     const isSlash = SLASH_CHORDS_CP.includes(cpByChordSelection);
@@ -2671,6 +2703,140 @@
       list.appendChild(item);
     });
     container.appendChild(list);
+  }
+
+  // ── DEMO: Barre Chords / Triads sliding chromatically up the neck ──
+  const BARRE_SHAPES_DEMO = ['E','A','C','G','D'];
+  const TRIAD_STRINGS_DEMO = [['LE','Low E'],['A','A'],['D','D'],['G','G'],['B','B'],['HE','High E']];
+
+  function syncNavToggleOff(id, offText){
+    let tries = 0;
+    const attempt = () => {
+      const btn = document.getElementById(id);
+      if(btn){ btn.dataset.state='off'; btn.textContent=offText; }
+      else if(tries < 20){ tries++; setTimeout(attempt, 150); }
+    };
+    attempt();
+  }
+
+  function renderDemoSection(container){
+    const demoLabel = document.createElement('span'); demoLabel.className='choice-panel-label cp-label-bright';
+    demoLabel.textContent = 'Demo';
+    container.appendChild(demoLabel);
+
+    const demoInfo = document.createElement('div'); demoInfo.className='cp-demo-note';
+    demoInfo.textContent = 'Hold is automatically turned off before each demo so you can watch it move through the frets. Tap Hold On in the nav bar to freeze it on any position.';
+    container.appendChild(demoInfo);
+
+    const modeRow = document.createElement('div'); modeRow.className='cp-demo-mode-row';
+    [['barre','Barre Chords'],['triad','Triads']].forEach(([key,text])=>{
+      const btn = document.createElement('button');
+      btn.className='cp-demo-mode-btn'+(demoMode===key?' active':'');
+      btn.textContent = text;
+      btn.addEventListener('click',()=>{
+        demoMode = key; demoShape = null; demoString = null;
+        renderChordsPanel();
+      });
+      modeRow.appendChild(btn);
+    });
+    container.appendChild(modeRow);
+
+    if(demoMode === 'barre'){
+      const shapeLabel = document.createElement('span'); shapeLabel.className='choice-panel-label cp-label-bright';
+      shapeLabel.textContent = 'Choose a shape';
+      container.appendChild(shapeLabel);
+      const shapeRow = document.createElement('div'); shapeRow.className='cp-demo-choice-row';
+      BARRE_SHAPES_DEMO.forEach(shape=>{
+        const btn = document.createElement('button');
+        btn.className='cp-demo-choice-btn'+(demoShape===shape?' active':'');
+        btn.textContent = shape+' Shape';
+        btn.addEventListener('click',()=>{
+          demoShape = shape;
+          if(shape==='C' || shape==='G') playDemoBarre(shape, false);
+          renderChordsPanel();
+        });
+        shapeRow.appendChild(btn);
+      });
+      container.appendChild(shapeRow);
+
+      if(demoShape==='C' || demoShape==='G'){
+        const note = document.createElement('div'); note.className='cp-demo-note';
+        note.textContent = 'C and G shapes don\'t have a minor version, so this plays the major shape.';
+        container.appendChild(note);
+        const status = document.createElement('div'); status.className='cb-fret-status'; status.id='cpDemoStatus';
+        container.appendChild(status);
+      } else if(demoShape){
+        const qLabel = document.createElement('span'); qLabel.className='choice-panel-label cp-label-bright';
+        qLabel.textContent = 'Major or minor?';
+        container.appendChild(qLabel);
+        const qRow = document.createElement('div'); qRow.className='cp-demo-choice-row';
+        [['Major',false],['Minor',true]].forEach(([text,isMinor])=>{
+          const btn = document.createElement('button'); btn.className='cp-demo-choice-btn';
+          btn.textContent = text;
+          btn.addEventListener('click',()=>playDemoBarre(demoShape, isMinor));
+          qRow.appendChild(btn);
+        });
+        container.appendChild(qRow);
+        const status = document.createElement('div'); status.className='cb-fret-status'; status.id='cpDemoStatus';
+        container.appendChild(status);
+      }
+    }
+
+    if(demoMode === 'triad'){
+      const stringLabel = document.createElement('span'); stringLabel.className='choice-panel-label cp-label-bright';
+      stringLabel.textContent = 'Choose a string';
+      container.appendChild(stringLabel);
+      const stringRow = document.createElement('div'); stringRow.className='cp-demo-choice-row cp-demo-choice-row-wrap';
+      TRIAD_STRINGS_DEMO.forEach(([key,text])=>{
+        const btn = document.createElement('button');
+        btn.className='cp-demo-choice-btn'+(demoString===key?' active':'');
+        btn.textContent = text;
+        btn.addEventListener('click',()=>{ demoString = key; renderChordsPanel(); });
+        stringRow.appendChild(btn);
+      });
+      container.appendChild(stringRow);
+
+      if(demoString){
+        const qLabel = document.createElement('span'); qLabel.className='choice-panel-label cp-label-bright';
+        qLabel.textContent = 'Major or minor?';
+        container.appendChild(qLabel);
+        const qRow = document.createElement('div'); qRow.className='cp-demo-choice-row';
+        [['Major',false],['Minor',true]].forEach(([text,isMinor])=>{
+          const btn = document.createElement('button'); btn.className='cp-demo-choice-btn';
+          btn.textContent = text;
+          btn.addEventListener('click',()=>playDemoTriad(demoString, isMinor));
+          qRow.appendChild(btn);
+        });
+        container.appendChild(qRow);
+        const status = document.createElement('div'); status.className='cb-fret-status'; status.id='cpDemoStatus';
+        container.appendChild(status);
+      }
+    }
+  }
+
+  async function playDemoBarre(shape, isMinor){
+    const statusEl = document.getElementById('cpDemoStatus');
+    if(statusEl){ statusEl.textContent='Turning off Hold...'; statusEl.style.color='var(--gold)'; }
+    await sendFretboardCommandDirect('HOLD OFF');
+    syncNavToggleOff('vm-hold-toggle','Hold On');
+    const qualityText = isMinor ? 'minor' : 'major';
+    if(statusEl){ statusEl.textContent='Playing '+shape+' shape '+qualityText+' — sliding up the neck...'; statusEl.style.color='var(--gold)'; }
+    const cmd = shape+' SHAPE PLAY'+(isMinor?' MINOR':'');
+    await sendFretboardCommandDirect(cmd);
+    if(statusEl){ statusEl.textContent='Done — tap a shape above to play it again'; statusEl.style.color='var(--green)'; }
+  }
+
+  async function playDemoTriad(stringKey, isMinor){
+    const statusEl = document.getElementById('cpDemoStatus');
+    if(statusEl){ statusEl.textContent='Turning off Hold...'; statusEl.style.color='var(--gold)'; }
+    await sendFretboardCommandDirect('HOLD OFF');
+    syncNavToggleOff('vm-hold-toggle','Hold On');
+    const label = (TRIAD_STRINGS_DEMO.find(([k])=>k===stringKey)||[null,stringKey])[1];
+    const qualityText = isMinor ? 'minor' : 'major';
+    if(statusEl){ statusEl.textContent='Playing '+label+' triads '+qualityText+' — sliding through all 12 roots...'; statusEl.style.color='var(--gold)'; }
+    const cmd = 'TRIAD '+stringKey+' PLAY'+(isMinor?' MINOR':'');
+    await sendFretboardCommandDirect(cmd);
+    if(statusEl){ statusEl.textContent='Done — tap a string above to play it again'; statusEl.style.color='var(--green)'; }
   }
 
 
