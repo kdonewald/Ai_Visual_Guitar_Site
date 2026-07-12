@@ -2646,17 +2646,21 @@
     });
     container.appendChild(noteGrid);
 
-    // Reset — collapses everything back to the empty, nothing-selected state
+    renderDemoSection(container);
+
+    // Reset — collapses everything back to the empty, nothing-selected state,
+    // including the Demo section's shape/string/quality choices
     const resetBtn=document.createElement('button'); resetBtn.className='cp-chord-reset-btn';
     resetBtn.textContent='Reset';
     resetBtn.addEventListener('click',()=>{
       cpByChordSelection=null;
       cpSelectedChord=null;
+      demoMode=null;
+      demoShape=null;
+      demoString=null;
       renderChordsPanel();
     });
     container.appendChild(resetBtn);
-
-    renderDemoSection(container);
 
     if(!cpByChordSelection) return;
 
