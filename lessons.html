@@ -2631,7 +2631,10 @@
   function showChordActions(container){
     const el=document.getElementById('cpChordActions');
     const nm=document.getElementById('cpSelName');
-    if(el){ el.classList.add('show'); }
+    if(el){
+      el.classList.add('show');
+      el.scrollIntoView({behavior:'smooth', block:'center'});
+    }
     if(nm&&cpSelectedChord){ nm.textContent=cpSelectedChord.label; }
   }
 
