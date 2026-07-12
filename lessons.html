@@ -605,6 +605,11 @@
     color:var(--text-light);
   }
   .cb-type-row.selected .cb-type-row-pattern{ color:var(--teal); }
+  .cb-type-row-pattern-label{ opacity:.7; }
+  .cb-type-note{
+    font-size:.78rem;color:var(--text-light);line-height:1.5;
+    padding:0 .2rem;margin-top:-.1rem;
+  }
 
   /* Build button */
   .cb-build-btn{
@@ -698,6 +703,7 @@
   .cbcg-root{ font-weight:800;color:var(--text); }
   .cbcg-notes{ font-family:'DM Mono',monospace;color:var(--text-mid);letter-spacing:.03em; }
   .cbcg-name{ font-weight:700; }
+  .cbcg-name-quality{ margin-left:.4em; }
 
   /* Step-back + ask Vizi row */
   .cb-action-row{
@@ -2083,7 +2089,10 @@
     ['Major','Minor'].forEach(type => {
       const btn = document.createElement('button'); btn.className='cb-type-row';
       const nameEl = document.createElement('span'); nameEl.className='cb-type-row-name'; nameEl.textContent=type;
-      const patternEl = document.createElement('span'); patternEl.className='cb-type-row-pattern'; patternEl.textContent=CHORD_TYPES[type].formula;
+      const patternEl = document.createElement('span'); patternEl.className='cb-type-row-pattern';
+      const patternLabelEl = document.createElement('span'); patternLabelEl.className='cb-type-row-pattern-label'; patternLabelEl.textContent='Pattern: ';
+      const patternValEl = document.createElement('span'); patternValEl.textContent=CHORD_TYPES[type].formula;
+      patternEl.appendChild(patternLabelEl); patternEl.appendChild(patternValEl);
       btn.appendChild(nameEl); btn.appendChild(patternEl);
       if(cbType===type) btn.classList.add('selected');
       btn.addEventListener('click',()=>{
@@ -2095,6 +2104,9 @@
       });
       typeGrid.appendChild(btn);
     });
+    const typeNote = document.createElement('div'); typeNote.className='cb-type-note';
+    typeNote.textContent = 'There are other patterns for other scales, but these are the most important ones for beginners.';
+    typeGrid.appendChild(typeNote);
     wrap.appendChild(typeGrid);
 
     // ── Build button ──
@@ -2362,15 +2374,18 @@
           const c1=document.createElement('div'); c1.className='cbcg-cell cbcg-root'; c1.textContent=rootDisp;
           const c2=document.createElement('div'); c2.className='cbcg-cell cbcg-notes'; c2.textContent=notesDisp;
 
-          // Built as separate DOM nodes (text node + span), not one HTML string,
-          // so the space between root and quality can never be lost.
+          // Root and quality are two separate spans with CSS margin between
+          // them (not a text-node space) — .cbcg-cell is display:flex, and
+          // flex containers can silently trim trailing whitespace in a text
+          // node even though the character is genuinely in the DOM. Margin
+          // can't be collapsed away like that.
           const c3=document.createElement('div'); c3.className='cbcg-cell cbcg-name';
-          c3.appendChild(document.createTextNode(rootDisp + ' '));
-          const qEl = document.createElement('span');
-          if(row.quality === 'Major') qEl.className = 'cp-q-major';
-          else if(row.quality === 'Minor') qEl.className = 'cp-q-minor';
+          const rootEl = document.createElement('span'); rootEl.textContent = rootDisp;
+          const qEl = document.createElement('span'); qEl.className = 'cbcg-name-quality';
+          if(row.quality === 'Major') qEl.classList.add('cp-q-major');
+          else if(row.quality === 'Minor') qEl.classList.add('cp-q-minor');
           qEl.textContent = row.quality;
-          c3.appendChild(qEl);
+          c3.appendChild(rootEl); c3.appendChild(qEl);
 
           grid.appendChild(c1); grid.appendChild(c2); grid.appendChild(c3);
         });
@@ -2790,6 +2805,11 @@
       exList.appendChild(hint);
     }
 
+    // Warmup: turn Hold on the moment the stage opens, not just on scale
+    // choice — the student may take a while picking, and this way Hold is
+    // guaranteed on well before any SCALE command could ever be sent.
+    if (stage.id === 'warmup'){ activateHoldOnly(); }
+
     // Soloing: Bandcamp + grouped key/scale
     if (def.bandcamp){ renderSoloingPanel(def); return; }
 
@@ -3128,6 +3148,7 @@
     exList.innerHTML = '';
     if (soloAudioEl){ soloAudioEl.pause(); soloAudioEl = null; }
     selectedTrack = null; selectedScale = null; selectedKeyName = null;
+    activateHoldOnly();
 
     // ── Inject CSS once ──────────────────────────────────────
     if (!document.getElementById('soloCSS')){
@@ -3209,7 +3230,7 @@
     // round-trip before the student has even picked a track or scale yet.
     const holdReminder = document.createElement('div');
     holdReminder.className = 'solo-hold-reminder';
-    holdReminder.innerHTML = '<span class="shr-icon">💡</span><span>Hold turns on automatically when you pick a scale below, so the lights stay on while you play.</span>';
+    holdReminder.innerHTML = '<span class="shr-icon">💡</span><span>Hold turns on automatically as soon as you open this stage, so the lights stay on while you play.</span>';
     exList.appendChild(holdReminder);
 
     let openKey = null;
