@@ -671,6 +671,24 @@
   .cb-interval.WH{ background:rgba(232,160,32,0.12);color:var(--gold); }
   .cb-interval-arrow{ font-size:.83rem;color:var(--text-light); }
 
+  /* Scale chord grid — Chord / Root 3 5 / Chord Name */
+  .cb-chord-grid{
+    display:grid;grid-template-columns:auto 1fr auto;gap:1px;
+    background:var(--cream-dark);border:1.5px solid var(--cream-dark);border-radius:10px;
+    overflow:hidden;margin-top:.5rem;
+  }
+  .cbcg-head{
+    background:rgba(255,255,255,0.04);color:var(--text-mid);
+    font-family:'DM Mono',monospace;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    padding:.5rem .65rem;
+  }
+  .cbcg-cell{
+    background:var(--white);padding:.55rem .65rem;font-size:.86rem;display:flex;align-items:center;
+  }
+  .cbcg-root{ font-weight:800;color:var(--text); }
+  .cbcg-notes{ font-family:'DM Mono',monospace;color:var(--text-mid);letter-spacing:.03em; }
+  .cbcg-name{ font-weight:700; }
+
   /* Step-back + ask Vizi row */
   .cb-action-row{
     display:flex;gap:.5rem;margin-top:.75rem;
@@ -2005,22 +2023,8 @@
     'Sus4':       { intervals:[2,2,1,2,2,2,1], formula:'W W H W W W H', degrees:[0,3,4], labels:['Root','4th','5th'],               pillClass:['root-note','third-note','fifth-note'],    desc:'Major scale → replace 3rd with 4th' },
   };
 
-  // Common open chord voicings for fretboard lighting
-  const OPEN_CHORDS = {
-    'C Major':'CHORD C','D Major':'CHORD D','E Major':'CHORD E',
-    'F Major':'CHORD F','G Major':'CHORD G','A Major':'CHORD A',
-    'B Major':'CHORD B',
-    'A Minor':'CHORD Am','B Minor':'CHORD Bm','D Minor':'CHORD Dm',
-    'E Minor':'CHORD Em','G Minor':'CHORD Gm',
-    'A Major 7th':'CHORD Amaj7','C Major 7th':'CHORD Cmaj7','D Major 7th':'CHORD Dmaj7',
-    'E Major 7th':'CHORD Emaj7','G Major 7th':'CHORD Gmaj7',
-    'A Minor 7th':'CHORD Am7','D Minor 7th':'CHORD Dm7','E Minor 7th':'CHORD Em7',
-    'G Dom 7th':'CHORD G7','C Dom 7th':'CHORD C7','D Dom 7th':'CHORD D7',
-    'B Diminished':'CHORD Bdim',
-  };
-
   let cbRoot = null, cbType = null, cbStep = 0;
-  let cbScaleNotes = [], cbChordNotes = [];
+  let cbScaleNotes = [];
 
   function buildScaleFromRoot(root, intervals){
     const rootIdx = CHROM12.indexOf(root.replace('C#/Db','C#').replace('D#/Eb','D#').replace('F#/Gb','F#').replace('G#/Ab','G#').replace('A#/Bb','A#'));
@@ -2063,7 +2067,7 @@
     typeLabel.textContent='Step 2 — Choose a chord type';
     wrap.appendChild(typeLabel);
     const typeGrid = document.createElement('div'); typeGrid.className='cb-type-grid';
-    Object.keys(CHORD_TYPES).forEach(type => {
+    ['Major','Minor'].forEach(type => {
       const btn = document.createElement('button'); btn.className='cb-type-btn';
       btn.textContent = type;
       if(cbType===type) btn.classList.add('selected');
@@ -2092,22 +2096,17 @@
 
     // ── Action row ──
     const actionRow = document.createElement('div'); actionRow.className='cb-action-row';
-    const viziBtn = document.createElement('button');
-    viziBtn.className='cb-vizi-btn'; viziBtn.id='cbViziBtn';
-    viziBtn.textContent='Ask Vizi to explain →';
-    viziBtn.addEventListener('click',()=>{
+    const lightScaleBtn = document.createElement('button');
+    lightScaleBtn.className='cb-vizi-btn'; lightScaleBtn.id='cbLightScaleBtn';
+    lightScaleBtn.textContent='🎸 Light Scale';
+    lightScaleBtn.addEventListener('click',()=>{
       if(!cbRoot||!cbType) return;
-      const exercise = cbRoot+' '+cbType+' — Chord Construction';
+      const exercise = cbRoot+' '+cbType+' — Scale Chords';
       const p=new URLSearchParams({stage:'chord-theory',exercise});
       window.location.href='vizi.html?'+p.toString();
     });
-    actionRow.appendChild(viziBtn);
+    actionRow.appendChild(lightScaleBtn);
     wrap.appendChild(actionRow);
-
-    // Fretboard status
-    const fretStatus = document.createElement('div');
-    fretStatus.className='cb-fret-status'; fretStatus.id='cbFretStatus';
-    wrap.appendChild(fretStatus);
 
     exList.appendChild(wrap);
 
@@ -2136,8 +2135,6 @@
 
     // Build scale
     cbScaleNotes = buildScaleFromRoot(cbRoot, def.intervals);
-    // Build chord notes (pick degrees from scale)
-    cbChordNotes = def.degrees.map(d => cbScaleNotes[d] || cbScaleNotes[d%cbScaleNotes.length]);
 
     const stepsEl = document.getElementById('cbSteps');
 
@@ -2159,15 +2156,9 @@
       );
     }
 
-    // ── STEP 3: The chord tones ──
+    // ── STEP 3: Every chord in the scale ──
     if(fromStep <= 2){
-      await animateStep(stepsEl, 3, cbRoot+' '+cbType+' Chord',
-        buildChordDesc(cbRoot, cbType, def, cbChordNotes),
-        ()=> renderAllNotes('chord'),
-        fromStep===2 ? 0 : 600
-      );
-      // Light fretboard
-      await lightChordOnFretboard();
+      await renderScaleChordsStep(stepsEl, cbScaleNotes, fromStep===2 ? 0 : 600);
     }
 
     cbStep = 3;
@@ -2205,9 +2196,7 @@
   }
 
   function getPillInfo(forStep){
-    // forStep: 1=all notes, 2=scale, 3=chord tones
-    const def = CHORD_TYPES[cbType];
-
+    // forStep: 1=all notes, 2=scale
     // Rotate CHROM12 so the chosen root is always the first note shown
     function rootFirst(arr){
       if(!cbRoot) return arr;
@@ -2220,24 +2209,11 @@
       // All 12 notes — root first if selected, otherwise C-first
       return rootFirst(CHROM12).map(n=>({note:n, cls:'active-note'}));
     }
-    if(forStep===2){
-      // All 12 rotated root-first; scale notes highlighted, rest faded
-      return rootFirst(CHROM12).map(n=>({
-        note:n,
-        cls: cbScaleNotes.includes(n)
-          ? (n===cbRoot ? 'root-note' : 'active-note')
-          : 'faded'
-      }));
-    }
-    // Step 3 — scale notes only (already root-first from buildScaleFromRoot)
-    // highlight 1st, 3rd, 5th as chord tones
-    return cbScaleNotes.map((n,i)=>({
+    // Step 2 — all 12 rotated root-first; scale notes highlighted, rest faded
+    return rootFirst(CHROM12).map(n=>({
       note:n,
-      cls: cbChordNotes.includes(n)
-        ? (i===0 ? 'root-note'
-          : i===def.degrees[1] ? 'third-note'
-          : i===def.degrees[2] ? 'fifth-note'
-          : 'seventh-note')
+      cls: cbScaleNotes.includes(n)
+        ? (n===cbRoot ? 'root-note' : 'active-note')
         : 'faded'
     }));
   }
@@ -2254,39 +2230,75 @@
       + root + ' ' + typeName + ' scale — now we pick the chord tones from it.';
   }
 
-  function buildChordDesc(root, type, def, chordNotes){
-    const noteStr = chordNotes.join(', ');
-    const degStr = def.labels.join(' + ');
-    // Use "Root" not "1st" throughout
-    const cleanDesc = def.desc.replace('1st','Root');
-    return cleanDesc + '.  '
-      + root + ' ' + type + ' = ' + noteStr
-      + '  (' + degStr + ').  '
-      + 'Combine any of these notes on the guitar and you have a ' + root + ' ' + type + ' chord.';
+  // Given three scale-note names, work out whether stacking them as 1-3-5
+  // from that root produces a Major, Minor, Diminished, or Augmented chord —
+  // purely from the actual pitch-class intervals, not a hardcoded per-degree guess.
+  function chordQualityName(root, third, fifth){
+    const rootPC = CHROM12.indexOf(root);
+    const thirdPC = CHROM12.indexOf(third);
+    const fifthPC = CHROM12.indexOf(fifth);
+    const t = (thirdPC - rootPC + 12) % 12;
+    const f = (fifthPC - rootPC + 12) % 12;
+    if(t===4 && f===7) return 'Major';
+    if(t===3 && f===7) return 'Minor';
+    if(t===3 && f===6) return 'Diminished';
+    if(t===4 && f===8) return 'Augmented';
+    return '';
   }
 
-  async function lightChordOnFretboard(){
-    const statusEl = document.getElementById('cbFretStatus');
-    const key = cbRoot + ' ' + cbType;
-    const cmd = OPEN_CHORDS[key];
-    if(!cmd){
-      if(statusEl){ statusEl.textContent='No open voicing — ask Vizi to show it on the fretboard'; statusEl.style.color='var(--text-light)'; }
-      return;
+  // Build all 7 scale-degree chords, each as its own fresh 1-3-5 stack
+  // using only notes native to this scale.
+  function buildScaleChordRows(scaleNotes){
+    const rows = [];
+    for(let i=0;i<scaleNotes.length;i++){
+      const root  = scaleNotes[i];
+      const third = scaleNotes[(i+2)%scaleNotes.length];
+      const fifth = scaleNotes[(i+4)%scaleNotes.length];
+      const quality = chordQualityName(root, third, fifth);
+      rows.push({ root, third, fifth, quality });
     }
-    if(statusEl){ statusEl.textContent='Lighting fretboard...'; statusEl.style.color='var(--gold)'; }
-    try{
-      const res = await fetch(RAILWAY_URL+'/fretboard-command',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({command:cmd})
-      });
-      if(res.ok){
-        if(statusEl){ statusEl.textContent='Fretboard lit — open '+cbRoot+' '+cbType+' shape'; statusEl.style.color='var(--green)'; }
-      } else {
-        if(statusEl){ statusEl.textContent='Could not reach fretboard'; statusEl.style.color='var(--red)'; }
-      }
-    }catch(e){
-      if(statusEl){ statusEl.textContent='Could not reach fretboard'; statusEl.style.color='var(--red)'; }
-    }
+    return rows;
+  }
+
+  async function renderScaleChordsStep(container, scaleNotes, delay){
+    return new Promise(resolve=>{
+      setTimeout(()=>{
+        container.querySelectorAll('.cb-step').forEach(s=>{ s.classList.remove('active'); s.classList.add('done'); });
+        const step = document.createElement('div'); step.className='cb-step active';
+        const head = document.createElement('div'); head.className='cb-step-head';
+        const numEl = document.createElement('div'); numEl.className='cb-step-num'; numEl.textContent='3';
+        const titleEl = document.createElement('div'); titleEl.className='cb-step-title'; titleEl.textContent='Every Chord in the Scale';
+        head.appendChild(numEl); head.appendChild(titleEl);
+        const body = document.createElement('div'); body.className='cb-step-body';
+
+        const descEl = document.createElement('div'); descEl.className='cb-step-desc';
+        descEl.textContent = 'These ' + scaleNotes.length + ' notes are also the root of every chord built from this scale — each one below starts fresh from that note and stacks Root, 3rd, 5th using only notes already in the scale.';
+        body.appendChild(descEl);
+
+        const grid = document.createElement('div'); grid.className='cb-chord-grid';
+        const h1=document.createElement('div'); h1.className='cbcg-head'; h1.textContent='Chord';
+        const h2=document.createElement('div'); h2.className='cbcg-head'; h2.textContent='Root 3 5';
+        const h3=document.createElement('div'); h3.className='cbcg-head'; h3.textContent='Chord Name';
+        grid.appendChild(h1); grid.appendChild(h2); grid.appendChild(h3);
+
+        buildScaleChordRows(scaleNotes).forEach(row=>{
+          const rootDisp = displayNote(row.root);
+          const notesDisp = [row.root, row.third, row.fifth].map(displayNote).join(' ');
+          const nameDisp = rootDisp + ' ' + row.quality;
+
+          const c1=document.createElement('div'); c1.className='cbcg-cell cbcg-root'; c1.textContent=rootDisp;
+          const c2=document.createElement('div'); c2.className='cbcg-cell cbcg-notes'; c2.textContent=notesDisp;
+          const c3=document.createElement('div'); c3.className='cbcg-cell cbcg-name'; c3.innerHTML=colorizeQualityLabel(nameDisp);
+          grid.appendChild(c1); grid.appendChild(c2); grid.appendChild(c3);
+        });
+        body.appendChild(grid);
+
+        step.appendChild(head); step.appendChild(body);
+        container.appendChild(step);
+        head.addEventListener('click',()=>{ step.classList.toggle('done'); step.classList.toggle('active'); });
+        resolve();
+      }, delay);
+    });
   }
 
 

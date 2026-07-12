@@ -335,8 +335,8 @@ nav .nav-links, .site-nav .nav-links {
       const startedAt = Date.now();
       try {
         const msg = goingOn
-          ? 'Please return the COLOR T command to the fretboard immediately.'
-          : 'Please return the COLOR F command to the fretboard immediately.';
+          ? 'Please return the COLOR THEORY command to the fretboard immediately.'
+          : 'Please return the COLOR FINGER command to the fretboard immediately.';
         await fetch(VM_RAILWAY_URL + '/claude-tts', {
           method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ message: msg, mode: 'talk' })
