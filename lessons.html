@@ -720,14 +720,14 @@
 
   /* Scale chord grid — Chord / Root 3 5 / Chord Name */
   .cb-chord-grid{
-    display:grid;grid-template-columns:minmax(7.4rem,auto) 1fr auto;gap:1px;
+    display:grid;grid-template-columns:minmax(7.4rem,auto) minmax(4.6rem,1fr) auto;gap:1px;
     background:var(--cream-dark);border:1.5px solid var(--cream-dark);border-radius:10px;
     overflow:hidden;margin-top:.5rem;
   }
   .cbcg-head{
     background:rgba(255,255,255,0.04);color:var(--text);
     font-family:'DM Mono',monospace;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-    padding:.5rem .65rem;
+    padding:.5rem .65rem;white-space:nowrap;
   }
   .cbcg-cell{
     background:var(--white);padding:.55rem .65rem;font-size:.86rem;display:flex;align-items:center;
@@ -737,6 +737,16 @@
   .cbcg-notes{ font-family:'DM Mono',monospace;color:var(--text);letter-spacing:.03em; }
   .cbcg-name{ font-weight:700; }
   .cbcg-name-quality{ margin-left:.4em; }
+
+  .cb-roman-legend{
+    display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.85rem;
+  }
+  .cb-roman-legend-item{
+    font-size:.86rem;color:var(--text);
+    background:rgba(255,255,255,0.04);border:1.5px solid var(--cream-dark);
+    border-radius:8px;padding:.4rem .65rem;
+  }
+  .cb-roman-legend-sym{ font-weight:800; }
 
   /* Step-back + ask Vizi row */
   .cb-action-row{
@@ -2455,14 +2465,20 @@
         });
         body.appendChild(grid);
 
-        const romanNote = document.createElement('div'); romanNote.className='cb-step-desc';
-        romanNote.style.marginTop = '.75rem';
-        romanNote.textContent = 'A capital Roman numeral means the chord is Major. A lowercase Roman numeral means minor. A lowercase Roman numeral with a ° means diminished.';
-        body.appendChild(romanNote);
+        const legend = document.createElement('div'); legend.className='cb-roman-legend';
+        [['I','Major','cp-q-major'],['i','minor','cp-q-minor'],['i°','diminished','']].forEach(([sym,label,cls])=>{
+          const item = document.createElement('div'); item.className='cb-roman-legend-item';
+          const symEl = document.createElement('span'); symEl.className='cb-roman-legend-sym'+(cls?' '+cls:'');
+          symEl.textContent = sym;
+          const eqEl = document.createElement('span'); eqEl.textContent = ' = '+label;
+          item.appendChild(symEl); item.appendChild(eqEl);
+          legend.appendChild(item);
+        });
+        body.appendChild(legend);
 
         const progNote = document.createElement('div'); progNote.className='cb-step-desc';
-        progNote.style.marginTop = '.5rem';
-        progNote.textContent = "Musicians use these Roman numerals to talk about chord progressions by their position in the scale instead of by key — so a \"1-4-5 progression\" or a \"ii-V-I\" means the same pattern no matter what key you're in.";
+        progNote.style.marginTop = '.4rem';
+        progNote.textContent = 'Musicians use these to name progressions (like "1-4-5" or "ii-V-I") that work the same in any key.';
         body.appendChild(progNote);
 
         step.appendChild(head); step.appendChild(body);
