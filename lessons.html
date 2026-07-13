@@ -628,8 +628,8 @@
   .cb-type-row:hover{ border-color:var(--teal); }
   .cb-type-row.selected{ border:2px solid var(--teal);background:rgba(42,172,184,0.1);box-shadow:0 0 0 1px rgba(42,172,184,0.25); }
   .cb-type-row-name{
-    font-family:'DM Mono',monospace;font-size:.88rem;font-weight:600;
-    color:var(--text-mid);min-width:4.2rem;
+    font-family:'DM Mono',monospace;font-size:.88rem;font-weight:700;
+    color:var(--text);min-width:4.2rem;
   }
   .cb-type-row.selected .cb-type-row-name{ color:var(--teal);font-weight:700; }
   .cb-type-row-pattern{
@@ -2136,7 +2136,7 @@
     const typeLabel = document.createElement('span'); typeLabel.id='cbStep2Label';
     typeLabel.className='choice-panel-label'+(cbRoot?' cp-label-bright':'');
     typeLabel.style.marginTop='.25rem'; typeLabel.style.display='block';
-    typeLabel.textContent='Step 2 — Choose a chord type';
+    typeLabel.textContent='Step 2 — Pick Major or Minor';
     wrap.appendChild(typeLabel);
     const typeGrid = document.createElement('div'); typeGrid.className='cb-type-grid';
     ['Major','Minor'].forEach(type => {
@@ -2280,7 +2280,7 @@
     // ── STEP 1: All 12 notes ──
     if(fromStep <= 0){
       await animateStep(stepsEl, 1, 'All Possible Notes',
-        'These are all 12 notes in Western music. Every chord, scale, and melody is built from these.',
+        'These are all 12 notes in Western music. Every chord, scale, and melody is built from these. Each note is one half step higher than the one before it.',
         ()=> renderAllNotes('all'),
         0
       );
