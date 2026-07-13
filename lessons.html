@@ -720,7 +720,7 @@
 
   /* Scale chord grid — Chord / Root 3 5 / Chord Name */
   .cb-chord-grid{
-    display:grid;grid-template-columns:auto 1fr auto;gap:1px;
+    display:grid;grid-template-columns:minmax(7.4rem,auto) 1fr auto;gap:1px;
     background:var(--cream-dark);border:1.5px solid var(--cream-dark);border-radius:10px;
     overflow:hidden;margin-top:.5rem;
   }
@@ -732,7 +732,7 @@
   .cbcg-cell{
     background:var(--white);padding:.55rem .65rem;font-size:.86rem;display:flex;align-items:center;
   }
-  .cbcg-root{ font-weight:800;color:var(--text); }
+  .cbcg-root{ font-weight:800;color:var(--text);white-space:nowrap; }
   .cbcg-notes{ font-family:'DM Mono',monospace;color:var(--text-mid);letter-spacing:.03em; }
   .cbcg-name{ font-weight:700; }
   .cbcg-name-quality{ margin-left:.4em; }
@@ -2437,7 +2437,7 @@
           const qEl = document.createElement('span'); qEl.className = 'cbcg-name-quality';
           if(row.quality === 'Major') qEl.classList.add('cp-q-major');
           else if(row.quality === 'Minor') qEl.classList.add('cp-q-minor');
-          qEl.textContent = row.quality;
+          qEl.textContent = row.quality === 'Diminished' ? 'Dim' : row.quality;
           c3.appendChild(rootEl); c3.appendChild(qEl);
 
           grid.appendChild(c1); grid.appendChild(c2); grid.appendChild(c3);
