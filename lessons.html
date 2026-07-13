@@ -2138,6 +2138,9 @@
     typeLabel.style.marginTop='.25rem'; typeLabel.style.display='block';
     typeLabel.textContent='Step 2 — Pick Major or Minor';
     wrap.appendChild(typeLabel);
+    const whNote = document.createElement('div'); whNote.className='cb-type-note';
+    whNote.textContent = 'W = whole step, H = half step — these patterns show how far apart each note in the scale is from the one before it.';
+    wrap.appendChild(whNote);
     const typeGrid = document.createElement('div'); typeGrid.className='cb-type-grid';
     ['Major','Minor'].forEach(type => {
       const btn = document.createElement('button'); btn.className='cb-type-row';
