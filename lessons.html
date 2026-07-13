@@ -1224,6 +1224,10 @@
   }
   .cp-bonus-video-row .cp-video-intro-btn:hover{ background:rgba(61,186,114,0.16);border-color:var(--vizi); }
   .cp-bonus-video-row .cp-video-intro-btn .cp-vid-icon{ color:var(--vizi); }
+  .cp-bonus-video-row-sm .cp-video-intro-btn{
+    padding:.45rem .85rem;font-size:.78rem;
+  }
+  .cp-bonus-video-row-sm .cp-video-intro-btn .cp-vid-icon{ font-size:.85rem; }
 
 
   .tb-power-reminder{
@@ -2625,11 +2629,9 @@
   }
 
   function renderByChordView(container){
-    // Bonus intro videos — barre chords and triads, right below the main intro video
-    const videoRow = document.createElement('div'); videoRow.className='cp-bonus-video-row';
-    videoRow.appendChild(makeVideoIntroBtn('Watch Barre Chords Video', activeStage&&activeStage.barreVideoUrl||''));
-    videoRow.appendChild(makeVideoIntroBtn('Watch Triads Video', activeStage&&activeStage.triadVideoUrl||''));
-    container.appendChild(videoRow);
+    // Demo comes first — sets up what "different ways to play it" will mean
+    // before the student dives into the chord picker below.
+    renderDemoSection(container);
 
     // Note + slash-chord picker
     const noteLabel=document.createElement('span'); noteLabel.className='choice-panel-label cp-label-bright';
@@ -2659,10 +2661,53 @@
     });
     container.appendChild(noteGrid);
 
-    renderDemoSection(container);
+    if(cpByChordSelection){
+      const isSlash = SLASH_CHORDS_CP.includes(cpByChordSelection);
 
-    // Reset — collapses everything back to the empty, nothing-selected state,
-    // including the Demo section's shape/string/quality choices
+      const listLabel=document.createElement('span'); listLabel.className='choice-panel-label';
+      listLabel.textContent='Different ways to play '+cpByChordSelection;
+      container.appendChild(listLabel);
+
+      if(isSlash){
+        const sc=cpByChordSelection;
+        const explainer=document.createElement('div'); explainer.className='cp-slash-explainer';
+        explainer.textContent="A slash chord is a regular chord played over a different bass note — the letter before the slash is the chord, the letter after is the bass note. It's one specific voicing, not a full chord family, so there's only one way to play it here.";
+        container.appendChild(explainer);
+
+        const list=document.createElement('div'); list.className='cp-voicings-list';
+        const item=document.createElement('div'); item.className='cp-voicing-item';
+        const tag=document.createElement('span'); tag.className='cp-voicing-tag open'; tag.textContent='open';
+        const name=document.createElement('span'); name.className='cp-voicing-name'; name.textContent=sc;
+        const arr=document.createElement('span'); arr.className='cp-voicing-arrow'; arr.textContent='›';
+        item.appendChild(tag); item.appendChild(name); item.appendChild(arr);
+        item.addEventListener('click',()=>{
+          cpSelectedChord={label:sc, cmd:'CHORD '+sc, type:'open'};
+          showChordActions(container.parentElement||exList);
+        });
+        list.appendChild(item);
+        container.appendChild(list);
+      } else {
+        // Voicings list for a plain note
+        const voicings = getVoicings(cpByChordSelection);
+        const list=document.createElement('div'); list.className='cp-voicings-list';
+        voicings.forEach(v=>{
+          const item=document.createElement('div'); item.className='cp-voicing-item';
+          const tag=document.createElement('span'); tag.className='cp-voicing-tag '+v.tag; tag.textContent=v.tag;
+          const name=document.createElement('span'); name.className='cp-voicing-name'; name.innerHTML=colorizeQualityLabel(v.label);
+          const arr=document.createElement('span'); arr.className='cp-voicing-arrow'; arr.textContent='›';
+          item.appendChild(tag); item.appendChild(name); item.appendChild(arr);
+          item.addEventListener('click',()=>{
+            cpSelectedChord={label:v.label, cmd:v.cmd, type:v.type};
+            showChordActions(container.parentElement||exList);
+          });
+          list.appendChild(item);
+        });
+        container.appendChild(list);
+      }
+    }
+
+    // Reset — always last, collapses everything back to the empty,
+    // nothing-selected state, including the Demo section's choices
     const resetBtn=document.createElement('button'); resetBtn.className='cp-chord-reset-btn';
     resetBtn.textContent='Reset';
     resetBtn.addEventListener('click',()=>{
@@ -2674,52 +2719,6 @@
       renderChordsPanel();
     });
     container.appendChild(resetBtn);
-
-    if(!cpByChordSelection) return;
-
-    const isSlash = SLASH_CHORDS_CP.includes(cpByChordSelection);
-
-    const listLabel=document.createElement('span'); listLabel.className='choice-panel-label';
-    listLabel.textContent='Different ways to play '+cpByChordSelection;
-    container.appendChild(listLabel);
-
-    if(isSlash){
-      const sc=cpByChordSelection;
-      const explainer=document.createElement('div'); explainer.className='cp-slash-explainer';
-      explainer.textContent="A slash chord is a regular chord played over a different bass note — the letter before the slash is the chord, the letter after is the bass note. It's one specific voicing, not a full chord family, so there's only one way to play it here.";
-      container.appendChild(explainer);
-
-      const list=document.createElement('div'); list.className='cp-voicings-list';
-      const item=document.createElement('div'); item.className='cp-voicing-item';
-      const tag=document.createElement('span'); tag.className='cp-voicing-tag open'; tag.textContent='open';
-      const name=document.createElement('span'); name.className='cp-voicing-name'; name.textContent=sc;
-      const arr=document.createElement('span'); arr.className='cp-voicing-arrow'; arr.textContent='›';
-      item.appendChild(tag); item.appendChild(name); item.appendChild(arr);
-      item.addEventListener('click',()=>{
-        cpSelectedChord={label:sc, cmd:'CHORD '+sc, type:'open'};
-        showChordActions(container.parentElement||exList);
-      });
-      list.appendChild(item);
-      container.appendChild(list);
-      return;
-    }
-
-    // Voicings list for a plain note
-    const voicings = getVoicings(cpByChordSelection);
-    const list=document.createElement('div'); list.className='cp-voicings-list';
-    voicings.forEach(v=>{
-      const item=document.createElement('div'); item.className='cp-voicing-item';
-      const tag=document.createElement('span'); tag.className='cp-voicing-tag '+v.tag; tag.textContent=v.tag;
-      const name=document.createElement('span'); name.className='cp-voicing-name'; name.innerHTML=colorizeQualityLabel(v.label);
-      const arr=document.createElement('span'); arr.className='cp-voicing-arrow'; arr.textContent='›';
-      item.appendChild(tag); item.appendChild(name); item.appendChild(arr);
-      item.addEventListener('click',()=>{
-        cpSelectedChord={label:v.label, cmd:v.cmd, type:v.type};
-        showChordActions(container.parentElement||exList);
-      });
-      list.appendChild(item);
-    });
-    container.appendChild(list);
   }
 
   // ── DEMO: Barre Chords / Triads sliding chromatically up the neck ──
@@ -2739,8 +2738,14 @@
     demoInfo.textContent = 'See how barre chords and triads work up and down the fretboard.';
     container.appendChild(demoInfo);
 
+    // Bonus intro videos — smaller than the main intro video, still green
+    const videoRow = document.createElement('div'); videoRow.className='cp-bonus-video-row cp-bonus-video-row-sm';
+    videoRow.appendChild(makeVideoIntroBtn('Watch Barre Chords Video', activeStage&&activeStage.barreVideoUrl||''));
+    videoRow.appendChild(makeVideoIntroBtn('Watch Triads Video', activeStage&&activeStage.triadVideoUrl||''));
+    container.appendChild(videoRow);
+
     const modeRow = document.createElement('div'); modeRow.className='cp-demo-mode-row';
-    [['barre','Barre Chords'],['triad','Triads']].forEach(([key,text])=>{
+    [['barre','Barre Chord Demo'],['triad','Triad Demo']].forEach(([key,text])=>{
       const btn = document.createElement('button');
       btn.className='cp-demo-mode-btn'+(demoMode===key?' active':'');
       btn.textContent = text;
