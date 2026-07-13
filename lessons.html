@@ -2388,6 +2388,15 @@
     return rows;
   }
 
+  const ROMAN_NUMERALS = ['I','II','III','IV','V','VI','VII'];
+  function romanForQuality(idx, quality){
+    const base = ROMAN_NUMERALS[idx] || String(idx+1);
+    if(quality === 'Minor') return base.toLowerCase();
+    if(quality === 'Diminished') return base.toLowerCase()+'°';
+    if(quality === 'Augmented') return base+'+';
+    return base; // Major
+  }
+
   async function renderScaleChordsStep(container, scaleNotes, delay){
     return new Promise(resolve=>{
       setTimeout(()=>{
@@ -2400,7 +2409,7 @@
         const body = document.createElement('div'); body.className='cb-step-body';
 
         const descEl = document.createElement('div'); descEl.className='cb-step-desc';
-        descEl.textContent = 'These 7 notes are also the 1st notes (root) of every chord in this scale. Seven notes in the scale, seven chords in the scale. Each new chord starts on a different one of those notes and simply counts up two notes from there to get to the third and two from there to get to the 5th.';
+        descEl.textContent = 'These 7 notes are also the root of every chord in the scale — count up two notes for the 3rd, two more for the 5th, and you get all 7 chords.';
         body.appendChild(descEl);
 
         const grid = document.createElement('div'); grid.className='cb-chord-grid';
@@ -2409,11 +2418,13 @@
         const h3=document.createElement('div'); h3.className='cbcg-head'; h3.textContent='Chord Name';
         grid.appendChild(h1); grid.appendChild(h2); grid.appendChild(h3);
 
-        buildScaleChordRows(scaleNotes).forEach(row=>{
+        buildScaleChordRows(scaleNotes).forEach((row, idx)=>{
           const rootDisp = displayNote(row.root);
           const notesDisp = [row.root, row.third, row.fifth].map(displayNote).join(' ');
+          const roman = romanForQuality(idx, row.quality);
 
-          const c1=document.createElement('div'); c1.className='cbcg-cell cbcg-root'; c1.textContent=rootDisp;
+          const c1=document.createElement('div'); c1.className='cbcg-cell cbcg-root';
+          c1.textContent = (idx+1)+' ('+roman+') — '+rootDisp;
           const c2=document.createElement('div'); c2.className='cbcg-cell cbcg-notes'; c2.textContent=notesDisp;
 
           // Root and quality are two separate spans with CSS margin between
@@ -2432,6 +2443,11 @@
           grid.appendChild(c1); grid.appendChild(c2); grid.appendChild(c3);
         });
         body.appendChild(grid);
+
+        const romanNote = document.createElement('div'); romanNote.className='cb-step-desc';
+        romanNote.style.marginTop = '.75rem';
+        romanNote.textContent = 'A capital Roman numeral means the chord is Major. A lowercase Roman numeral means minor. A lowercase Roman numeral with a ° means diminished.';
+        body.appendChild(romanNote);
 
         step.appendChild(head); step.appendChild(body);
         container.appendChild(step);
