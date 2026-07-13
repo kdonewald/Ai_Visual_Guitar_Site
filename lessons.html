@@ -1217,6 +1217,13 @@
   .cp-video-intro-btn:hover{ background:var(--vizi-light);transform:translateY(-1px); }
   .cp-video-intro-btn:disabled{ background:rgba(255,255,255,0.10);color:var(--text-dim);box-shadow:none;cursor:default; }
   .cp-video-intro-btn .cp-vid-icon{ font-size:1rem; }
+  .cp-bonus-video-row{ display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem; }
+  .cp-bonus-video-row .cp-video-intro-btn{
+    background:rgba(61,186,114,0.08);border:1.5px solid rgba(61,186,114,0.4);
+    color:var(--text);box-shadow:none;margin-bottom:0;
+  }
+  .cp-bonus-video-row .cp-video-intro-btn:hover{ background:rgba(61,186,114,0.16);border-color:var(--vizi); }
+  .cp-bonus-video-row .cp-video-intro-btn .cp-vid-icon{ color:var(--vizi); }
 
 
   .tb-power-reminder{
@@ -1366,8 +1373,8 @@
       id:'chords', num:4, label:'Chords',
       desc:'',
       videoUrl:'https://youtube.com/shorts/tVfIc41nhLc',       // main stage intro — open chords + chord builder
-      barreVideoUrl:'https://youtube.com/shorts/Mfh0b5IEh8M',  // barre chords section intro
-      triadVideoUrl:'https://youtube.com/shorts/MCxritexm9M',  // triads section intro
+      barreVideoUrl:'https://youtube.com/shorts/Mfh0b5IEh8M?is=24mkcr_UDx_Ye3x4',  // barre chords section intro
+      triadVideoUrl:'https://youtube.com/shorts/MCxritexm9M?is=scPnOb9XeO64d9OK',  // triads section intro
       tips:[
         "Press only as hard as needed to stop the buzz — squeezing harder just tires your hand.",
         "Curl your fretting fingers like you're holding a small ball, not flat across the strings.",
@@ -2618,6 +2625,12 @@
   }
 
   function renderByChordView(container){
+    // Bonus intro videos — barre chords and triads, right below the main intro video
+    const videoRow = document.createElement('div'); videoRow.className='cp-bonus-video-row';
+    videoRow.appendChild(makeVideoIntroBtn('Watch Barre Chords Video', activeStage&&activeStage.barreVideoUrl||''));
+    videoRow.appendChild(makeVideoIntroBtn('Watch Triads Video', activeStage&&activeStage.triadVideoUrl||''));
+    container.appendChild(videoRow);
+
     // Note + slash-chord picker
     const noteLabel=document.createElement('span'); noteLabel.className='choice-panel-label cp-label-bright';
     noteLabel.textContent='Choose a chord and see different ways to play it on the fretboard';
