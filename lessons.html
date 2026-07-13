@@ -3011,7 +3011,13 @@
   }
 
   function renderChoicePanel(stage){
-    if (stage.id==='strumming'){ renderStrummingPanel(); const vmInlineEl=document.getElementById('vm-inline'); if(vmInlineEl) vmInlineEl.style.display='none'; return; }
+    if (stage.id==='strumming'){
+      renderStrummingPanel();
+      if(window.viziMetro && typeof window.viziMetro.stop==='function') window.viziMetro.stop();
+      const metroToggle=document.getElementById('vm-metro-toggle'); if(metroToggle) metroToggle.style.display='none';
+      const metroRow=document.getElementById('vm-metro-row'); if(metroRow) metroRow.style.display='none';
+      return;
+    }
     if (stage.id==='chord-theory'){ renderChordBuilder(); return; }
     if (stage.id==='chords'){ renderChordsPanel(); return; }
     const def = CHOICE_PANELS[stage.id];
@@ -3132,8 +3138,8 @@
   document.getElementById('catClose').addEventListener('click', () => {
     stopTuner();
     catPanel.classList.remove('show');
-    const vmInline = document.getElementById('vm-inline');
-    if(vmInline) vmInline.style.display='';
+    const metroToggle=document.getElementById('vm-metro-toggle'); if(metroToggle) metroToggle.style.display='';
+    const metroRow=document.getElementById('vm-metro-row'); if(metroRow) metroRow.style.display='';
   });
 
   // Auto-open from sessionStorage or hash
