@@ -725,7 +725,7 @@
     overflow:hidden;margin-top:.5rem;
   }
   .cbcg-head{
-    background:rgba(255,255,255,0.04);color:var(--text-mid);
+    background:rgba(255,255,255,0.04);color:var(--text);
     font-family:'DM Mono',monospace;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
     padding:.5rem .65rem;
   }
@@ -733,7 +733,8 @@
     background:var(--white);padding:.55rem .65rem;font-size:.86rem;display:flex;align-items:center;
   }
   .cbcg-root{ font-weight:800;color:var(--text);white-space:nowrap; }
-  .cbcg-notes{ font-family:'DM Mono',monospace;color:var(--text-mid);letter-spacing:.03em; }
+  .cbcg-roman{ margin:0 .3em; }
+  .cbcg-notes{ font-family:'DM Mono',monospace;color:var(--text);letter-spacing:.03em; }
   .cbcg-name{ font-weight:700; }
   .cbcg-name-quality{ margin-left:.4em; }
 
@@ -2409,12 +2410,12 @@
         const body = document.createElement('div'); body.className='cb-step-body';
 
         const descEl = document.createElement('div'); descEl.className='cb-step-desc';
-        descEl.textContent = 'These 7 notes are also the root of every chord in the scale — count up two notes for the 3rd, two more for the 5th, and you get all 7 chords.';
+        descEl.textContent = 'These 7 notes now become the root notes, i.e. first note, of each of the 7 chords in the scale. From each of these notes you just count up two higher notes in this scale to get the third and two more notes to get the fifth. 1st (root), 3rd, 5th is the formula to create chords.';
         body.appendChild(descEl);
 
         const grid = document.createElement('div'); grid.className='cb-chord-grid';
         const h1=document.createElement('div'); h1.className='cbcg-head'; h1.textContent='Chord';
-        const h2=document.createElement('div'); h2.className='cbcg-head'; h2.textContent='Root 3 5';
+        const h2=document.createElement('div'); h2.className='cbcg-head'; h2.textContent='1, 3, 5';
         const h3=document.createElement('div'); h3.className='cbcg-head'; h3.textContent='Chord Name';
         grid.appendChild(h1); grid.appendChild(h2); grid.appendChild(h3);
 
@@ -2423,8 +2424,18 @@
           const notesDisp = [row.root, row.third, row.fifth].map(displayNote).join(' ');
           const roman = romanForQuality(idx, row.quality);
 
+          // Chord column split into three spans so the Roman numeral can be
+          // colored by quality (same gold/blue as the Chord Name column)
+          // while the number and root name stay plain.
           const c1=document.createElement('div'); c1.className='cbcg-cell cbcg-root';
-          c1.textContent = (idx+1)+' ('+roman+') — '+rootDisp;
+          const numSpan = document.createElement('span'); numSpan.textContent = (idx+1);
+          const romanSpan = document.createElement('span'); romanSpan.className = 'cbcg-roman';
+          if(row.quality === 'Major') romanSpan.classList.add('cp-q-major');
+          else if(row.quality === 'Minor') romanSpan.classList.add('cp-q-minor');
+          romanSpan.textContent = '('+roman+')';
+          const dashSpan = document.createElement('span'); dashSpan.textContent = ' — '+rootDisp;
+          c1.appendChild(numSpan); c1.appendChild(romanSpan); c1.appendChild(dashSpan);
+
           const c2=document.createElement('div'); c2.className='cbcg-cell cbcg-notes'; c2.textContent=notesDisp;
 
           // Root and quality are two separate spans with CSS margin between
@@ -2448,6 +2459,11 @@
         romanNote.style.marginTop = '.75rem';
         romanNote.textContent = 'A capital Roman numeral means the chord is Major. A lowercase Roman numeral means minor. A lowercase Roman numeral with a ° means diminished.';
         body.appendChild(romanNote);
+
+        const progNote = document.createElement('div'); progNote.className='cb-step-desc';
+        progNote.style.marginTop = '.5rem';
+        progNote.textContent = "Musicians use these Roman numerals to talk about chord progressions by their position in the scale instead of by key — so a \"1-4-5 progression\" or a \"ii-V-I\" means the same pattern no matter what key you're in.";
+        body.appendChild(progNote);
 
         step.appendChild(head); step.appendChild(body);
         container.appendChild(step);
