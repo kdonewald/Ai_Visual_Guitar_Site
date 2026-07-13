@@ -508,18 +508,21 @@
     font-family:'DM Mono',monospace;font-size:.83rem;letter-spacing:.1em;
     text-transform:uppercase;color:var(--text-light);flex-shrink:0;width:3rem;
   }
-  .bpm-slider{
-    flex:1;-webkit-appearance:none;appearance:none;height:5px;
-    border-radius:3px;background:var(--cream-dark);outline:none;cursor:pointer;
+  .sp-bpm-btn{
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    height:42px;width:42px;border-radius:8px;
+    border:1.5px solid var(--cream-dark);background:rgba(255,255,255,0.03);
+    font-family:'DM Mono',monospace;font-size:1.2rem;font-weight:700;color:var(--text);
+    cursor:pointer;transition:all .15s;user-select:none;
   }
-  .bpm-slider::-webkit-slider-thumb{
-    -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
-    background:var(--red);cursor:pointer;box-shadow:0 2px 6px rgba(217,64,37,0.4);
+  .sp-bpm-btn:hover{ border-color:var(--red);background:rgba(217,64,37,0.08); }
+  .sp-bpm-btn:active{ background:rgba(217,64,37,0.16); }
+  .sp-bpm-display{
+    flex:1;font-family:'DM Mono',monospace;font-weight:700;color:var(--text);
+    display:flex;flex-direction:column;align-items:center;line-height:1.1;
   }
-  .bpm-value{
-    font-family:'DM Mono',monospace;font-size:.82rem;font-weight:500;
-    color:var(--text);width:4.2rem;text-align:right;flex-shrink:0;
-  }
+  .sp-bpm-num{ font-size:1.15rem; }
+  .sp-bpm-label{ font-size:.62rem;letter-spacing:.1em;color:var(--text-light);text-transform:uppercase; }
 
   .play-row{display:flex;align-items:center;justify-content:center;margin-top:.2rem;}
   .play-btn{
@@ -4154,8 +4157,12 @@ function initStrumPlayer(mountId){
 
     <div class="ctrl-row">
       <span class="ctrl-label">BPM</span>
-      <input type="range" class="bpm-slider" id="bpmSlider" min="40" max="160" value="70"/>
-      <span class="bpm-value" id="bpmValue">70 BPM</span>
+      <button class="sp-bpm-btn" id="spBpmMinus">−</button>
+      <div class="sp-bpm-display" id="spBpmDisplay">
+        <span class="sp-bpm-num">70</span>
+        <span class="sp-bpm-label">BPM</span>
+      </div>
+      <button class="sp-bpm-btn" id="spBpmPlus">+</button>
     </div>
 
     <div class="play-row">
@@ -4569,10 +4576,42 @@ document.getElementById('playBtn').addEventListener('click',()=>{
   }
 });
 
-document.getElementById('bpmSlider').addEventListener('input',e=>{
-  bpm=parseInt(e.target.value);
-  document.getElementById('bpmValue').textContent=bpm+' BPM';
-});
+function updateSpBpmDisplay(){
+  const numEl = document.querySelector('#spBpmDisplay .sp-bpm-num');
+  if(numEl) numEl.textContent = bpm;
+}
+
+function setSpBpm(v){
+  bpm = Math.max(40, Math.min(160, Math.round(v)));
+  updateSpBpmDisplay();
+}
+
+let spRepeatTimer = null, spRepeatInterval = null;
+function spStartRepeat(delta){
+  let stepCount = 0;
+  setSpBpm(bpm + delta);
+  spRepeatTimer = setTimeout(function fire(){
+    stepCount++;
+    const step = stepCount > 20 ? 10 : stepCount > 10 ? 5 : 1;
+    setSpBpm(bpm + delta*step);
+    spRepeatInterval = setTimeout(fire, stepCount > 10 ? 60 : 120);
+  }, 400);
+}
+function spStopRepeat(){
+  clearTimeout(spRepeatTimer); clearTimeout(spRepeatInterval);
+  spRepeatTimer = spRepeatInterval = null;
+}
+function spAddHoldRepeat(btn, delta){
+  btn.addEventListener('mousedown',  () => spStartRepeat(delta));
+  btn.addEventListener('touchstart', (e) => { e.preventDefault(); spStartRepeat(delta); }, {passive:false});
+  btn.addEventListener('mouseup',    spStopRepeat);
+  btn.addEventListener('mouseleave', spStopRepeat);
+  btn.addEventListener('touchend',   spStopRepeat);
+  btn.addEventListener('touchcancel',spStopRepeat);
+}
+spAddHoldRepeat(document.getElementById('spBpmMinus'), -1);
+spAddHoldRepeat(document.getElementById('spBpmPlus'), 1);
+updateSpBpmDisplay();
 
 // ═══════════════════════════════════════════════════
 // INIT
