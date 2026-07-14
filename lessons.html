@@ -752,10 +752,10 @@
   .cb-roman-legend-sym{ font-weight:800; }
 
   /* Theory-mode color legend — Root/3rd/5th, wherever Theory gets auto-turned on */
-  .theory-color-legend{ display:flex;gap:.4rem;margin-top:.5rem;flex-wrap:wrap; }
+  .theory-color-legend{ display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap; }
   .tcl-item{
-    font-family:'DM Mono',monospace;font-size:.72rem;font-weight:800;
-    letter-spacing:.04em;border-radius:6px;padding:.2rem .5rem;white-space:nowrap;
+    font-family:'DM Mono',monospace;font-size:.92rem;font-weight:800;
+    letter-spacing:.04em;border-radius:8px;padding:.35rem .75rem;white-space:nowrap;
   }
   .tcl-root{ color:var(--red);background:rgba(224,85,64,.14); }
   .tcl-third{ color:var(--green);background:rgba(61,186,114,.14); }
@@ -3548,6 +3548,11 @@
       document.querySelectorAll('.solo-section-head').forEach(h => h.classList.toggle('open', h.dataset.key === key));
       document.querySelectorAll('.solo-section-body').forEach(b => b.classList.toggle('open', b.dataset.key === key));
     }
+
+    const keyListLabel = document.createElement('span');
+    keyListLabel.className = 'choice-panel-label cp-label-bright';
+    keyListLabel.textContent = 'Pick a key to begin';
+    exList.appendChild(keyListLabel);
 
     Object.entries(BACKING_TRACKS).forEach(([keyName, data]) => {
       // Section header

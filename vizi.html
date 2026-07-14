@@ -140,10 +140,10 @@
   .song-banner:hover{background:rgba(79,142,247,0.16)}
 
   /* Theory-mode color legend — Root/3rd/5th, matches lessons.html styling */
-  .theory-color-legend{ display:flex;gap:.4rem;margin:0 0 1.1rem;flex-wrap:wrap;justify-content:center; }
+  .theory-color-legend{ display:flex;gap:.5rem;margin:0 0 1.1rem;flex-wrap:wrap;justify-content:center; }
   .tcl-item{
-    font-family:'DM Mono',monospace;font-size:.72rem;font-weight:800;
-    letter-spacing:.04em;border-radius:6px;padding:.2rem .5rem;white-space:nowrap;
+    font-family:'DM Mono',monospace;font-size:.92rem;font-weight:800;
+    letter-spacing:.04em;border-radius:8px;padding:.35rem .75rem;white-space:nowrap;
   }
   .tcl-root{ color:#e05540;background:rgba(224,85,64,.14); }
   .tcl-third{ color:#3dba72;background:rgba(61,186,114,.14); }
@@ -283,16 +283,16 @@
 
   <button class="talk" id="talkBtn">Hold<br>to Talk</button>
   <div class="status" id="status">Ready</div>
-
-  <button class="stop-track-btn" id="stopTrackBtn" style="display:none">⏹ Stop Backing Track</button>
-
-  <button class="upload-btn" id="uploadBtn" style="display:none">🎵 Upload a Song</button>
-  <div class="song-banner" id="songBanner"></div>
   <div class="theory-color-legend" id="theoryLegendVizi" style="display:none;">
     <span class="tcl-item tcl-root">Root</span>
     <span class="tcl-item tcl-third">3rd</span>
     <span class="tcl-item tcl-fifth">5th</span>
   </div>
+
+  <button class="stop-track-btn" id="stopTrackBtn" style="display:none">⏹ Stop Backing Track</button>
+
+  <button class="upload-btn" id="uploadBtn" style="display:none">🎵 Upload a Song</button>
+  <div class="song-banner" id="songBanner"></div>
 
   <button class="sheet-show-btn" id="sheetShowBtn">📄 Show Song Sheet</button>
 
