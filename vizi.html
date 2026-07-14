@@ -1177,8 +1177,7 @@
         pendingIntroBlob = await res.blob();
         setBtn('intro');
         btn.innerHTML = 'Tap to<br>start';
-        const shortName = exerciseName.split(' \u2014')[0].split(' \u2013')[0];
-        setStatus(shortName + ' ready \u2014 tap to hear Vizi');
+        setStatus('Ready \u2014 tap to hear Vizi');
         applyMetronomeCommand(pendingIntroCmd || '');
       } else {
         setBtn('');
