@@ -139,6 +139,16 @@
   .song-banner.show{display:block}
   .song-banner:hover{background:rgba(79,142,247,0.16)}
 
+  /* Theory-mode color legend — Root/3rd/5th, matches lessons.html styling */
+  .theory-color-legend{ display:flex;gap:.4rem;margin:0 0 1.1rem;flex-wrap:wrap;justify-content:center; }
+  .tcl-item{
+    font-family:'DM Mono',monospace;font-size:.72rem;font-weight:800;
+    letter-spacing:.04em;border-radius:6px;padding:.2rem .5rem;white-space:nowrap;
+  }
+  .tcl-root{ color:#e05540;background:rgba(224,85,64,.14); }
+  .tcl-third{ color:#3dba72;background:rgba(61,186,114,.14); }
+  .tcl-fifth{ color:#4f8ef7;background:rgba(79,142,247,.14); }
+
   /* ── panels ── */
   .panels{width:100%;max-width:440px;display:flex;flex-direction:column;gap:.85rem}
   .panel{
@@ -278,6 +288,11 @@
 
   <button class="upload-btn" id="uploadBtn" style="display:none">🎵 Upload a Song</button>
   <div class="song-banner" id="songBanner"></div>
+  <div class="theory-color-legend" id="theoryLegendVizi" style="display:none;">
+    <span class="tcl-item tcl-root">Root</span>
+    <span class="tcl-item tcl-third">3rd</span>
+    <span class="tcl-item tcl-fifth">5th</span>
+  </div>
 
   <button class="sheet-show-btn" id="sheetShowBtn">📄 Show Song Sheet</button>
 
@@ -856,7 +871,7 @@
 
     setBtn('thinking');
     btn.innerHTML = 'Vizi is<br>preparing…';
-    setStatus('Loading your tab exercise…');
+    setStatus('Getting your tab ready…');
 
     songBanner.textContent = '📐 Tab Exercise — tap button to hear Vizi';
     songBanner.classList.add('show');
@@ -899,7 +914,7 @@
 
     setBtn('thinking');
     btn.innerHTML = 'Vizi is<br>preparing…';
-    setStatus('Getting your exercise ready…');
+    setStatus('Getting things ready…');
 
     if (stageId === 'song') {
       const ub = document.getElementById('uploadBtn');
@@ -927,6 +942,8 @@
       if (holdBtn) { holdBtn.dataset.state = 'on'; holdBtn.textContent = 'Hold Off'; }
       const theoryBtn = document.getElementById('vm-theory-toggle');
       if (theoryBtn) { theoryBtn.dataset.state = 'on'; theoryBtn.textContent = 'Theory Off'; }
+      const legendEl = document.getElementById('theoryLegendVizi');
+      if (legendEl) legendEl.style.display = 'flex';
     }
 
     // The 11 slash chords actually stored in firmware must be sent with the
@@ -1138,7 +1155,7 @@
     const requestMode = (stageId === 'soloing' || stageId === 'strumming') ? stageId : 'talk';
 
     try {
-      setStatus('Loading your exercise…');
+      setStatus('Just a moment…');
       const res = await fetch(RAILWAY_URL + '/claude-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
