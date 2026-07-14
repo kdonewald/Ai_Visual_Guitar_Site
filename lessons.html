@@ -3402,7 +3402,7 @@
     exList.innerHTML = '';
     if (soloAudioEl){ soloAudioEl.pause(); soloAudioEl = null; }
     selectedTrack = null; selectedScale = null; selectedKeyName = null;
-    activateHoldOnly();
+    activateHoldAndTheory();
 
     // ── Inject CSS once ──────────────────────────────────────
     if (!document.getElementById('soloCSS')){
@@ -3496,7 +3496,7 @@
     // round-trip before the student has even picked a track or scale yet.
     const holdReminder = document.createElement('div');
     holdReminder.className = 'solo-hold-reminder';
-    holdReminder.innerHTML = '<span class="shr-icon">💡</span><span>Hold has been automatically turned on for this stage, so the lights stay lit while you play. Tap <b>Hold Off</b> in the nav bar if you\'d rather turn it off.</span>';
+    holdReminder.innerHTML = '<span class="shr-icon">💡</span><span>Hold and Theory mode have both been automatically turned on for this stage — the lights stay lit, and root/3rd/5th are colored so you can spot them while you play. Tap <b>Hold Off</b> or <b>Theory Off</b> in the nav bar if you\'d rather turn either one off.</span>';
     exList.appendChild(holdReminder);
 
     let openKey = null;

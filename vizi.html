@@ -906,19 +906,27 @@
       if (ub) ub.style.display = '';
     }
 
-    // Soloing: Hold is already turned on back on lessons.html the moment the
-    // panel opened, but that's a separate page load — nothing here carries
-    // it over automatically. Fire it directly again on arrival rather than
-    // relying on Vizi's spoken response to remember to include it.
+    // Soloing: Hold and Theory mode are already turned on back on lessons.html
+    // the moment the panel opened, but that's a separate page load — nothing
+    // here carries it over automatically. Fire both directly again on
+    // arrival rather than relying on Vizi's spoken response to remember.
+    // Theory mode matters here specifically because the Soloing content
+    // teaches root/5th — that's exactly what Theory coloring highlights.
     if (stageId === 'soloing') {
       try {
         await fetch(RAILWAY_URL + '/fretboard-command', {
           method: 'POST', headers: {'Content-Type':'application/json'},
           body: JSON.stringify({command: 'HOLD ON'})
         });
+        await fetch(RAILWAY_URL + '/fretboard-command', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({command: 'COLOR THEORY'})
+        });
       } catch(e) { /* best effort — exercise still proceeds either way */ }
       const holdBtn = document.getElementById('vm-hold-toggle');
       if (holdBtn) { holdBtn.dataset.state = 'on'; holdBtn.textContent = 'Hold Off'; }
+      const theoryBtn = document.getElementById('vm-theory-toggle');
+      if (theoryBtn) { theoryBtn.dataset.state = 'on'; theoryBtn.textContent = 'Theory Off'; }
     }
 
     // The 11 slash chords actually stored in firmware must be sent with the
