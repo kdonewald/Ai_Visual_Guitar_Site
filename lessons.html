@@ -1769,7 +1769,7 @@
     tunerChoice.style.display = (id === 'tuning') ? '' : 'none';
 
     renderExercises(stage);
-    showRandomTip();
+    showStageTipOrNote();
     catPanel.classList.add('show');
     window.scrollTo({top:0, behavior:'smooth'});
   }
@@ -1856,14 +1856,30 @@
   });
   if(document.getElementById('vidToExercises')){
     document.getElementById('vidToExercises').addEventListener('click', () => {
-      vidWrap.classList.remove('show'); introVideo.pause(); showRandomTip();
+      vidWrap.classList.remove('show'); introVideo.pause(); showStageTipOrNote();
     });
   }
 
   function showRandomTip(){
+    const lbl = tipCard.querySelector('.tip-label');
+    if(lbl) lbl.textContent = 'Tip';
     if (!activeStage || !activeStage.tips || !activeStage.tips.length) return;
     tipText.textContent = activeStage.tips[Math.floor(Math.random()*activeStage.tips.length)];
     tipCard.classList.add('show');
+  }
+
+  // chord-theory has no rotating tip — that slot shows the Hold/Theory
+  // auto-on note instead, since that's more useful there and keeps the
+  // page from having both a tip card AND a separate note further down.
+  function showStageTipOrNote(){
+    if(activeStage && activeStage.id === 'chord-theory'){
+      tipText.textContent = 'Hold and Theory mode have both been automatically turned on for this stage. Tap Hold Off or Theory Off in the nav bar if you\'d rather turn either one off.';
+      const lbl = tipCard.querySelector('.tip-label');
+      if(lbl) lbl.textContent = 'Note';
+      tipCard.classList.add('show');
+      return;
+    }
+    showRandomTip();
   }
 
   // ── Choice panel rendering ─────────────────────────────────
@@ -2108,10 +2124,6 @@
   function renderChordBuilder(){
     exList.innerHTML = '';
     const wrap = document.createElement('div'); wrap.className='cb-wrap';
-
-    const autoNote = document.createElement('div'); autoNote.className='stage-auto-note';
-    autoNote.innerHTML = '<span class="san-icon">💡</span><span>Hold and Theory mode have both been automatically turned on for this stage. Tap <b>Hold Off</b> or <b>Theory Off</b> in the nav bar if you\'d rather turn either one off.</span>';
-    wrap.appendChild(autoNote);
 
     // ── Root note picker ──
     const rootLabel = document.createElement('span'); rootLabel.className='choice-panel-label cp-label-bright';
