@@ -2607,9 +2607,15 @@
     'G':'CHORD G',
     'Am':'CHORD Am','Dm':'CHORD Dm','Em':'CHORD Em',
     'Gm':'CHORD Gm',
-    'Amaj7':'CHORD Amaj7','Cmaj7':'CHORD Cmaj7','Dmaj7':'CHORD Dmaj7',
-    'Emaj7':'CHORD Emaj7','Fmaj7':'CHORD Fmaj7','Gmaj7':'CHORD Gmaj7',
-    'Amin7':'CHORD Amin7','Dmin7':'CHORD Dmin7','Emin7':'CHORD Emin7',
+    // NOTE: Major 7th removed for now — no real Major7 chord data exists in
+    // firmware yet (the "XM7" family is actually Minor7, see min7 below).
+    // Add these back once real Major7 arrays are built.
+    'Amin7':'CHORD Amin7','Bmin7':'CHORD Bmin7','Dmin7':'CHORD Dmin7',
+    'Emin7':'CHORD Emin7','Gmin7':'CHORD Gmin7',
+    // Cmin7 intentionally excluded — it's a real, working firmware alias,
+    // but it's a barre shape (no open string), not a true open chord like
+    // the five above. Left out of this "open" list the same way F/B/Bm
+    // were excluded from the plain major/minor open list earlier.
     'G7':'CHORD G7','C7':'CHORD C7','D7':'CHORD D7',
     'E7':'CHORD E7','A7':'CHORD A7','B7':'CHORD B7',
   };
