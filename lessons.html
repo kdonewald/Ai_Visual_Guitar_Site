@@ -2609,7 +2609,7 @@
     'Gm':'CHORD Gm',
     'Amaj7':'CHORD Amaj7','Cmaj7':'CHORD Cmaj7','Dmaj7':'CHORD Dmaj7',
     'Emaj7':'CHORD Emaj7','Fmaj7':'CHORD Fmaj7','Gmaj7':'CHORD Gmaj7',
-    'Am7':'CHORD Am7','Dm7':'CHORD Dm7','Em7':'CHORD Em7',
+    'Amin7':'CHORD Amin7','Dmin7':'CHORD Dmin7','Emin7':'CHORD Emin7',
     'G7':'CHORD G7','C7':'CHORD C7','D7':'CHORD D7',
     'E7':'CHORD E7','A7':'CHORD A7','B7':'CHORD B7',
   };
@@ -2642,7 +2642,7 @@
     if(OPEN_VOICINGS[root])   voicings.push({tag:'open',  label:'Open '+root+' Major',          cmd:'CHORD '+root,    type:'open'});
     if(OPEN_VOICINGS[root+'m']) voicings.push({tag:'open',label:'Open '+root+' Minor',           cmd:'CHORD '+root+'m',type:'open'});
     if(OPEN_VOICINGS[root+'maj7']) voicings.push({tag:'open',label:'Open '+root+' Major 7th',   cmd:'CHORD '+root+'maj7',type:'open'});
-    if(OPEN_VOICINGS[root+'m7'])   voicings.push({tag:'open',label:'Open '+root+' Minor 7th',   cmd:'CHORD '+root+'m7', type:'open'});
+    if(OPEN_VOICINGS[root+'min7'])   voicings.push({tag:'open',label:'Open '+root+' Minor 7th',   cmd:'CHORD '+root+'min7', type:'open'});
     if(OPEN_VOICINGS[root+'7'])    voicings.push({tag:'open',label:'Open '+root+' Dom 7th',      cmd:'CHORD '+root+'7',  type:'open'});
     // Barre shapes
     ['E Shape','A Shape','C Shape','G Shape','D Shape'].forEach(shape=>{
