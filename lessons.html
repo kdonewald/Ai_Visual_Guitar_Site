@@ -3417,6 +3417,12 @@
         }
         .solo-section-head:hover{ border-color:rgba(255,255,255,.22); }
         .solo-section-head.open{ border-color:var(--blue); background:rgba(79,142,247,.08); border-radius:10px 10px 0 0; }
+        .solo-key-tag{
+          display:inline-block; font-family:'DM Mono',monospace; font-size:.68rem; font-weight:800;
+          letter-spacing:.06em; text-transform:uppercase; color:var(--blue);
+          background:rgba(79,142,247,.14); border-radius:6px; padding:.15rem .45rem;
+          flex-shrink:0;
+        }
         .solo-key-name{ font-family:'DM Sans',sans-serif; font-size:.95rem; font-weight:700; color:#fff; flex-shrink:0; }
         .solo-key-desc{ font-size:.78rem; color:var(--text-mid); }
         .solo-chevron{ margin-left:auto; color:var(--text-dim); font-size:.75rem; transition:transform .2s; flex-shrink:0; }
@@ -3442,6 +3448,12 @@
         .solo-track-title{ display:block; font-family:'DM Sans',sans-serif; font-size:.88rem; font-weight:600; color:#fff; }
         .solo-track-meta{ display:block; font-family:'DM Mono',monospace; font-size:.70rem; color:var(--text-mid); margin-top:.1rem; }
         .solo-track-bpm{ font-family:'DM Mono',monospace; font-size:.72rem; font-weight:700; color:var(--gold); flex-shrink:0; }
+        .solo-step-label{
+          display:block; font-family:'DM Mono',monospace; font-size:.72rem;
+          letter-spacing:.1em; text-transform:uppercase;
+          color:var(--text-mid); margin:.6rem 0 .5rem;
+        }
+        .solo-step-label.solo-step-bright{ color:#fff; font-weight:800; }
         .solo-scales-label{
           display:block; font-family:'DM Mono',monospace; font-size:.72rem;
           letter-spacing:.1em; text-transform:uppercase;
@@ -3518,7 +3530,7 @@
       const head = document.createElement('div');
       head.className = 'solo-section-head';
       head.dataset.key = keyName;
-      head.innerHTML = `<span class="solo-key-name">${keyName}</span><span class="solo-key-desc">${data.desc}</span><span class="solo-chevron">▾</span>`;
+      head.innerHTML = `<span class="solo-key-tag">Key</span><span class="solo-key-name">${keyName}</span><span class="solo-key-desc">${data.desc}</span><span class="solo-chevron">▾</span>`;
       head.addEventListener('click', () => {
         if (openKey === keyName){
           openKey = null;
@@ -3535,7 +3547,12 @@
       body.className = 'solo-section-body';
       body.dataset.key = keyName;
 
-      // Track list
+      // Track list — Step 1
+      const step1Label = document.createElement('span');
+      step1Label.className = 'solo-step-label solo-step-bright';
+      step1Label.textContent = 'Step 1 — Choose your backing track';
+      body.appendChild(step1Label);
+
       const trackList = document.createElement('div'); trackList.className = 'solo-track-list';
       data.tracks.forEach(track => {
         const btn = document.createElement('button'); btn.className = 'solo-track-btn';
@@ -3574,17 +3591,18 @@
           btn.querySelector('.solo-track-icon').textContent = '■';
           selectedTrack = track;
           selectedKeyName = keyName;
+          step2Label.classList.add('solo-step-bright');
           refreshAskBtnState();
         });
         trackList.appendChild(btn);
       });
       body.appendChild(trackList);
 
-      // Scale buttons
-      const scalesLabel = document.createElement('span');
-      scalesLabel.className = 'solo-scales-label';
-      scalesLabel.textContent = 'Pick a scale — fretboard lights instantly';
-      body.appendChild(scalesLabel);
+      // Scale buttons — Step 2, starts dim, brightens once a track is picked
+      const step2Label = document.createElement('span');
+      step2Label.className = 'solo-step-label';
+      step2Label.textContent = 'Step 2 — Choose your scale (fretboard lights instantly)';
+      body.appendChild(step2Label);
 
       const scaleRow = document.createElement('div'); scaleRow.className = 'solo-scale-row';
       data.scales.forEach(scale => {
@@ -3597,6 +3615,9 @@
           selectedScale = scale;
           selectedKeyName = keyName;
           refreshAskBtnState();
+          // Both choices are made now — guide the student straight to the
+          // send button instead of leaving them to scroll and find it.
+          if (askBtn) askBtn.scrollIntoView({behavior:'smooth', block:'center'});
         });
         scaleRow.appendChild(sb);
       });
