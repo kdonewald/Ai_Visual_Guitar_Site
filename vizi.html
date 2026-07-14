@@ -956,6 +956,22 @@
       if (legendEl) legendEl.style.display = 'flex';
     }
 
+    // Warmup: same issue as Soloing — Hold is already turned on back on
+    // lessons.html the moment the panel opened, but navigating here is a
+    // full page reload, so nothing carries over. Fire it directly again on
+    // arrival. No Theory mode here — Warmup has no root/3rd/5th teaching
+    // point the way Soloing does.
+    if (stageId === 'warmup') {
+      try {
+        await fetch(RAILWAY_URL + '/fretboard-command', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({command: 'HOLD ON'})
+        });
+      } catch(e) { /* best effort — exercise still proceeds either way */ }
+      const holdBtn = document.getElementById('vm-hold-toggle');
+      if (holdBtn) { holdBtn.dataset.state = 'on'; holdBtn.textContent = 'Hold Off'; }
+    }
+
     // The 11 slash chords actually stored in firmware must be sent with the
     // slash intact (e.g. "CHORD C/G") — unlike enharmonic note names like
     // "C#/Db" where only the first name should be kept. This tells the two
