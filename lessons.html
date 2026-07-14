@@ -723,7 +723,7 @@
 
   /* Scale chord grid — Chord / Root 3 5 / Chord Name */
   .cb-chord-grid{
-    display:grid;grid-template-columns:minmax(7.4rem,auto) minmax(4.6rem,1fr) auto;gap:1px;
+    display:grid;grid-template-columns:minmax(7.4rem,auto) minmax(4.6rem,1fr) minmax(5.2rem,auto);gap:1px;
     background:var(--cream-dark);border:1.5px solid var(--cream-dark);border-radius:10px;
     overflow:hidden;margin-top:.5rem;
   }
@@ -738,7 +738,7 @@
   .cbcg-root{ font-weight:800;color:var(--text);white-space:nowrap; }
   .cbcg-roman{ margin:0 .3em; }
   .cbcg-notes{ font-family:'DM Mono',monospace;color:var(--text);letter-spacing:.03em; }
-  .cbcg-name{ font-weight:700; }
+  .cbcg-name{ font-weight:700;flex-wrap:wrap;min-width:0; }
   .cbcg-name-quality{ margin-left:.4em; }
 
   .cb-roman-legend{
@@ -2464,7 +2464,7 @@
           const qEl = document.createElement('span'); qEl.className = 'cbcg-name-quality';
           if(row.quality === 'Major') qEl.classList.add('cp-q-major');
           else if(row.quality === 'Minor') qEl.classList.add('cp-q-minor');
-          qEl.textContent = row.quality === 'Diminished' ? 'Dim' : row.quality;
+          qEl.textContent = row.quality;
           c3.appendChild(rootEl); c3.appendChild(qEl);
 
           grid.appendChild(c1); grid.appendChild(c2); grid.appendChild(c3);
@@ -2472,7 +2472,7 @@
         body.appendChild(grid);
 
         const legend = document.createElement('div'); legend.className='cb-roman-legend';
-        [['I','Major','cp-q-major'],['i','minor','cp-q-minor'],['i°','Dim','']].forEach(([sym,label,cls])=>{
+        [['I','Major','cp-q-major'],['i','minor','cp-q-minor'],['i°','diminished','']].forEach(([sym,label,cls])=>{
           const item = document.createElement('div'); item.className='cb-roman-legend-item';
           const symEl = document.createElement('span'); symEl.className='cb-roman-legend-sym'+(cls?' '+cls:'');
           symEl.textContent = sym;
