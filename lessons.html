@@ -742,12 +742,12 @@
   .cbcg-name-quality{ margin-left:.4em; }
 
   .cb-roman-legend{
-    display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.85rem;
+    display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.85rem;
   }
   .cb-roman-legend-item{
-    font-size:.86rem;color:var(--text);
+    font-size:.8rem;color:var(--text);white-space:nowrap;
     background:rgba(255,255,255,0.04);border:1.5px solid var(--cream-dark);
-    border-radius:8px;padding:.4rem .65rem;
+    border-radius:8px;padding:.4rem .55rem;
   }
   .cb-roman-legend-sym{ font-weight:800; }
 
@@ -2369,7 +2369,7 @@
 
   function buildScaleDesc(root, type, def, scale){
     const typeName = type.split(' ')[0];
-    return 'Starting from ' + root + ' (the Root), applying the '
+    return 'Starting from ' + root + ' (the Root) — since that\'s the name of the scale you chose — applying the '
       + typeName + ' formula (' + def.formula + ') gives us: '
       + scale.join(' – ') + '.  These are the ' + scale.length + ' notes in the '
       + root + ' ' + typeName + ' scale.';
@@ -2472,7 +2472,7 @@
         body.appendChild(grid);
 
         const legend = document.createElement('div'); legend.className='cb-roman-legend';
-        [['I','Major','cp-q-major'],['i','minor','cp-q-minor'],['i°','diminished','']].forEach(([sym,label,cls])=>{
+        [['I','Major','cp-q-major'],['i','minor','cp-q-minor'],['i°','Dim','']].forEach(([sym,label,cls])=>{
           const item = document.createElement('div'); item.className='cb-roman-legend-item';
           const symEl = document.createElement('span'); symEl.className='cb-roman-legend-sym'+(cls?' '+cls:'');
           symEl.textContent = sym;
@@ -2484,7 +2484,7 @@
 
         const progNote = document.createElement('div'); progNote.className='cb-step-desc';
         progNote.style.marginTop = '.4rem';
-        progNote.textContent = 'Musicians use these to name progressions (like "1-4-5" or "ii-V-I") that work the same in any key.';
+        progNote.textContent = 'Certain chord progressions just sound good together, no matter the key — like 1-4-5, or 1-5-6-4 (one of the most common progressions in pop music). This is why we number the chords in each scale.';
         body.appendChild(progNote);
 
         step.appendChild(head); step.appendChild(body);
