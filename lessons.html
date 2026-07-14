@@ -751,6 +751,16 @@
   }
   .cb-roman-legend-sym{ font-weight:800; }
 
+  /* Theory-mode color legend — Root/3rd/5th, wherever Theory gets auto-turned on */
+  .theory-color-legend{ display:flex;gap:.4rem;margin-top:.5rem;flex-wrap:wrap; }
+  .tcl-item{
+    font-family:'DM Mono',monospace;font-size:.72rem;font-weight:800;
+    letter-spacing:.04em;border-radius:6px;padding:.2rem .5rem;white-space:nowrap;
+  }
+  .tcl-root{ color:var(--red);background:rgba(224,85,64,.14); }
+  .tcl-third{ color:var(--green);background:rgba(61,186,114,.14); }
+  .tcl-fifth{ color:var(--blue);background:rgba(79,142,247,.14); }
+
   /* Step-back + ask Vizi row */
   .cb-action-row{
     display:flex;gap:.5rem;margin-top:.75rem;
@@ -1292,6 +1302,11 @@
         <div>
           <span class="tip-label">Tip</span>
           <span class="tip-text" id="tipText"></span>
+          <div class="theory-color-legend" id="theoryLegendRow" style="display:none;">
+            <span class="tcl-item tcl-root">Root</span>
+            <span class="tcl-item tcl-third">3rd</span>
+            <span class="tcl-item tcl-fifth">5th</span>
+          </div>
         </div>
       </div>
 
@@ -1863,6 +1878,8 @@
   function showRandomTip(){
     const lbl = tipCard.querySelector('.tip-label');
     if(lbl) lbl.textContent = 'Tip';
+    const legendRow = document.getElementById('theoryLegendRow');
+    if(legendRow) legendRow.style.display = 'none';
     if (!activeStage || !activeStage.tips || !activeStage.tips.length) return;
     tipText.textContent = activeStage.tips[Math.floor(Math.random()*activeStage.tips.length)];
     tipCard.classList.add('show');
@@ -1871,11 +1888,14 @@
   // chord-theory has no rotating tip — that slot shows the Hold/Theory
   // auto-on note instead, since that's more useful there and keeps the
   // page from having both a tip card AND a separate note further down.
+  // It also shows the Root/3rd/5th color legend, since Theory mode is on.
   function showStageTipOrNote(){
     if(activeStage && activeStage.id === 'chord-theory'){
       tipText.textContent = 'Hold and Theory mode have both been automatically turned on for this stage. Tap Hold Off or Theory Off in the nav bar if you\'d rather turn either one off.';
       const lbl = tipCard.querySelector('.tip-label');
       if(lbl) lbl.textContent = 'Note';
+      const legendRow = document.getElementById('theoryLegendRow');
+      if(legendRow) legendRow.style.display = 'flex';
       tipCard.classList.add('show');
       return;
     }
@@ -3498,6 +3518,10 @@
     holdReminder.className = 'solo-hold-reminder';
     holdReminder.innerHTML = '<span class="shr-icon">💡</span><span>Hold and Theory mode have both been automatically turned on for this stage — the lights stay lit, and root/3rd/5th are colored so you can spot them while you play. Tap <b>Hold Off</b> or <b>Theory Off</b> in the nav bar if you\'d rather turn either one off.</span>';
     exList.appendChild(holdReminder);
+
+    const soloLegend = document.createElement('div'); soloLegend.className = 'theory-color-legend';
+    soloLegend.innerHTML = '<span class="tcl-item tcl-root">Root</span><span class="tcl-item tcl-third">3rd</span><span class="tcl-item tcl-fifth">5th</span>';
+    exList.appendChild(soloLegend);
 
     let openKey = null;
 
