@@ -1885,10 +1885,10 @@
     tipCard.classList.add('show');
   }
 
-  // chord-theory has no rotating tip — that slot shows the Hold/Theory
-  // auto-on note instead, since that's more useful there and keeps the
-  // page from having both a tip card AND a separate note further down.
-  // It also shows the Root/3rd/5th color legend, since Theory mode is on.
+  // chord-theory and warmup have no rotating tip — that slot shows the
+  // Hold (and for chord-theory, Theory) auto-on note instead, since that's
+  // more useful there and keeps the page from having both a tip card AND a
+  // separate note further down.
   function showStageTipOrNote(){
     if(activeStage && activeStage.id === 'chord-theory'){
       tipText.textContent = 'Hold and Theory mode have both been automatically turned on for this stage. Tap Hold Off or Theory Off in the nav bar if you\'d rather turn either one off.';
@@ -1896,6 +1896,15 @@
       if(lbl) lbl.textContent = 'Note';
       const legendRow = document.getElementById('theoryLegendRow');
       if(legendRow) legendRow.style.display = 'flex';
+      tipCard.classList.add('show');
+      return;
+    }
+    if(activeStage && activeStage.id === 'warmup'){
+      tipText.textContent = 'Hold has been automatically turned on for this stage, so the lights stay lit while you play. Tap Hold Off in the nav bar if you\'d rather turn it off.';
+      const lbl = tipCard.querySelector('.tip-label');
+      if(lbl) lbl.textContent = 'Note';
+      const legendRow = document.getElementById('theoryLegendRow');
+      if(legendRow) legendRow.style.display = 'none';
       tipCard.classList.add('show');
       return;
     }
@@ -3064,7 +3073,7 @@
     const def = CHOICE_PANELS[stage.id];
     exList.innerHTML = '';
     const label = document.createElement('span');
-    label.className = 'choice-panel-label';
+    label.className = 'choice-panel-label' + (stage.id === 'warmup' ? ' cp-label-bright' : '');
     label.textContent = def.label;
     exList.appendChild(label);
     if (def.hint){
@@ -3077,11 +3086,10 @@
     // Warmup: turn Hold on the moment the stage opens, not just on scale
     // choice — the student may take a while picking, and this way Hold is
     // guaranteed on well before any SCALE command could ever be sent.
+    // The note about it lives in the tip-card slot now (see
+    // showStageTipOrNote), not here, so it's not duplicated on the page.
     if (stage.id === 'warmup'){
       activateHoldOnly();
-      const autoNote = document.createElement('div'); autoNote.className='stage-auto-note';
-      autoNote.innerHTML = '<span class="san-icon">💡</span><span>Hold has been automatically turned on for this stage, so the lights stay lit while you play. Tap <b>Hold Off</b> in the nav bar if you\'d rather turn it off.</span>';
-      exList.appendChild(autoNote);
     }
 
     // Soloing: Bandcamp + grouped key/scale
