@@ -119,6 +119,7 @@
   }
   .cp-demo-mode-btn:hover{ border-color:var(--teal); }
   .cp-demo-mode-btn.active{ border-color:var(--teal);background:rgba(42,172,184,0.1);color:var(--teal); }
+  .cp-demo-section-toggle{ display:block;width:100%;margin-bottom:1rem;text-align:left; }
   .cp-demo-choice-row{ display:flex;gap:.4rem;margin-bottom:.85rem;flex-wrap:wrap; }
   .cp-demo-choice-row-wrap{ flex-wrap:wrap; }
   .cp-demo-choice-btn{
@@ -1067,7 +1068,7 @@
   }
   .cp-action-btns{ display:flex;gap:.45rem; }
   .cp-hold-hint{
-    font-size:.76rem;color:var(--text-mid);font-style:italic;
+    font-size:.8rem;color:var(--text);font-weight:500;font-style:italic;
     margin-top:.6rem;text-align:center;
   }
   .cp-action-btn{
@@ -1099,7 +1100,7 @@
   }
   .cp-prog-empty{
     font-family:'DM Mono',monospace;font-size:.85rem;
-    color:var(--text);opacity:.75;font-style:italic;
+    color:var(--text);font-weight:500;font-style:italic;
   }
   .cp-prog-chord{
     display:flex;align-items:center;gap:.25rem;
@@ -2716,6 +2717,7 @@
   let cpGridQuality = null;     // 'major'|'minor'|'7'|'min7'
   let cpShowSlash = false;      // Slash Chords reveal panel
   let cpShow6th = false;        // 6th Chords reveal panel
+  let cpShowDemo = false;       // Barre/Triad demo videos + shape-sliding demo, collapsed by default
 
   // Voicings tab state (Open/Barre/Triad/All) — only used for major/minor cells
   let cpVoicingTab = null;      // 'open'|'barre'|'triad'|'all'|null
@@ -2733,6 +2735,7 @@
     cpGridQuality = null;
     cpShowSlash = false;
     cpShow6th = false;
+    cpShowDemo = false;
     cpSelectedChord = null;
     resetVoicingTabState();
   }
@@ -3149,6 +3152,13 @@
   const TRIAD_STRINGS_DEMO = [['LE','Low E'],['A','A'],['D','D'],['G','G'],['B','B'],['HE','High E']];
 
   function renderDemoSection(container){
+    const demoToggleBtn = document.createElement('button');
+    demoToggleBtn.className = 'cp-demo-mode-btn cp-demo-section-toggle'+(cpShowDemo?' active':'');
+    demoToggleBtn.textContent = (cpShowDemo?'▾ ':'▸ ')+'Barre and Triad Chords';
+    demoToggleBtn.addEventListener('click',()=>{ cpShowDemo=!cpShowDemo; renderChordsPanel(); });
+    container.appendChild(demoToggleBtn);
+    if(!cpShowDemo) return;
+
     const demoLabel = document.createElement('span'); demoLabel.className='choice-panel-label cp-label-bright';
     demoLabel.textContent = 'Demo';
     container.appendChild(demoLabel);
