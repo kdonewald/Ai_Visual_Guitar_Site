@@ -99,8 +99,8 @@
   .choice-panel-label.cp-label-bright{color:var(--text);font-weight:700;}
   .cp-chord-reset-btn{
     display:block;margin:.75rem 0 1rem;padding:.5rem 1rem;
-    font-family:'DM Mono',monospace;font-size:.8rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
-    color:var(--text-mid);background:transparent;border:1.5px solid var(--cream-dark);border-radius:8px;
+    font-family:'DM Mono',monospace;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--text);background:transparent;border:1.5px solid var(--cream-dark);border-radius:8px;
     cursor:pointer;transition:all .18s;
   }
   .cp-chord-reset-btn:hover{border-color:var(--red);color:var(--red);}
@@ -1085,7 +1085,7 @@
   }
   .cp-prog-label{
     font-family:'DM Mono',monospace;font-size:.84rem;letter-spacing:.12em;
-    text-transform:uppercase;color:var(--text-mid);margin-bottom:.5rem;display:block;
+    text-transform:uppercase;color:var(--text);font-weight:700;margin-bottom:.5rem;display:block;
   }
   .cp-prog-bar{
     display:flex;flex-wrap:wrap;gap:.3rem;min-height:36px;
@@ -1095,7 +1095,7 @@
   }
   .cp-prog-empty{
     font-family:'DM Mono',monospace;font-size:.85rem;
-    color:var(--text-mid);font-style:italic;
+    color:var(--text);opacity:.75;font-style:italic;
   }
   .cp-prog-chord{
     display:flex;align-items:center;gap:.25rem;
@@ -1131,7 +1131,7 @@
   }
   .cp-loop-label{
     font-family:'DM Mono',monospace;font-size:.85rem;letter-spacing:.06em;
-    text-transform:uppercase;color:var(--text-mid);flex:1;
+    text-transform:uppercase;color:var(--text);font-weight:600;flex:1;
   }
   .cp-loop-toggle{
     width:36px;height:20px;border-radius:10px;
@@ -1217,19 +1217,19 @@
   .cp-voicing-arrow{ color:var(--text-light);font-size:.8rem; }
 
   /* ── Root/Minor/7th/Min7th grid — per-cell color key ── */
-  .cp-legend-row{ display:flex;gap:.9rem;flex-wrap:wrap;margin-bottom:.6rem;font-size:.74rem;color:var(--text-mid); }
-  .cp-legend-item{ display:flex;align-items:center;gap:.35rem; }
-  .cp-legend-swatch{ width:.7rem;height:.7rem;border-radius:3px;flex-shrink:0;display:inline-block; }
-  .cp-legend-swatch.natural{ background:var(--white);border:1.5px solid var(--cream-dark); }
-  .cp-legend-swatch.accidental{ background:rgba(79,142,247,0.15);border:1.5px solid var(--blue); }
-  .cp-legend-swatch.greyed{ background:rgba(255,255,255,0.04);border:1.5px solid var(--text-light);opacity:.6; }
+  .cp-legend-row{ display:flex;gap:1.1rem;flex-wrap:wrap;margin-bottom:.7rem;font-size:.82rem;color:var(--text);font-weight:600; }
+  .cp-legend-item{ display:flex;align-items:center;gap:.45rem; }
+  .cp-legend-swatch{ width:1.05rem;height:1.05rem;border-radius:4px;flex-shrink:0;display:inline-block; }
+  .cp-legend-swatch.natural{ background:var(--text); }
+  .cp-legend-swatch.accidental{ background:var(--blue); }
+  .cp-legend-swatch.greyed{ background:var(--text-light); }
   .cp-chord-tagline{ font-size:.78rem;color:var(--text-mid);line-height:1.5;margin-bottom:.85rem;font-style:italic; }
 
   .cp-grid{ display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;margin-bottom:.35rem; }
   .cp-grid-header{ margin-bottom:.15rem; }
   .cp-grid-col-label{
-    font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;
-    color:var(--text-mid);text-align:center;
+    font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--text);font-weight:700;text-align:center;
   }
   .cp-grid-cell{
     padding:.45rem .2rem;border-radius:7px;
@@ -2847,9 +2847,9 @@
     // blue = no open but barre+triad still cover it, grey = nothing built yet.
     const legend=document.createElement('div'); legend.className='cp-legend-row';
     const legendWhite=document.createElement('span'); legendWhite.className='cp-legend-item';
-    legendWhite.innerHTML='<span class="cp-legend-swatch natural"></span>Open shape exists';
+    legendWhite.innerHTML='<span class="cp-legend-swatch natural"></span>Open, Barre, or Triad';
     const legendBlue=document.createElement('span'); legendBlue.className='cp-legend-item';
-    legendBlue.innerHTML='<span class="cp-legend-swatch accidental"></span>Barre + Triad only';
+    legendBlue.innerHTML='<span class="cp-legend-swatch accidental"></span>Barre or Triad';
     const legendGrey=document.createElement('span'); legendGrey.className='cp-legend-item';
     legendGrey.innerHTML='<span class="cp-legend-swatch greyed"></span>Not available yet';
     legend.appendChild(legendWhite); legend.appendChild(legendBlue); legend.appendChild(legendGrey);
