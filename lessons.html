@@ -1215,6 +1215,14 @@
   .cp-q-minor{color:var(--blue);font-weight:700;}
   .cp-q-seventh{color:var(--teal);font-weight:700;}
   .cp-voicing-arrow{ color:var(--text-light);font-size:.8rem; }
+  .cp-voicing-item.cp-voicing-selected{
+    cursor:default;border-color:var(--red);background:rgba(217,64,37,0.08);
+  }
+  .cp-voicing-item.cp-voicing-selected:hover{ border-color:var(--red);background:rgba(217,64,37,0.08); }
+  .cp-voicing-check{
+    font-family:'DM Mono',monospace;font-size:.72rem;font-weight:700;letter-spacing:.04em;
+    text-transform:uppercase;color:var(--red);flex-shrink:0;
+  }
 
   /* ── Root/Minor/7th/Min7th grid — per-cell color key ── */
   .cp-legend-row{ display:flex;gap:1.1rem;flex-wrap:wrap;margin-bottom:.7rem;font-size:.82rem;color:var(--text);font-weight:600; }
@@ -1223,7 +1231,7 @@
   .cp-legend-swatch.natural{ background:var(--text); }
   .cp-legend-swatch.accidental{ background:var(--blue); }
   .cp-legend-swatch.greyed{ background:var(--text-light); }
-  .cp-chord-tagline{ font-size:.78rem;color:var(--text-mid);line-height:1.5;margin-bottom:.85rem;font-style:italic; }
+  .cp-chord-tagline{ font-size:.82rem;color:var(--text);opacity:.85;line-height:1.5;margin-bottom:.85rem;font-style:italic;font-weight:500; }
 
   .cp-grid{ display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;margin-bottom:.35rem; }
   .cp-grid-header{ margin-bottom:.15rem; }
@@ -2815,6 +2823,21 @@
     return item;
   }
 
+  // Confirmation card for voicings that select themselves automatically
+  // (Open, Barre once a shape is picked, Triad once a string is picked, and
+  // 7th/Min7th) — there's only ever one possible voicing in those cases, so
+  // requiring a second tap to "confirm" it was pure friction. This just
+  // shows what got selected; it isn't clickable.
+  function addSelectedVoicingCard(list, tag, label){
+    const item=document.createElement('div'); item.className='cp-voicing-item cp-voicing-selected';
+    const tagEl=document.createElement('span'); tagEl.className='cp-voicing-tag '+tag; tagEl.textContent=tag;
+    const nameEl=document.createElement('span'); nameEl.className='cp-voicing-name'; nameEl.innerHTML=colorizeQualityLabel(label);
+    const checkEl=document.createElement('span'); checkEl.className='cp-voicing-check'; checkEl.textContent='✓ Selected';
+    item.appendChild(tagEl); item.appendChild(nameEl); item.appendChild(checkEl);
+    list.appendChild(item);
+    return item;
+  }
+
   function addInlineNote(list, text){
     const note=document.createElement('div'); note.className='cp-demo-note';
     note.textContent=text;
@@ -2948,13 +2971,16 @@
     } else {
       // 7th / Min7th — a single fixed open (or open-position barre, for
       // Cmin7) voicing, no Barre/Triad tabs since neither concept applies.
+      // Only ever one possible voicing here, so it selects itself.
       const cmd = getOpenVoicing(root, quality);
       const list=document.createElement('div'); list.className='cp-voicings-list';
       if(cmd){
         const tag = (root==='C' && quality==='min7') ? 'barre' : 'open';
         const label = root+(quality==='7' ? ' 7th' : ' Minor 7th');
-        addVoicingItem(list, tag, label, cmd);
+        cpSelectedChord = {label, cmd, type:tag};
+        addSelectedVoicingCard(list, tag, label);
       } else {
+        cpSelectedChord = null;
         addInlineNote(list, 'Not available for '+root+' yet.');
       }
       container.appendChild(list);
@@ -3001,7 +3027,10 @@
       btn.className='cp-tab-btn'+(cpVoicingTab===key?' active':'')+(disabled?' disabled':'');
       btn.textContent=label;
       if(disabled){ btn.disabled=true; }
-      else{ btn.addEventListener('click',()=>{ cpVoicingTab=key; renderChordsPanel(); }); }
+      else{ btn.addEventListener('click',()=>{
+        cpVoicingTab=key; cpBarreShapeSel=null; cpTriadStringSel=null; cpSelectedChord=null;
+        renderChordsPanel();
+      }); }
       tabWrap.appendChild(btn);
     });
     container.appendChild(tabWrap);
@@ -3026,12 +3055,16 @@
     container.appendChild(list);
   }
 
+  // Open only ever has one possible voicing for a given root+quality, so it
+  // selects itself the moment the tab is opened — no confirming tap needed.
   function renderOpenTab(list, root, quality){
     const cmd = getOpenVoicing(root, quality);
     const qLabel = quality==='minor' ? 'Minor' : 'Major';
     if(cmd){
-      addVoicingItem(list, 'open', 'Open '+root+' '+qLabel, cmd);
+      cpSelectedChord = {label:'Open '+root+' '+qLabel, cmd, type:'open'};
+      addSelectedVoicingCard(list, 'open', cpSelectedChord.label);
     } else {
+      cpSelectedChord = null;
       addInlineNote(list, 'No open shape for '+root+' '+qLabel.toLowerCase()+' — try Barre or Triad instead.');
     }
   }
@@ -3047,7 +3080,17 @@
       btn.className='cp-demo-choice-btn'+(cpBarreShapeSel===shape?' active':'')+(greyed?' disabled':'');
       btn.textContent=shape+' Shape';
       if(greyed){ btn.disabled=true; }
-      else{ btn.addEventListener('click',()=>{ cpBarreShapeSel=shape; renderChordsPanel(); }); }
+      else{ btn.addEventListener('click',()=>{
+        // Picking the shape IS the selection — updates silently if a shape
+        // was already chosen, no need to re-confirm.
+        cpBarreShapeSel=shape;
+        const minorSuffix = quality==='minor' ? 'm' : '';
+        const cmd = shape+' SHAPE '+root+minorSuffix;
+        const label = root+' '+(quality==='minor'?'Minor':'Major')+' — '+shape+' Shape';
+        cpSelectedChord = {label, cmd, type:'barre'};
+        renderChordsPanel();
+        showChordActions(exList);
+      }); }
       shapeRow.appendChild(btn);
     });
     list.appendChild(shapeRow);
@@ -3055,11 +3098,8 @@
       addInlineNote(list, 'No standard minor shape for C or G — E, A, and D shapes cover every minor barre chord.');
     }
 
-    if(cpBarreShapeSel){
-      const minorSuffix = quality==='minor' ? 'm' : '';
-      const cmd = cpBarreShapeSel+' SHAPE '+root+minorSuffix;
-      const label = root+' '+(quality==='minor'?'Minor':'Major')+' — '+cpBarreShapeSel+' Shape';
-      addVoicingItem(list, 'barre', label, cmd);
+    if(cpBarreShapeSel && cpSelectedChord){
+      addSelectedVoicingCard(list, 'barre', cpSelectedChord.label);
     }
   }
 
@@ -3072,17 +3112,22 @@
       const btn=document.createElement('button');
       btn.className='cp-demo-choice-btn'+(cpTriadStringSel===key?' active':'');
       btn.textContent=text;
-      btn.addEventListener('click',()=>{ cpTriadStringSel=key; renderChordsPanel(); });
+      btn.addEventListener('click',()=>{
+        // Picking the string IS the selection — same silent-update pattern as Barre.
+        cpTriadStringSel=key;
+        const minorSuffix = quality==='minor' ? 'M' : '';
+        const cmd = 'TRIAD '+key+' '+root+minorSuffix;
+        const label = root+' '+(quality==='minor'?'Minor':'Major')+' Triad ('+text+')';
+        cpSelectedChord = {label, cmd, type:'triad'};
+        renderChordsPanel();
+        showChordActions(exList);
+      });
       stringRow.appendChild(btn);
     });
     list.appendChild(stringRow);
 
-    if(cpTriadStringSel){
-      const minorSuffix = quality==='minor' ? 'M' : '';
-      const cmd = 'TRIAD '+cpTriadStringSel+' '+root+minorSuffix;
-      const groupText = (stringGroups.find(([k])=>k===cpTriadStringSel)||[null,cpTriadStringSel])[1];
-      const label = root+' '+(quality==='minor'?'Minor':'Major')+' Triad ('+groupText+')';
-      addVoicingItem(list, 'triad', label, cmd);
+    if(cpTriadStringSel && cpSelectedChord){
+      addSelectedVoicingCard(list, 'triad', cpSelectedChord.label);
     }
   }
 
@@ -3302,7 +3347,10 @@
     const progStatus=document.createElement('div'); progStatus.className='cp-prog-status'; progStatus.id='cpProgStatus';
     progSection.appendChild(progStatus);
     playBtn.addEventListener('click',()=>playProgression(progStatus));
-    clearBtn.addEventListener('click',()=>{ cpProgression=[]; cpPlayTimer=null; renderChordsPanel(); });
+    clearBtn.addEventListener('click',()=>{
+      cpProgression=[]; cpPlayTimer=null;
+      renderChordsPanel();
+    });
     return progSection;
   }
 
