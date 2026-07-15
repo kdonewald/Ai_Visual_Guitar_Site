@@ -1066,6 +1066,10 @@
     font-size:1.35rem;color:#ffffff;text-align:center;
   }
   .cp-action-btns{ display:flex;gap:.45rem; }
+  .cp-hold-hint{
+    font-size:.76rem;color:var(--text-mid);font-style:italic;
+    margin-top:.6rem;text-align:center;
+  }
   .cp-action-btn{
     flex:1;padding:.65rem .5rem;border-radius:8px;
     border:1.5px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);
@@ -1126,27 +1130,6 @@
   .cp-prog-btn.vizi:hover:not(:disabled){ background:rgba(79,142,247,0.24); }
   .cp-prog-btn.clear{ color:var(--text);font-weight:700; }
   .cp-prog-btn:disabled{ opacity:.35;cursor:not-allowed; }
-  .cp-loop-row{
-    display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem;
-  }
-  .cp-loop-label{
-    font-family:'DM Mono',monospace;font-size:.85rem;letter-spacing:.06em;
-    text-transform:uppercase;color:var(--text);font-weight:600;flex:1;
-  }
-  .cp-loop-toggle{
-    width:36px;height:20px;border-radius:10px;
-    background:rgba(255,255,255,.15);cursor:pointer;
-    position:relative;transition:background .2s;border:none;
-    flex-shrink:0;
-  }
-  .cp-loop-toggle.on{ background:var(--green); }
-  .cp-loop-toggle::after{
-    content:'';position:absolute;
-    width:14px;height:14px;border-radius:50%;
-    background:white;top:3px;left:3px;
-    transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);
-  }
-  .cp-loop-toggle.on::after{ left:19px; }
   .cp-prog-status{
     font-family:'DM Mono',monospace;font-size:.85rem;
     color:var(--text-mid);text-align:center;
@@ -1233,7 +1216,7 @@
   .cp-legend-swatch.greyed{ background:var(--text-light); }
   .cp-chord-tagline{ font-size:.82rem;color:var(--text);opacity:.85;line-height:1.5;margin-bottom:.85rem;font-style:italic;font-weight:500; }
 
-  .cp-grid{ display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;margin-bottom:.35rem; }
+  .cp-grid{ display:grid;grid-template-columns:repeat(5,1fr);gap:.3rem;margin-bottom:.35rem; }
   .cp-grid-header{ margin-bottom:.15rem; }
   .cp-grid-col-label{
     font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;
@@ -2725,7 +2708,6 @@
 
   // Progression state
   let cpProgression = [];
-  let cpLooping = false;
   let cpPlayTimer = null;
   let cpSelectedChord = null;
 
@@ -2776,37 +2758,46 @@
     {key:'minor', label:'Minor'},
     {key:'7',     label:'7th'},
     {key:'min7',  label:'Min7th'},
+    {key:'maj7',  label:'Maj7'},
   ];
 
   // Map display note to clean root for commands
   function cleanNote(n){ return n.replace('/','').split('/')[0]; }
 
   // ── Quality model ──────────────────────────────────────────
-  const QUALITY_SUFFIX = {major:'', minor:'m', '7':'7', min7:'min7'};
+  const QUALITY_SUFFIX = {major:'', minor:'m', '7':'7', min7:'min7', maj7:'maj7'};
+  const QUALITY_DISPLAY = {major:'Major', minor:'Minor', '7':'7th', min7:'Minor 7th', maj7:'Major 7th'};
 
   // Command string for a root+quality Open voicing, or null if it doesn't exist.
   function getOpenVoicing(root, qualityKey){
     return OPEN_VOICINGS[root + QUALITY_SUFFIX[qualityKey]] || null;
   }
 
-  // Grid-cell button label — kept short since the grid is now 4 columns wide.
+  // Movable E-shape barre command for 7th/Min7th/Maj7 qualities that don't
+  // have (or, for Maj7, never had) an open shape — E-shape covers every root,
+  // so this is always a valid fallback once the firmware's E_DOM7/E_MIN7/E_MAJ7
+  // templates are flashed.
+  function getBarreQualityCmd(root, qualityKey){
+    return 'E SHAPE '+root+QUALITY_SUFFIX[qualityKey];
+  }
+
+  // Grid-cell button label — kept short since the grid is now 5 columns wide.
   function gridCellLabel(root, colKey){
     if(colKey==='major') return root;
     if(colKey==='minor') return root+'m';
     if(colKey==='7')     return root+'7';
-    return root+'min7';
+    if(colKey==='min7')  return root+'min7';
+    return root+'maj7';
   }
 
   // Grid-cell color state: 'white' = open shape exists, 'blue' = no open but
-  // barre+triad still cover it (major/minor only — always true there), and
-  // 'grey' = nothing exists yet anywhere (only ever a 7th/min7-on-accidental thing).
+  // Barre covers it instead (Triad too, for Major/Minor). Now that E-shape
+  // barre covers 7th/Min7th/Maj7 for every root, nothing is ever truly
+  // unavailable — 'grey' stays defined for a future column (e.g. Diminished)
+  // that doesn't have a barre fallback yet.
   function gridCellState(root, colKey, natural){
     const cmd = getOpenVoicing(root, colKey);
-    if(colKey==='major' || colKey==='minor'){
-      return cmd ? 'white' : 'blue';
-    }
-    if(!natural) return 'grey';
-    return cmd ? 'white' : 'grey';
+    return cmd ? 'white' : 'blue';
   }
 
   function addVoicingItem(list, tag, label, cmd){
@@ -2870,9 +2861,9 @@
     // blue = no open but barre+triad still cover it, grey = nothing built yet.
     const legend=document.createElement('div'); legend.className='cp-legend-row';
     const legendWhite=document.createElement('span'); legendWhite.className='cp-legend-item';
-    legendWhite.innerHTML='<span class="cp-legend-swatch natural"></span>Open, Barre, or Triad';
+    legendWhite.innerHTML='<span class="cp-legend-swatch natural"></span>Open shape available';
     const legendBlue=document.createElement('span'); legendBlue.className='cp-legend-item';
-    legendBlue.innerHTML='<span class="cp-legend-swatch accidental"></span>Barre or Triad';
+    legendBlue.innerHTML='<span class="cp-legend-swatch accidental"></span>No open — Barre instead';
     const legendGrey=document.createElement('span'); legendGrey.className='cp-legend-item';
     legendGrey.innerHTML='<span class="cp-legend-swatch greyed"></span>Not available yet';
     legend.appendChild(legendWhite); legend.appendChild(legendBlue); legend.appendChild(legendGrey);
@@ -2924,7 +2915,7 @@
         const state = gridCellState(row.root, col.key, row.natural);
         const btn=document.createElement('button');
         const isActive = cpGridRoot===row.root && cpGridQuality===col.key;
-        btn.className='cp-grid-cell '+state+(isActive?' active':'')+((col.key==='7'||col.key==='min7')?' cp-grid-cell-small':'');
+        btn.className='cp-grid-cell '+state+(isActive?' active':'')+((col.key==='7'||col.key==='min7'||col.key==='maj7')?' cp-grid-cell-small':'');
         btn.textContent=gridCellLabel(row.root, col.key);
         if(state==='grey'){
           btn.disabled=true;
@@ -2956,19 +2947,23 @@
     if(quality==='major' || quality==='minor'){
       renderChordVoicingTabs(container, root, quality);
     } else {
-      // 7th / Min7th — a single fixed open (or open-position barre, for
-      // Cmin7) voicing, no Barre/Triad tabs since neither concept applies.
-      // Only ever one possible voicing here, so it selects itself.
-      const cmd = getOpenVoicing(root, quality);
+      // 7th / Min7th / Maj7 — a single voicing, no Barre/Triad tabs since
+      // neither concept applies the way it does for Major/Minor. Prefer the
+      // real open shape where one exists; otherwise fall back to the movable
+      // E-shape barre template (covers every root, including accidentals —
+      // and always for Maj7, which has no open shape at all). Only ever one
+      // possible voicing here, so it selects itself.
+      const openCmd = getOpenVoicing(root, quality);
       const list=document.createElement('div'); list.className='cp-voicings-list';
-      if(cmd){
+      const qLabel = QUALITY_DISPLAY[quality];
+      if(openCmd){
         const tag = (root==='C' && quality==='min7') ? 'barre' : 'open';
-        const label = root+(quality==='7' ? ' 7th' : ' Minor 7th');
-        cpSelectedChord = {label, cmd, type:tag};
-        addSelectedVoicingCard(list, tag, label);
+        cpSelectedChord = {label:root+' '+qLabel, cmd:openCmd, type:tag};
+        addSelectedVoicingCard(list, tag, cpSelectedChord.label);
       } else {
-        cpSelectedChord = null;
-        addInlineNote(list, 'Not available for '+root+' yet.');
+        const label = root+' '+qLabel+' — E Shape';
+        cpSelectedChord = {label, cmd:getBarreQualityCmd(root, quality), type:'barre'};
+        addSelectedVoicingCard(list, 'barre', label);
       }
       container.appendChild(list);
     }
@@ -3292,6 +3287,9 @@
     const arpBtn=document.createElement('button'); arpBtn.className='cp-action-btn arp'; arpBtn.textContent='🎵 Arpeggio';
     actBtns.appendChild(sendBtn); actBtns.appendChild(progBtn); actBtns.appendChild(arpBtn);
     actionWrap.appendChild(selName); actionWrap.appendChild(actBtns);
+    const holdHint=document.createElement('div'); holdHint.className='cp-hold-hint';
+    holdHint.textContent='Want it to stay lit? Turn Hold on before pressing Light Chord.';
+    actionWrap.appendChild(holdHint);
     if(cpSelectedChord) actionWrap.classList.add('show');
     exList.appendChild(actionWrap);
 
@@ -3335,11 +3333,6 @@
     progSection.appendChild(progLabel);
     const progBar=document.createElement('div'); progBar.className='cp-prog-bar'; progBar.id='cpProgBar';
     buildProgBar(progBar); progSection.appendChild(progBar);
-    const loopRow=document.createElement('div'); loopRow.className='cp-loop-row';
-    const loopLabel=document.createElement('span'); loopLabel.className='cp-loop-label'; loopLabel.textContent='Loop';
-    const loopToggle=document.createElement('button'); loopToggle.className='cp-loop-toggle'+(cpLooping?' on':''); loopToggle.id='cpLoopToggle';
-    loopToggle.addEventListener('click',()=>{ cpLooping=!cpLooping; loopToggle.classList.toggle('on',cpLooping); });
-    loopRow.appendChild(loopLabel); loopRow.appendChild(loopToggle); progSection.appendChild(loopRow);
     const progControls=document.createElement('div'); progControls.className='cp-prog-controls';
     const playBtn=document.createElement('button'); playBtn.className='cp-prog-btn play'; playBtn.textContent='🎸 Light Progression';
     const clearBtn=document.createElement('button'); clearBtn.className='cp-prog-btn clear'; clearBtn.textContent='Clear';
@@ -3348,7 +3341,7 @@
     progSection.appendChild(progControls);
     const progStatus=document.createElement('div'); progStatus.className='cp-prog-status'; progStatus.id='cpProgStatus';
     progSection.appendChild(progStatus);
-    playBtn.addEventListener('click',()=>playProgression(progStatus));
+    playBtn.addEventListener('click',()=>playProgression(progStatus, playBtn));
     clearBtn.addEventListener('click',()=>{
       cpProgression=[]; cpPlayTimer=null;
       renderChordsPanel();
@@ -3394,11 +3387,41 @@
     if(playBtn) playBtn.disabled=cpProgression.length<1;
   }
 
-  function playProgression(statusEl){
+  // Sends a command straight to the fretboard, bypassing Vizi/Claude entirely —
+  // same direct-fire pattern used for the Hold/Theory auto-fire on arrival.
+  async function sendFretboardCmdDirect(cmd){
+    try{
+      const res = await fetch(RAILWAY_URL+'/fretboard-command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:cmd})});
+      return res.ok;
+    }catch(e){
+      return false;
+    }
+  }
+
+  function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+  async function playProgression(statusEl, playBtn){
     if(!cpProgression.length)return;
-    // Send entire progression to Vizi in one call
+    if(playBtn) playBtn.disabled=true;
+    if(statusEl) statusEl.textContent="Here's your progression 🎸";
+
+    // Fire each chord's real command in order — not a reconstructed guess
+    // from its display label, the exact command it was selected with (open,
+    // barre, or triad). Paced to the firmware's own hold+gap timing (3000ms +
+    // 800ms) so each chord finishes its natural display before the next fires.
+    for(let i=0;i<cpProgression.length;i++){
+      if(statusEl) statusEl.textContent='Playing '+(i+1)+' of '+cpProgression.length+': '+cpProgression[i].label;
+      await sendFretboardCmdDirect(cpProgression[i].cmd);
+      await sleep(3800);
+    }
+
+    if(statusEl) statusEl.textContent="Here's your progression 🎸";
+    if(playBtn) playBtn.disabled=cpProgression.length<1;
+
+    // Progression is already lit — hand Vizi a recap-only exercise so it
+    // narrates what was just played instead of trying to re-fire it.
     const progStr = cpProgression.map(p=>p.label).join(' → ');
-    goToVizi('chords','Progression: '+progStr);
+    goToVizi('chords','Progression recap: '+progStr);
   }
 
   function goToVizi(stage, exercise){
