@@ -1229,6 +1229,43 @@
   .cp-q-seventh{color:var(--teal);font-weight:700;}
   .cp-voicing-arrow{ color:var(--text-light);font-size:.8rem; }
 
+  /* ── Root grid color key: naturals (open+barre+triad) vs accidentals (barre+triad only) ── */
+  .cp-chord-note-btn.accidental{ border-color:rgba(45,212,191,0.35);color:var(--teal); }
+  .cp-chord-note-btn.accidental:hover{ border-color:var(--teal); }
+  .cp-chord-note-btn.accidental.active{ border-color:var(--teal);background:rgba(45,212,191,0.08);color:var(--teal); }
+  .cp-legend-row{ display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:.6rem;font-size:.76rem;color:var(--text-mid); }
+  .cp-legend-item{ display:flex;align-items:center;gap:.35rem; }
+  .cp-legend-swatch{ width:.7rem;height:.7rem;border-radius:3px;flex-shrink:0;display:inline-block; }
+  .cp-legend-swatch.natural{ background:var(--white);border:1.5px solid var(--cream-dark); }
+  .cp-legend-swatch.accidental{ background:rgba(45,212,191,0.15);border:1.5px solid var(--teal); }
+  .cp-chord-tagline{ font-size:.78rem;color:var(--text-mid);line-height:1.5;margin-bottom:.85rem;font-style:italic; }
+
+  /* ── Quality toggle (Major/Minor/7th/6th/etc) ── */
+  .cp-quality-row{ display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.75rem; }
+  .cp-quality-btn{
+    padding:.4rem .7rem;border-radius:7px;
+    border:1.5px solid var(--cream-dark);background:var(--white);
+    font-family:'DM Mono',monospace;font-size:.78rem;font-weight:600;
+    color:var(--text-mid);cursor:pointer;transition:all .15s;
+  }
+  .cp-quality-btn:hover{ border-color:var(--gold);color:var(--gold); }
+  .cp-quality-btn.active{ border-color:var(--gold);background:rgba(232,160,32,0.09);color:var(--gold); }
+
+  /* ── Open/Barre/Triad/All tab row ── */
+  .cp-tab-row{ display:flex;gap:.35rem;margin-bottom:.5rem; }
+  .cp-tab-btn{
+    flex:1;padding:.5rem .3rem;border-radius:7px;
+    border:1.5px solid var(--cream-dark);background:var(--white);
+    font-family:'DM Mono',monospace;font-size:.78rem;font-weight:700;
+    letter-spacing:.05em;text-transform:uppercase;
+    color:var(--text);cursor:pointer;transition:all .15s;text-align:center;
+  }
+  .cp-tab-btn:hover:not(.disabled){ border-color:var(--red);color:var(--red); }
+  .cp-tab-btn.active{ border-color:var(--red);background:rgba(217,64,37,0.08);color:var(--red); }
+  .cp-tab-btn.disabled{ opacity:.35;cursor:not-allowed; }
+  .cp-demo-choice-btn.disabled{ opacity:.35;cursor:not-allowed; }
+  .cp-voicings-section-label{ font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mid);margin:.7rem 0 .35rem; }
+
   /* ── Section video intro button ── */
   .cp-video-intro-btn{
     display:flex;align-items:center;gap:.6rem;
@@ -2659,6 +2696,13 @@
     // were excluded from the plain major/minor open list earlier.
     'G7':'CHORD G7','C7':'CHORD C7','D7':'CHORD D7',
     'E7':'CHORD E7','A7':'CHORD A7','B7':'CHORD B7',
+    // 6th chords — CHORD_DICT already has A6-G6 (major 6) and AM6-GM6
+    // (minor 6, M=minor convention) wired for all 7 naturals. No firmware
+    // change needed, just surfacing what's already there.
+    'A6':'CHORD A6','B6':'CHORD B6','C6':'CHORD C6','D6':'CHORD D6',
+    'E6':'CHORD E6','F6':'CHORD F6','G6':'CHORD G6',
+    'Am6':'CHORD Am6','Bm6':'CHORD Bm6','Cm6':'CHORD Cm6','Dm6':'CHORD Dm6',
+    'Em6':'CHORD Em6','Fm6':'CHORD Fm6','Gm6':'CHORD Gm6',
   };
 
   // Progression state
@@ -2667,6 +2711,23 @@
   let cpLooping = false;
   let cpPlayTimer = null;
   let cpSelectedChord = null;
+
+  // Voicings tab state (Open/Barre/Triad/All) — reset whenever a new root is picked
+  let cpVoicingTab = null;      // 'open'|'barre'|'triad'|'all'|null
+  let cpOpenQuality = 'major';  // Open tab has its own quality picker: major/minor/7/6/m6/min7
+  let cpBarreShapeSel = null;   // 'E'|'A'|'C'|'G'|'D', chosen within the Barre tab
+  let cpBarreQuality = 'major'; // Barre tab only ever needs major/minor
+  let cpTriadStringSel = null;  // 'HE'|'B'|'G'|'D'|'A'|'LE', chosen within the Triad tab
+  let cpTriadQuality = 'major'; // Triad tab only ever needs major/minor
+
+  function resetVoicingTabState(){
+    cpVoicingTab = null;
+    cpOpenQuality = 'major';
+    cpBarreShapeSel = null;
+    cpBarreQuality = 'major';
+    cpTriadStringSel = null;
+    cpTriadQuality = 'major';
+  }
 
   // Demo section state
   let demoMode = null;   // 'barre' | 'triad' | null
@@ -2680,34 +2741,41 @@
   // Map display note to clean root for commands
   function cleanNote(n){ return n.replace('/','').split('/')[0]; }
 
-  // All voicings for a given note
-  function getVoicings(note){
-    const root = cleanNote(note);
-    const voicings = [];
-    // Open chord if available
-    const openCmd = OPEN_VOICINGS[root] || OPEN_VOICINGS[root+'m'] || null;
-    if(OPEN_VOICINGS[root])   voicings.push({tag:'open',  label:'Open '+root+' Major',          cmd:'CHORD '+root,    type:'open'});
-    if(OPEN_VOICINGS[root+'m']) voicings.push({tag:'open',label:'Open '+root+' Minor',           cmd:'CHORD '+root+'m',type:'open'});
-    if(OPEN_VOICINGS[root+'maj7']) voicings.push({tag:'open',label:'Open '+root+' Major 7th',   cmd:'CHORD '+root+'maj7',type:'open'});
-    if(OPEN_VOICINGS[root+'min7'])   voicings.push({tag:'open',label:'Open '+root+' Minor 7th',   cmd:'CHORD '+root+'min7', type:'open'});
-    if(OPEN_VOICINGS[root+'7'])    voicings.push({tag:'open',label:'Open '+root+' Dom 7th',      cmd:'CHORD '+root+'7',  type:'open'});
-    // Barre shapes
-    ['E Shape','A Shape','C Shape','G Shape','D Shape'].forEach(shape=>{
-      voicings.push({tag:'barre', label:root+' Major — '+shape, cmd:'CHORD '+root, type:'barre', shape});
-      voicings.push({tag:'barre', label:root+' Minor — '+shape, cmd:'CHORD '+root+'m', type:'barre', shape});
+  // ── Quality model ──────────────────────────────────────────
+  // Open supports 6 real qualities (firmware has fixed arrays for each,
+  // naturals only). Barre and Triad are structurally major/minor only —
+  // there's no movable 7th/6th template and no such thing as a "7 triad".
+  const QUALITY_SUFFIX = {major:'', minor:'m', '7':'7', '6':'6', m6:'m6', min7:'min7'};
+  const QUALITY_LABEL  = {major:'Major', minor:'Minor', '7':'Dom 7th', '6':'6th', m6:'Minor 6th', min7:'Minor 7th'};
+  const OPEN_QUALITIES = [['major','Major'],['minor','Minor'],['7','7th'],['6','6th'],['m6','Min 6th'],['min7','Min 7th']];
+
+  function isNaturalRoot(note){ return !note.includes('/'); }
+
+  // Command string for a root+quality Open voicing, or null if it doesn't exist
+  // (F has none at all; several naturals are missing specific qualities —
+  // that's deliberate curation, not a bug, see OPEN_VOICINGS comments above).
+  function getOpenVoicing(root, qualityKey){
+    return OPEN_VOICINGS[root + QUALITY_SUFFIX[qualityKey]] || null;
+  }
+
+  function addVoicingItem(list, tag, label, cmd){
+    const item=document.createElement('div'); item.className='cp-voicing-item';
+    const tagEl=document.createElement('span'); tagEl.className='cp-voicing-tag '+tag; tagEl.textContent=tag;
+    const nameEl=document.createElement('span'); nameEl.className='cp-voicing-name'; nameEl.innerHTML=colorizeQualityLabel(label);
+    const arrEl=document.createElement('span'); arrEl.className='cp-voicing-arrow'; arrEl.textContent='›';
+    item.appendChild(tagEl); item.appendChild(nameEl); item.appendChild(arrEl);
+    item.addEventListener('click',()=>{
+      cpSelectedChord={label, cmd, type:tag};
+      showChordActions(exList);
     });
-    // Triads high
-    ['Root on High E','Root on B','Root on G'].forEach(grp=>{
-      const key = grp.includes('High E')?'HE':grp.includes('Root on B')?'B':'G';
-      voicings.push({tag:'triad', label:root+' Major Triad ('+key+')', cmd:'TRIAD '+key+' '+root,     type:'triad'});
-      voicings.push({tag:'triad', label:root+' Minor Triad ('+key+')', cmd:'TRIAD '+key+' '+root+'M', type:'triad'});
-    });
-    // Triads low
-    [['Root on D','D'],['Root on A','A'],['Root on Low E','LE']].forEach(([grp,key])=>{
-      voicings.push({tag:'triad', label:root+' Major Triad ('+key+')', cmd:'TRIAD '+key+' '+root,     type:'triad'});
-      voicings.push({tag:'triad', label:root+' Minor Triad ('+key+')', cmd:'TRIAD '+key+' '+root+'M', type:'triad'});
-    });
-    return voicings;
+    list.appendChild(item);
+    return item;
+  }
+
+  function addInlineNote(list, text){
+    const note=document.createElement('div'); note.className='cp-demo-note';
+    note.textContent=text;
+    list.appendChild(note);
   }
 
   // Slash chords — song-specific bass-note voicings, appended to the end of the same picker
@@ -2734,13 +2802,29 @@
     noteLabel.textContent='Choose a chord and see different ways to play it on the fretboard';
     container.appendChild(noteLabel);
 
+    // Color-key legend — naturals get Open+Barre+Triad, accidentals get
+    // Barre+Triad only (no open shape exists for a sharp/flat on guitar).
+    const legend=document.createElement('div'); legend.className='cp-legend-row';
+    const legendNat=document.createElement('span'); legendNat.className='cp-legend-item';
+    legendNat.innerHTML='<span class="cp-legend-swatch natural"></span>Open + Barre + Triad';
+    const legendAcc=document.createElement('span'); legendAcc.className='cp-legend-item';
+    legendAcc.innerHTML='<span class="cp-legend-swatch accidental"></span>Barre + Triad only';
+    legend.appendChild(legendNat); legend.appendChild(legendAcc);
+    container.appendChild(legend);
+
+    const tagline=document.createElement('div'); tagline.className='cp-chord-tagline';
+    tagline.textContent="This isn't every possible chord — just the ones worth learning first. Nail these and the rest come easy.";
+    container.appendChild(tagline);
+
     const noteGrid=document.createElement('div'); noteGrid.className='cp-chord-note-grid';
     ALL_NOTES_CP.forEach(note=>{
       const btn=document.createElement('button');
-      btn.className='cp-chord-note-btn'+(cpByChordSelection===note?' active':'');
+      const natural = isNaturalRoot(note);
+      btn.className='cp-chord-note-btn'+(natural?'':' accidental')+(cpByChordSelection===note?' active':'');
       btn.textContent=note;
       btn.addEventListener('click',()=>{
         cpByChordSelection=note;
+        resetVoicingTabState();
         renderChordsPanel();
       });
       noteGrid.appendChild(btn);
@@ -2751,6 +2835,7 @@
       btn.textContent=sc;
       btn.addEventListener('click',()=>{
         cpByChordSelection=sc;
+        resetVoicingTabState();
         renderChordsPanel();
       });
       noteGrid.appendChild(btn);
@@ -2771,34 +2856,10 @@
         container.appendChild(explainer);
 
         const list=document.createElement('div'); list.className='cp-voicings-list';
-        const item=document.createElement('div'); item.className='cp-voicing-item';
-        const tag=document.createElement('span'); tag.className='cp-voicing-tag open'; tag.textContent='open';
-        const name=document.createElement('span'); name.className='cp-voicing-name'; name.textContent=sc;
-        const arr=document.createElement('span'); arr.className='cp-voicing-arrow'; arr.textContent='›';
-        item.appendChild(tag); item.appendChild(name); item.appendChild(arr);
-        item.addEventListener('click',()=>{
-          cpSelectedChord={label:sc, cmd:'CHORD '+sc, type:'open'};
-          showChordActions(container.parentElement||exList);
-        });
-        list.appendChild(item);
+        addVoicingItem(list, 'open', sc, 'CHORD '+sc);
         container.appendChild(list);
       } else {
-        // Voicings list for a plain note
-        const voicings = getVoicings(cpByChordSelection);
-        const list=document.createElement('div'); list.className='cp-voicings-list';
-        voicings.forEach(v=>{
-          const item=document.createElement('div'); item.className='cp-voicing-item';
-          const tag=document.createElement('span'); tag.className='cp-voicing-tag '+v.tag; tag.textContent=v.tag;
-          const name=document.createElement('span'); name.className='cp-voicing-name'; name.innerHTML=colorizeQualityLabel(v.label);
-          const arr=document.createElement('span'); arr.className='cp-voicing-arrow'; arr.textContent='›';
-          item.appendChild(tag); item.appendChild(name); item.appendChild(arr);
-          item.addEventListener('click',()=>{
-            cpSelectedChord={label:v.label, cmd:v.cmd, type:v.type};
-            showChordActions(container.parentElement||exList);
-          });
-          list.appendChild(item);
-        });
-        container.appendChild(list);
+        renderChordVoicingTabs(container, cleanNote(cpByChordSelection), isNaturalRoot(cpByChordSelection));
       }
     }
 
@@ -2812,9 +2873,169 @@
       demoMode=null;
       demoShape=null;
       demoString=null;
+      resetVoicingTabState();
       renderChordsPanel();
     });
     container.appendChild(resetBtn);
+  }
+
+  // ── Open/Barre/Triad/All tabs for a selected root ──────────────
+  function renderChordVoicingTabs(container, root, natural){
+    const barreTriadShapes = ['E','A','C','G','D'];
+    const triadStrings = [['HE','High E'],['B','B'],['G','G'],['D','D'],['A','A'],['LE','Low E']];
+
+    const tabWrap=document.createElement('div'); tabWrap.className='cp-tab-row';
+    [['open','Open'],['barre','Barre'],['triad','Triad'],['all','All']].forEach(([key,label])=>{
+      const disabled = key==='open' && !natural;
+      const btn=document.createElement('button');
+      btn.className='cp-tab-btn'+(cpVoicingTab===key?' active':'')+(disabled?' disabled':'');
+      btn.textContent=label;
+      if(disabled){ btn.disabled=true; }
+      else{ btn.addEventListener('click',()=>{ cpVoicingTab=key; renderChordsPanel(); }); }
+      tabWrap.appendChild(btn);
+    });
+    container.appendChild(tabWrap);
+    if(!natural){
+      addInlineNote(container, 'No open shape for a sharp/flat root — Barre and Triad cover it instead.');
+    }
+
+    if(!cpVoicingTab) return;
+
+    const list=document.createElement('div'); list.className='cp-voicings-list';
+
+    if(cpVoicingTab==='open'){
+      renderOpenTab(list, root);
+    } else if(cpVoicingTab==='barre'){
+      renderBarreTab(list, root, barreTriadShapes);
+    } else if(cpVoicingTab==='triad'){
+      renderTriadTab(list, root, triadStrings);
+    } else if(cpVoicingTab==='all'){
+      renderAllTab(list, root, natural, barreTriadShapes, triadStrings);
+    }
+
+    container.appendChild(list);
+  }
+
+  function renderOpenTab(list, root){
+    const qRow=document.createElement('div'); qRow.className='cp-quality-row';
+    OPEN_QUALITIES.forEach(([key,label])=>{
+      const btn=document.createElement('button');
+      btn.className='cp-quality-btn'+(cpOpenQuality===key?' active':'');
+      btn.textContent=label;
+      btn.addEventListener('click',()=>{ cpOpenQuality=key; renderChordsPanel(); });
+      qRow.appendChild(btn);
+    });
+    list.appendChild(qRow);
+
+    const cmd = getOpenVoicing(root, cpOpenQuality);
+    if(cmd){
+      addVoicingItem(list, 'open', 'Open '+root+' '+QUALITY_LABEL[cpOpenQuality], cmd);
+    } else {
+      addInlineNote(list, 'No open shape for '+root+' '+QUALITY_LABEL[cpOpenQuality]+' — try Barre or Triad instead.');
+    }
+  }
+
+  function renderBarreTab(list, root, shapes){
+    const qRow=document.createElement('div'); qRow.className='cp-quality-row';
+    [['major','Major'],['minor','Minor']].forEach(([key,label])=>{
+      const btn=document.createElement('button');
+      btn.className='cp-quality-btn'+(cpBarreQuality===key?' active':'');
+      btn.textContent=label;
+      btn.addEventListener('click',()=>{ cpBarreQuality=key; cpBarreShapeSel=null; renderChordsPanel(); });
+      qRow.appendChild(btn);
+    });
+    list.appendChild(qRow);
+
+    const shapeLabel=document.createElement('span'); shapeLabel.className='choice-panel-label cp-label-bright';
+    shapeLabel.textContent='Choose a shape';
+    list.appendChild(shapeLabel);
+    const shapeRow=document.createElement('div'); shapeRow.className='cp-demo-choice-row';
+    shapes.forEach(shape=>{
+      const greyed = cpBarreQuality==='minor' && (shape==='C'||shape==='G');
+      const btn=document.createElement('button');
+      btn.className='cp-demo-choice-btn'+(cpBarreShapeSel===shape?' active':'')+(greyed?' disabled':'');
+      btn.textContent=shape+' Shape';
+      if(greyed){ btn.disabled=true; }
+      else{ btn.addEventListener('click',()=>{ cpBarreShapeSel=shape; renderChordsPanel(); }); }
+      shapeRow.appendChild(btn);
+    });
+    list.appendChild(shapeRow);
+    if(cpBarreQuality==='minor'){
+      addInlineNote(list, 'No standard minor shape for C or G — E, A, and D shapes cover every minor barre chord.');
+    }
+
+    if(cpBarreShapeSel){
+      const minorSuffix = cpBarreQuality==='minor' ? 'm' : '';
+      const cmd = cpBarreShapeSel+' SHAPE '+root+minorSuffix;
+      const label = root+' '+(cpBarreQuality==='minor'?'Minor':'Major')+' — '+cpBarreShapeSel+' Shape';
+      addVoicingItem(list, 'barre', label, cmd);
+    }
+  }
+
+  function renderTriadTab(list, root, stringGroups){
+    const qRow=document.createElement('div'); qRow.className='cp-quality-row';
+    [['major','Major'],['minor','Minor']].forEach(([key,label])=>{
+      const btn=document.createElement('button');
+      btn.className='cp-quality-btn'+(cpTriadQuality===key?' active':'');
+      btn.textContent=label;
+      btn.addEventListener('click',()=>{ cpTriadQuality=key; cpTriadStringSel=null; renderChordsPanel(); });
+      qRow.appendChild(btn);
+    });
+    list.appendChild(qRow);
+
+    const stringLabel=document.createElement('span'); stringLabel.className='choice-panel-label cp-label-bright';
+    stringLabel.textContent='Choose a string';
+    list.appendChild(stringLabel);
+    const stringRow=document.createElement('div'); stringRow.className='cp-demo-choice-row cp-demo-choice-row-wrap';
+    stringGroups.forEach(([key,text])=>{
+      const btn=document.createElement('button');
+      btn.className='cp-demo-choice-btn'+(cpTriadStringSel===key?' active':'');
+      btn.textContent=text;
+      btn.addEventListener('click',()=>{ cpTriadStringSel=key; renderChordsPanel(); });
+      stringRow.appendChild(btn);
+    });
+    list.appendChild(stringRow);
+
+    if(cpTriadStringSel){
+      const minorSuffix = cpTriadQuality==='minor' ? 'M' : '';
+      const cmd = 'TRIAD '+cpTriadStringSel+' '+root+minorSuffix;
+      const groupText = (stringGroups.find(([k])=>k===cpTriadStringSel)||[null,cpTriadStringSel])[1];
+      const label = root+' '+(cpTriadQuality==='minor'?'Minor':'Major')+' Triad ('+groupText+')';
+      addVoicingItem(list, 'triad', label, cmd);
+    }
+  }
+
+  // ALL tab reproduces the original full dump — every quality this root
+  // actually has, across Open, Barre (all shapes), and Triad (all strings) —
+  // as one long reference view, now opt-in instead of the default.
+  function renderAllTab(list, root, natural, shapes, stringGroups){
+    const openHeader=document.createElement('div'); openHeader.className='cp-voicings-section-label'; openHeader.textContent='Open';
+    list.appendChild(openHeader);
+    let anyOpen=false;
+    if(natural){
+      OPEN_QUALITIES.forEach(([key,label])=>{
+        const cmd = getOpenVoicing(root, key);
+        if(cmd){ addVoicingItem(list, 'open', 'Open '+root+' '+label, cmd); anyOpen=true; }
+      });
+    }
+    if(!anyOpen) addInlineNote(list, 'No open shape for '+root+'.');
+
+    const barreHeader=document.createElement('div'); barreHeader.className='cp-voicings-section-label'; barreHeader.textContent='Barre';
+    list.appendChild(barreHeader);
+    shapes.forEach(shape=>{
+      addVoicingItem(list, 'barre', root+' Major — '+shape+' Shape', shape+' SHAPE '+root);
+      if(!(shape==='C'||shape==='G')){
+        addVoicingItem(list, 'barre', root+' Minor — '+shape+' Shape', shape+' SHAPE '+root+'m');
+      }
+    });
+    addInlineNote(list, 'C and G shapes are major-only — no standard minor version.');
+
+    const triadHeader=document.createElement('div'); triadHeader.className='cp-voicings-section-label'; triadHeader.textContent='Triad';
+    list.appendChild(triadHeader);
+    stringGroups.forEach(([key,text])=>{
+      addVoicingItem(list, 'triad', root+' Major Triad ('+text+')', 'TRIAD '+key+' '+root);
+      addVoicingItem(list, 'triad', root+' Minor Triad ('+text+')', 'TRIAD '+key+' '+root+'M');
+    });
   }
 
   // ── DEMO: Barre Chords / Triads sliding chromatically up the neck ──
