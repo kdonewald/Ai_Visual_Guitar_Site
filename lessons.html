@@ -1193,19 +1193,6 @@
     background:var(--white);color:var(--text);
     box-shadow:0 1px 4px var(--shadow);font-weight:600;
   }
-  .cp-chord-note-grid{
-    display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem;
-    margin-bottom:.85rem;
-  }
-  .cp-chord-note-btn{
-    padding:.5rem .25rem;border-radius:8px;
-    border:1.5px solid var(--cream-dark);background:var(--white);
-    font-family:'DM Mono',monospace;font-size:.86rem;font-weight:700;
-    color:var(--text);cursor:pointer;transition:all .15s;text-align:center;
-  }
-  .cp-chord-note-btn:hover{ border-color:var(--red);color:var(--red); }
-  .cp-chord-note-btn.active{ border-color:var(--red);background:rgba(217,64,37,0.07);color:var(--red); }
-  .cp-slash-note-btn{ font-size:.72rem; }
   .cp-voicings-list{ display:flex;flex-direction:column;gap:.4rem;margin-bottom:.85rem; }
   .cp-voicing-item{
     display:flex;align-items:center;gap:.6rem;
@@ -1229,29 +1216,51 @@
   .cp-q-seventh{color:var(--teal);font-weight:700;}
   .cp-voicing-arrow{ color:var(--text-light);font-size:.8rem; }
 
-  /* ── Root grid color key: naturals (open+barre+triad) vs accidentals (barre+triad only) ── */
-  .cp-chord-note-btn.accidental{ border-color:rgba(45,212,191,0.35);color:var(--teal); }
-  .cp-chord-note-btn.accidental:hover{ border-color:var(--teal); }
-  .cp-chord-note-btn.accidental.active{ border-color:var(--teal);background:rgba(45,212,191,0.08);color:var(--teal); }
-  .cp-legend-row{ display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:.6rem;font-size:.76rem;color:var(--text-mid); }
+  /* ── Root/Minor/7th/Min7th grid — per-cell color key ── */
+  .cp-legend-row{ display:flex;gap:.9rem;flex-wrap:wrap;margin-bottom:.6rem;font-size:.74rem;color:var(--text-mid); }
   .cp-legend-item{ display:flex;align-items:center;gap:.35rem; }
   .cp-legend-swatch{ width:.7rem;height:.7rem;border-radius:3px;flex-shrink:0;display:inline-block; }
   .cp-legend-swatch.natural{ background:var(--white);border:1.5px solid var(--cream-dark); }
-  .cp-legend-swatch.accidental{ background:rgba(45,212,191,0.15);border:1.5px solid var(--teal); }
+  .cp-legend-swatch.accidental{ background:rgba(79,142,247,0.15);border:1.5px solid var(--blue); }
+  .cp-legend-swatch.greyed{ background:rgba(255,255,255,0.04);border:1.5px solid var(--text-light);opacity:.6; }
   .cp-chord-tagline{ font-size:.78rem;color:var(--text-mid);line-height:1.5;margin-bottom:.85rem;font-style:italic; }
 
-  /* ── Quality toggle (Major/Minor/7th/6th/etc) ── */
-  .cp-quality-row{ display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.75rem; }
-  .cp-quality-btn{
-    padding:.4rem .7rem;border-radius:7px;
-    border:1.5px solid var(--cream-dark);background:var(--white);
-    font-family:'DM Mono',monospace;font-size:.78rem;font-weight:600;
-    color:var(--text-mid);cursor:pointer;transition:all .15s;
+  .cp-grid{ display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;margin-bottom:.35rem; }
+  .cp-grid-header{ margin-bottom:.15rem; }
+  .cp-grid-col-label{
+    font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--text-mid);text-align:center;
   }
-  .cp-quality-btn:hover{ border-color:var(--gold);color:var(--gold); }
-  .cp-quality-btn.active{ border-color:var(--gold);background:rgba(232,160,32,0.09);color:var(--gold); }
+  .cp-grid-cell{
+    padding:.45rem .2rem;border-radius:7px;
+    border:1.5px solid var(--cream-dark);background:var(--white);
+    font-family:'DM Mono',monospace;font-size:.76rem;font-weight:700;
+    color:var(--text);cursor:pointer;transition:all .15s;text-align:center;
+  }
+  .cp-grid-cell-small{ font-size:.62rem; }
+  .cp-grid-cell:hover:not(:disabled){ border-color:var(--red);color:var(--red); }
+  .cp-grid-cell.active{ border-color:var(--red);background:rgba(217,64,37,0.08);color:var(--red); }
+  .cp-grid-cell.blue{ border-color:rgba(79,142,247,0.4);color:var(--blue); }
+  .cp-grid-cell.blue:hover:not(:disabled){ border-color:var(--red);color:var(--red); }
+  .cp-grid-cell.blue.active{ border-color:var(--red);color:var(--red); }
+  .cp-grid-cell.grey{ opacity:.35;cursor:not-allowed;color:var(--text-light); }
 
   /* ── Open/Barre/Triad/All tab row ── */
+  .cp-tab-row{ display:flex;gap:.35rem;margin-bottom:.5rem; }
+  .cp-tab-btn{
+    flex:1;padding:.5rem .3rem;border-radius:7px;
+    border:1.5px solid var(--cream-dark);background:var(--white);
+    font-family:'DM Mono',monospace;font-size:.78rem;font-weight:700;
+    letter-spacing:.05em;text-transform:uppercase;
+    color:var(--text);cursor:pointer;transition:all .15s;text-align:center;
+  }
+  .cp-tab-btn:hover:not(.disabled){ border-color:var(--red);color:var(--red); }
+  .cp-tab-btn.active{ border-color:var(--red);background:rgba(217,64,37,0.08);color:var(--red); }
+  .cp-tab-btn.disabled{ opacity:.35;cursor:not-allowed; }
+  .cp-demo-choice-btn.disabled{ opacity:.35;cursor:not-allowed; }
+  .cp-voicings-section-label{ font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mid);margin:.7rem 0 .35rem; }
+
+  /* ── Section video intro button ── */
   .cp-tab-row{ display:flex;gap:.35rem;margin-bottom:.5rem; }
   .cp-tab-btn{
     flex:1;padding:.5rem .3rem;border-radius:7px;
@@ -2690,12 +2699,13 @@
     // Add these back once real Major7 arrays are built.
     'Amin7':'CHORD Amin7','Bmin7':'CHORD Bmin7','Dmin7':'CHORD Dmin7',
     'Emin7':'CHORD Emin7','Gmin7':'CHORD Gmin7',
-    // Cmin7 intentionally excluded — it's a real, working firmware alias,
-    // but it's a barre shape (no open string), not a true open chord like
-    // the five above. Left out of this "open" list the same way F/B/Bm
-    // were excluded from the plain major/minor open list earlier.
+    // Fmin7 and Cmin7 — real, working firmware aliases, added now alongside
+    // F7 below. Cmin7 is a barre-position fixed array (no open string), so
+    // the grid/list display it with the "barre" tag rather than "open" —
+    // it's still fully playable, just fingered differently than a true open.
+    'Fmin7':'CHORD Fmin7','Cmin7':'CHORD Cmin7',
     'G7':'CHORD G7','C7':'CHORD C7','D7':'CHORD D7',
-    'E7':'CHORD E7','A7':'CHORD A7','B7':'CHORD B7',
+    'E7':'CHORD E7','A7':'CHORD A7','B7':'CHORD B7','F7':'CHORD F7',
     // 6th chords — CHORD_DICT already has A6-G6 (major 6) and AM6-GM6
     // (minor 6, M=minor convention) wired for all 7 naturals. No firmware
     // change needed, just surfacing what's already there.
@@ -2706,27 +2716,35 @@
   };
 
   // Progression state
-  let cpByChordSelection = null; // a plain note (e.g. 'G') or a slash chord (e.g. 'C/G')
   let cpProgression = [];
   let cpLooping = false;
   let cpPlayTimer = null;
   let cpSelectedChord = null;
 
-  // Voicings tab state (Open/Barre/Triad/All) — reset whenever a new root is picked
+  // Grid selection state — which cell of the Root/Minor/7th/Min7th grid is active
+  let cpGridRoot = null;        // e.g. 'C', 'C#', 'F'
+  let cpGridQuality = null;     // 'major'|'minor'|'7'|'min7'
+  let cpShowSlash = false;      // Slash Chords reveal panel
+  let cpShow6th = false;        // 6th Chords reveal panel
+
+  // Voicings tab state (Open/Barre/Triad/All) — only used for major/minor cells
   let cpVoicingTab = null;      // 'open'|'barre'|'triad'|'all'|null
-  let cpOpenQuality = 'major';  // Open tab has its own quality picker: major/minor/7/6/m6/min7
   let cpBarreShapeSel = null;   // 'E'|'A'|'C'|'G'|'D', chosen within the Barre tab
-  let cpBarreQuality = 'major'; // Barre tab only ever needs major/minor
   let cpTriadStringSel = null;  // 'HE'|'B'|'G'|'D'|'A'|'LE', chosen within the Triad tab
-  let cpTriadQuality = 'major'; // Triad tab only ever needs major/minor
 
   function resetVoicingTabState(){
     cpVoicingTab = null;
-    cpOpenQuality = 'major';
     cpBarreShapeSel = null;
-    cpBarreQuality = 'major';
     cpTriadStringSel = null;
-    cpTriadQuality = 'major';
+  }
+
+  function resetChordPickerState(){
+    cpGridRoot = null;
+    cpGridQuality = null;
+    cpShowSlash = false;
+    cpShow6th = false;
+    cpSelectedChord = null;
+    resetVoicingTabState();
   }
 
   // Demo section state
@@ -2736,26 +2754,51 @@
 
 
   // ── BY CHORD VIEW ────────────────────────────────────────────
-  const ALL_NOTES_CP = ['C','C#/Db','D','D#/Eb','E','F','F#/Gb','G','G#/Ab','A','A#/Bb','B'];
+  // Grid layout: naturals in this order, each immediately followed by its
+  // sharp/flat below it (E and B have no accidental row — no E#/B# in use).
+  const NATURAL_ROOTS_ORDER = ['C','D','E','F','G','A','B'];
+  const SHARP_OF = {C:'C#',D:'D#',F:'F#',G:'G#',A:'A#'};
+  const GRID_ROWS = [];
+  NATURAL_ROOTS_ORDER.forEach(r=>{
+    GRID_ROWS.push({root:r, natural:true});
+    if (SHARP_OF[r]) GRID_ROWS.push({root:SHARP_OF[r], natural:false});
+  });
+  const GRID_COLUMNS = [
+    {key:'major', label:'Major'},
+    {key:'minor', label:'Minor'},
+    {key:'7',     label:'7th'},
+    {key:'min7',  label:'Min7th'},
+  ];
 
   // Map display note to clean root for commands
   function cleanNote(n){ return n.replace('/','').split('/')[0]; }
 
   // ── Quality model ──────────────────────────────────────────
-  // Open supports 6 real qualities (firmware has fixed arrays for each,
-  // naturals only). Barre and Triad are structurally major/minor only —
-  // there's no movable 7th/6th template and no such thing as a "7 triad".
-  const QUALITY_SUFFIX = {major:'', minor:'m', '7':'7', '6':'6', m6:'m6', min7:'min7'};
-  const QUALITY_LABEL  = {major:'Major', minor:'Minor', '7':'Dom 7th', '6':'6th', m6:'Minor 6th', min7:'Minor 7th'};
-  const OPEN_QUALITIES = [['major','Major'],['minor','Minor'],['7','7th'],['6','6th'],['m6','Min 6th'],['min7','Min 7th']];
+  const QUALITY_SUFFIX = {major:'', minor:'m', '7':'7', min7:'min7'};
 
-  function isNaturalRoot(note){ return !note.includes('/'); }
-
-  // Command string for a root+quality Open voicing, or null if it doesn't exist
-  // (F has none at all; several naturals are missing specific qualities —
-  // that's deliberate curation, not a bug, see OPEN_VOICINGS comments above).
+  // Command string for a root+quality Open voicing, or null if it doesn't exist.
   function getOpenVoicing(root, qualityKey){
     return OPEN_VOICINGS[root + QUALITY_SUFFIX[qualityKey]] || null;
+  }
+
+  // Grid-cell button label — kept short since the grid is now 4 columns wide.
+  function gridCellLabel(root, colKey){
+    if(colKey==='major') return root;
+    if(colKey==='minor') return root+'m';
+    if(colKey==='7')     return root+'7';
+    return root+'min7';
+  }
+
+  // Grid-cell color state: 'white' = open shape exists, 'blue' = no open but
+  // barre+triad still cover it (major/minor only — always true there), and
+  // 'grey' = nothing exists yet anywhere (only ever a 7th/min7-on-accidental thing).
+  function gridCellState(root, colKey, natural){
+    const cmd = getOpenVoicing(root, colKey);
+    if(colKey==='major' || colKey==='minor'){
+      return cmd ? 'white' : 'blue';
+    }
+    if(!natural) return 'grey';
+    return cmd ? 'white' : 'grey';
   }
 
   function addVoicingItem(list, tag, label, cmd){
@@ -2778,13 +2821,12 @@
     list.appendChild(note);
   }
 
-  // Slash chords — song-specific bass-note voicings, appended to the end of the same picker
-  // rather than broken out as a separate grid. Each one has exactly one real voicing.
+  // Slash chords — pulled out into their own reveal panel below the grid,
+  // since they're a rare, song-specific case rather than a core chord family.
   const SLASH_CHORDS_CP = ['AM/F#','AM7/G','C/B','C/G','D/A','D/F#','EM/B','EM/G','F/A','G/B','G/F#'];
 
   // Colorizes the quality words inside a chord label so Major / Minor / 7th
-  // are each visually distinct at a glance (e.g. "Open G Major 7th" gets
-  // "Major" in gold and "7th" in teal).
+  // are each visually distinct at a glance.
   function colorizeQualityLabel(label){
     return label
       .replace(/\bMajor\b/g, '<span class="cp-q-major">Major</span>')
@@ -2797,90 +2839,158 @@
     // before the student dives into the chord picker below.
     renderDemoSection(container);
 
-    // Note + slash-chord picker
     const noteLabel=document.createElement('span'); noteLabel.className='choice-panel-label cp-label-bright';
     noteLabel.textContent='Choose a chord and see different ways to play it on the fretboard';
     container.appendChild(noteLabel);
 
-    // Color-key legend — naturals get Open+Barre+Triad, accidentals get
-    // Barre+Triad only (no open shape exists for a sharp/flat on guitar).
+    // Color-key legend — per cell, not per root: white = open shape exists,
+    // blue = no open but barre+triad still cover it, grey = nothing built yet.
     const legend=document.createElement('div'); legend.className='cp-legend-row';
-    const legendNat=document.createElement('span'); legendNat.className='cp-legend-item';
-    legendNat.innerHTML='<span class="cp-legend-swatch natural"></span>Open + Barre + Triad';
-    const legendAcc=document.createElement('span'); legendAcc.className='cp-legend-item';
-    legendAcc.innerHTML='<span class="cp-legend-swatch accidental"></span>Barre + Triad only';
-    legend.appendChild(legendNat); legend.appendChild(legendAcc);
+    const legendWhite=document.createElement('span'); legendWhite.className='cp-legend-item';
+    legendWhite.innerHTML='<span class="cp-legend-swatch natural"></span>Open shape exists';
+    const legendBlue=document.createElement('span'); legendBlue.className='cp-legend-item';
+    legendBlue.innerHTML='<span class="cp-legend-swatch accidental"></span>Barre + Triad only';
+    const legendGrey=document.createElement('span'); legendGrey.className='cp-legend-item';
+    legendGrey.innerHTML='<span class="cp-legend-swatch greyed"></span>Not available yet';
+    legend.appendChild(legendWhite); legend.appendChild(legendBlue); legend.appendChild(legendGrey);
     container.appendChild(legend);
 
     const tagline=document.createElement('div'); tagline.className='cp-chord-tagline';
     tagline.textContent="This isn't every possible chord — just the ones worth learning first. Nail these and the rest come easy.";
     container.appendChild(tagline);
 
-    const noteGrid=document.createElement('div'); noteGrid.className='cp-chord-note-grid';
-    ALL_NOTES_CP.forEach(note=>{
-      const btn=document.createElement('button');
-      const natural = isNaturalRoot(note);
-      btn.className='cp-chord-note-btn'+(natural?'':' accidental')+(cpByChordSelection===note?' active':'');
-      btn.textContent=note;
-      btn.addEventListener('click',()=>{
-        cpByChordSelection=note;
-        resetVoicingTabState();
-        renderChordsPanel();
-      });
-      noteGrid.appendChild(btn);
+    renderChordGrid(container);
+
+    // Reveal buttons — Slash Chords and 6th Chords live outside the main
+    // grid; both are real firmware data, just not core enough to earn a
+    // permanent column.
+    const revealRow=document.createElement('div'); revealRow.className='cp-demo-mode-row';
+    const slashBtn=document.createElement('button');
+    slashBtn.className='cp-demo-mode-btn'+(cpShowSlash?' active':'');
+    slashBtn.textContent='Slash Chords';
+    slashBtn.addEventListener('click',()=>{
+      cpShowSlash = !cpShowSlash; cpShow6th=false;
+      cpGridRoot=null; cpGridQuality=null; resetVoicingTabState();
+      renderChordsPanel();
     });
-    SLASH_CHORDS_CP.forEach(sc=>{
-      const btn=document.createElement('button');
-      btn.className='cp-chord-note-btn cp-slash-note-btn'+(cpByChordSelection===sc?' active':'');
-      btn.textContent=sc;
-      btn.addEventListener('click',()=>{
-        cpByChordSelection=sc;
-        resetVoicingTabState();
-        renderChordsPanel();
-      });
-      noteGrid.appendChild(btn);
+    const sixthBtn=document.createElement('button');
+    sixthBtn.className='cp-demo-mode-btn'+(cpShow6th?' active':'');
+    sixthBtn.textContent='6th Chords';
+    sixthBtn.addEventListener('click',()=>{
+      cpShow6th = !cpShow6th; cpShowSlash=false;
+      cpGridRoot=null; cpGridQuality=null; resetVoicingTabState();
+      renderChordsPanel();
     });
-    container.appendChild(noteGrid);
+    revealRow.appendChild(slashBtn); revealRow.appendChild(sixthBtn);
+    container.appendChild(revealRow);
 
-    if(cpByChordSelection){
-      const isSlash = SLASH_CHORDS_CP.includes(cpByChordSelection);
-
-      const listLabel=document.createElement('span'); listLabel.className='choice-panel-label';
-      listLabel.textContent='Different ways to play '+cpByChordSelection;
-      container.appendChild(listLabel);
-
-      if(isSlash){
-        const sc=cpByChordSelection;
-        const explainer=document.createElement('div'); explainer.className='cp-slash-explainer';
-        explainer.textContent="A slash chord is a regular chord played over a different bass note — the letter before the slash is the chord, the letter after is the bass note. It's one specific voicing, not a full chord family, so there's only one way to play it here.";
-        container.appendChild(explainer);
-
-        const list=document.createElement('div'); list.className='cp-voicings-list';
-        addVoicingItem(list, 'open', sc, 'CHORD '+sc);
-        container.appendChild(list);
-      } else {
-        renderChordVoicingTabs(container, cleanNote(cpByChordSelection), isNaturalRoot(cpByChordSelection));
-      }
-    }
+    renderChordDetail(container);
 
     // Reset — always last, collapses everything back to the empty,
     // nothing-selected state, including the Demo section's choices
     const resetBtn=document.createElement('button'); resetBtn.className='cp-chord-reset-btn';
     resetBtn.textContent='Reset';
     resetBtn.addEventListener('click',()=>{
-      cpByChordSelection=null;
-      cpSelectedChord=null;
+      resetChordPickerState();
       demoMode=null;
       demoShape=null;
       demoString=null;
-      resetVoicingTabState();
       renderChordsPanel();
     });
     container.appendChild(resetBtn);
   }
 
-  // ── Open/Barre/Triad/All tabs for a selected root ──────────────
-  function renderChordVoicingTabs(container, root, natural){
+  function renderChordGrid(container){
+    const headerRow=document.createElement('div'); headerRow.className='cp-grid cp-grid-header';
+    GRID_COLUMNS.forEach(col=>{
+      const h=document.createElement('div'); h.className='cp-grid-col-label'; h.textContent=col.label;
+      headerRow.appendChild(h);
+    });
+    container.appendChild(headerRow);
+
+    const grid=document.createElement('div'); grid.className='cp-grid';
+    GRID_ROWS.forEach(row=>{
+      GRID_COLUMNS.forEach(col=>{
+        const state = gridCellState(row.root, col.key, row.natural);
+        const btn=document.createElement('button');
+        const isActive = cpGridRoot===row.root && cpGridQuality===col.key;
+        btn.className='cp-grid-cell '+state+(isActive?' active':'')+((col.key==='7'||col.key==='min7')?' cp-grid-cell-small':'');
+        btn.textContent=gridCellLabel(row.root, col.key);
+        if(state==='grey'){
+          btn.disabled=true;
+        } else {
+          btn.addEventListener('click',()=>{
+            cpGridRoot=row.root; cpGridQuality=col.key;
+            cpShowSlash=false; cpShow6th=false;
+            resetVoicingTabState();
+            cpSelectedChord=null;
+            renderChordsPanel();
+          });
+        }
+        grid.appendChild(btn);
+      });
+    });
+    container.appendChild(grid);
+  }
+
+  function renderChordDetail(container){
+    if(cpShowSlash){ renderSlashPanel(container); return; }
+    if(cpShow6th){ render6thPanel(container); return; }
+    if(!cpGridRoot || !cpGridQuality) return;
+
+    const root = cpGridRoot, quality = cpGridQuality;
+    const listLabel=document.createElement('span'); listLabel.className='choice-panel-label';
+    listLabel.textContent='Different ways to play '+gridCellLabel(root, quality);
+    container.appendChild(listLabel);
+
+    if(quality==='major' || quality==='minor'){
+      renderChordVoicingTabs(container, root, quality);
+    } else {
+      // 7th / Min7th — a single fixed open (or open-position barre, for
+      // Cmin7) voicing, no Barre/Triad tabs since neither concept applies.
+      const cmd = getOpenVoicing(root, quality);
+      const list=document.createElement('div'); list.className='cp-voicings-list';
+      if(cmd){
+        const tag = (root==='C' && quality==='min7') ? 'barre' : 'open';
+        const label = root+(quality==='7' ? ' 7th' : ' Minor 7th');
+        addVoicingItem(list, tag, label, cmd);
+      } else {
+        addInlineNote(list, 'Not available for '+root+' yet.');
+      }
+      container.appendChild(list);
+    }
+  }
+
+  function renderSlashPanel(container){
+    const label=document.createElement('span'); label.className='choice-panel-label cp-label-bright';
+    label.textContent='Slash Chords';
+    container.appendChild(label);
+    const explainer=document.createElement('div'); explainer.className='cp-slash-explainer';
+    explainer.textContent="A slash chord is a regular chord played over a different bass note — the letter before the slash is the chord, the letter after is the bass note. Each one is a single specific voicing.";
+    container.appendChild(explainer);
+    const list=document.createElement('div'); list.className='cp-voicings-list';
+    SLASH_CHORDS_CP.forEach(sc=>addVoicingItem(list, 'open', sc, 'CHORD '+sc));
+    container.appendChild(list);
+  }
+
+  function render6thPanel(container){
+    const label=document.createElement('span'); label.className='choice-panel-label cp-label-bright';
+    label.textContent='6th Chords';
+    container.appendChild(label);
+    const explainer=document.createElement('div'); explainer.className='cp-slash-explainer';
+    explainer.textContent='Open-position only for now — naturals have both major 6th and minor 6th.';
+    container.appendChild(explainer);
+    const list=document.createElement('div'); list.className='cp-voicings-list';
+    NATURAL_ROOTS_ORDER.forEach(r=>{
+      addVoicingItem(list, 'open', r+' 6th', 'CHORD '+r+'6');
+      addVoicingItem(list, 'open', r+' Minor 6th', 'CHORD '+r+'m6');
+    });
+    container.appendChild(list);
+  }
+
+  // ── Open/Barre/Triad/All tabs for a selected root+quality ──────────────
+  function renderChordVoicingTabs(container, root, quality){
+    const natural = !root.includes('#');
     const barreTriadShapes = ['E','A','C','G','D'];
     const triadStrings = [['HE','High E'],['B','B'],['G','G'],['D','D'],['A','A'],['LE','Low E']];
 
@@ -2904,54 +3014,35 @@
     const list=document.createElement('div'); list.className='cp-voicings-list';
 
     if(cpVoicingTab==='open'){
-      renderOpenTab(list, root);
+      renderOpenTab(list, root, quality);
     } else if(cpVoicingTab==='barre'){
-      renderBarreTab(list, root, barreTriadShapes);
+      renderBarreTab(list, root, quality, barreTriadShapes);
     } else if(cpVoicingTab==='triad'){
-      renderTriadTab(list, root, triadStrings);
+      renderTriadTab(list, root, quality, triadStrings);
     } else if(cpVoicingTab==='all'){
-      renderAllTab(list, root, natural, barreTriadShapes, triadStrings);
+      renderAllTab(list, root, quality, natural, barreTriadShapes, triadStrings);
     }
 
     container.appendChild(list);
   }
 
-  function renderOpenTab(list, root){
-    const qRow=document.createElement('div'); qRow.className='cp-quality-row';
-    OPEN_QUALITIES.forEach(([key,label])=>{
-      const btn=document.createElement('button');
-      btn.className='cp-quality-btn'+(cpOpenQuality===key?' active':'');
-      btn.textContent=label;
-      btn.addEventListener('click',()=>{ cpOpenQuality=key; renderChordsPanel(); });
-      qRow.appendChild(btn);
-    });
-    list.appendChild(qRow);
-
-    const cmd = getOpenVoicing(root, cpOpenQuality);
+  function renderOpenTab(list, root, quality){
+    const cmd = getOpenVoicing(root, quality);
+    const qLabel = quality==='minor' ? 'Minor' : 'Major';
     if(cmd){
-      addVoicingItem(list, 'open', 'Open '+root+' '+QUALITY_LABEL[cpOpenQuality], cmd);
+      addVoicingItem(list, 'open', 'Open '+root+' '+qLabel, cmd);
     } else {
-      addInlineNote(list, 'No open shape for '+root+' '+QUALITY_LABEL[cpOpenQuality]+' — try Barre or Triad instead.');
+      addInlineNote(list, 'No open shape for '+root+' '+qLabel.toLowerCase()+' — try Barre or Triad instead.');
     }
   }
 
-  function renderBarreTab(list, root, shapes){
-    const qRow=document.createElement('div'); qRow.className='cp-quality-row';
-    [['major','Major'],['minor','Minor']].forEach(([key,label])=>{
-      const btn=document.createElement('button');
-      btn.className='cp-quality-btn'+(cpBarreQuality===key?' active':'');
-      btn.textContent=label;
-      btn.addEventListener('click',()=>{ cpBarreQuality=key; cpBarreShapeSel=null; renderChordsPanel(); });
-      qRow.appendChild(btn);
-    });
-    list.appendChild(qRow);
-
+  function renderBarreTab(list, root, quality, shapes){
     const shapeLabel=document.createElement('span'); shapeLabel.className='choice-panel-label cp-label-bright';
     shapeLabel.textContent='Choose a shape';
     list.appendChild(shapeLabel);
     const shapeRow=document.createElement('div'); shapeRow.className='cp-demo-choice-row';
     shapes.forEach(shape=>{
-      const greyed = cpBarreQuality==='minor' && (shape==='C'||shape==='G');
+      const greyed = quality==='minor' && (shape==='C'||shape==='G');
       const btn=document.createElement('button');
       btn.className='cp-demo-choice-btn'+(cpBarreShapeSel===shape?' active':'')+(greyed?' disabled':'');
       btn.textContent=shape+' Shape';
@@ -2960,29 +3051,19 @@
       shapeRow.appendChild(btn);
     });
     list.appendChild(shapeRow);
-    if(cpBarreQuality==='minor'){
+    if(quality==='minor'){
       addInlineNote(list, 'No standard minor shape for C or G — E, A, and D shapes cover every minor barre chord.');
     }
 
     if(cpBarreShapeSel){
-      const minorSuffix = cpBarreQuality==='minor' ? 'm' : '';
+      const minorSuffix = quality==='minor' ? 'm' : '';
       const cmd = cpBarreShapeSel+' SHAPE '+root+minorSuffix;
-      const label = root+' '+(cpBarreQuality==='minor'?'Minor':'Major')+' — '+cpBarreShapeSel+' Shape';
+      const label = root+' '+(quality==='minor'?'Minor':'Major')+' — '+cpBarreShapeSel+' Shape';
       addVoicingItem(list, 'barre', label, cmd);
     }
   }
 
-  function renderTriadTab(list, root, stringGroups){
-    const qRow=document.createElement('div'); qRow.className='cp-quality-row';
-    [['major','Major'],['minor','Minor']].forEach(([key,label])=>{
-      const btn=document.createElement('button');
-      btn.className='cp-quality-btn'+(cpTriadQuality===key?' active':'');
-      btn.textContent=label;
-      btn.addEventListener('click',()=>{ cpTriadQuality=key; cpTriadStringSel=null; renderChordsPanel(); });
-      qRow.appendChild(btn);
-    });
-    list.appendChild(qRow);
-
+  function renderTriadTab(list, root, quality, stringGroups){
     const stringLabel=document.createElement('span'); stringLabel.className='choice-panel-label cp-label-bright';
     stringLabel.textContent='Choose a string';
     list.appendChild(stringLabel);
@@ -2997,44 +3078,38 @@
     list.appendChild(stringRow);
 
     if(cpTriadStringSel){
-      const minorSuffix = cpTriadQuality==='minor' ? 'M' : '';
+      const minorSuffix = quality==='minor' ? 'M' : '';
       const cmd = 'TRIAD '+cpTriadStringSel+' '+root+minorSuffix;
       const groupText = (stringGroups.find(([k])=>k===cpTriadStringSel)||[null,cpTriadStringSel])[1];
-      const label = root+' '+(cpTriadQuality==='minor'?'Minor':'Major')+' Triad ('+groupText+')';
+      const label = root+' '+(quality==='minor'?'Minor':'Major')+' Triad ('+groupText+')';
       addVoicingItem(list, 'triad', label, cmd);
     }
   }
 
-  // ALL tab reproduces the original full dump — every quality this root
-  // actually has, across Open, Barre (all shapes), and Triad (all strings) —
-  // as one long reference view, now opt-in instead of the default.
-  function renderAllTab(list, root, natural, shapes, stringGroups){
+  // ALL tab: everything this root has for the one quality already chosen at
+  // the grid — Open, every Barre shape, every Triad string group.
+  function renderAllTab(list, root, quality, natural, shapes, stringGroups){
+    const qLabel = quality==='minor' ? 'Minor' : 'Major';
     const openHeader=document.createElement('div'); openHeader.className='cp-voicings-section-label'; openHeader.textContent='Open';
     list.appendChild(openHeader);
-    let anyOpen=false;
-    if(natural){
-      OPEN_QUALITIES.forEach(([key,label])=>{
-        const cmd = getOpenVoicing(root, key);
-        if(cmd){ addVoicingItem(list, 'open', 'Open '+root+' '+label, cmd); anyOpen=true; }
-      });
-    }
-    if(!anyOpen) addInlineNote(list, 'No open shape for '+root+'.');
+    const openCmd = natural ? getOpenVoicing(root, quality) : null;
+    if(openCmd){ addVoicingItem(list, 'open', 'Open '+root+' '+qLabel, openCmd); }
+    else { addInlineNote(list, 'No open shape for '+root+' '+qLabel.toLowerCase()+'.'); }
 
     const barreHeader=document.createElement('div'); barreHeader.className='cp-voicings-section-label'; barreHeader.textContent='Barre';
     list.appendChild(barreHeader);
+    const minorSuffix = quality==='minor' ? 'm' : '';
     shapes.forEach(shape=>{
-      addVoicingItem(list, 'barre', root+' Major — '+shape+' Shape', shape+' SHAPE '+root);
-      if(!(shape==='C'||shape==='G')){
-        addVoicingItem(list, 'barre', root+' Minor — '+shape+' Shape', shape+' SHAPE '+root+'m');
-      }
+      if(quality==='minor' && (shape==='C'||shape==='G')) return;
+      addVoicingItem(list, 'barre', root+' '+qLabel+' — '+shape+' Shape', shape+' SHAPE '+root+minorSuffix);
     });
-    addInlineNote(list, 'C and G shapes are major-only — no standard minor version.');
+    if(quality==='minor') addInlineNote(list, 'C and G shapes are major-only — no standard minor version.');
 
     const triadHeader=document.createElement('div'); triadHeader.className='cp-voicings-section-label'; triadHeader.textContent='Triad';
     list.appendChild(triadHeader);
+    const triadSuffix = quality==='minor' ? 'M' : '';
     stringGroups.forEach(([key,text])=>{
-      addVoicingItem(list, 'triad', root+' Major Triad ('+text+')', 'TRIAD '+key+' '+root);
-      addVoicingItem(list, 'triad', root+' Minor Triad ('+text+')', 'TRIAD '+key+' '+root+'M');
+      addVoicingItem(list, 'triad', root+' '+qLabel+' Triad ('+text+')', 'TRIAD '+key+' '+root+triadSuffix);
     });
   }
 
