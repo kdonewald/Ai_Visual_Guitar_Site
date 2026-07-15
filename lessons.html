@@ -1124,7 +1124,7 @@
   .cp-prog-btn.play:hover:not(:disabled){ background:rgba(224,85,64,0.24); }
   .cp-prog-btn.vizi{ border-color:var(--blue);color:#8ec8ff;background:rgba(79,142,247,0.14); }
   .cp-prog-btn.vizi:hover:not(:disabled){ background:rgba(79,142,247,0.24); }
-  .cp-prog-btn.clear{ color:rgba(255,255,255,.7); }
+  .cp-prog-btn.clear{ color:var(--text);font-weight:700; }
   .cp-prog-btn:disabled{ opacity:.35;cursor:not-allowed; }
   .cp-loop-row{
     display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem;
@@ -2908,19 +2908,6 @@
     container.appendChild(revealRow);
 
     renderChordDetail(container);
-
-    // Reset — always last, collapses everything back to the empty,
-    // nothing-selected state, including the Demo section's choices
-    const resetBtn=document.createElement('button'); resetBtn.className='cp-chord-reset-btn';
-    resetBtn.textContent='Reset';
-    resetBtn.addEventListener('click',()=>{
-      resetChordPickerState();
-      demoMode=null;
-      demoShape=null;
-      demoString=null;
-      renderChordsPanel();
-    });
-    container.appendChild(resetBtn);
   }
 
   function renderChordGrid(container){
@@ -3325,6 +3312,21 @@
     // -- PROGRESSION BUILDER --
     const progSec=buildProgSection();
     exList.appendChild(progSec);
+
+    // Reset — now sits below Clear, at the very bottom, collapses everything
+    // back to the empty, nothing-selected state, including the Demo section's
+    // choices. Left as its own button (not merged with Clear) so collapsing
+    // the picker and wiping the progression stay two independent actions.
+    const resetBtn=document.createElement('button'); resetBtn.className='cp-chord-reset-btn';
+    resetBtn.textContent='Reset';
+    resetBtn.addEventListener('click',()=>{
+      resetChordPickerState();
+      demoMode=null;
+      demoShape=null;
+      demoString=null;
+      renderChordsPanel();
+    });
+    exList.appendChild(resetBtn);
   }
 
   function buildProgSection(){
