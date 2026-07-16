@@ -43,7 +43,7 @@
   .logo-name{font-family:'Playfair Display',serif;font-size:.92rem;font-weight:700;color:var(--text)}
   .nav-links{display:flex;gap:.4rem;align-items:center}
   .nav-link{
-    font-size:.86rem;font-weight:500;color:var(--text-mid);text-decoration:none;
+    font-size:.86rem;font-weight:500;color:var(--text);text-decoration:none;
     padding:5px 12px;border-radius:6px;border:1.5px solid var(--border);transition:all .2s;
   }
   .nav-link:hover{border-color:var(--blue);color:var(--blue)}
@@ -57,7 +57,7 @@
   }
   .page-eyebrow::before{content:'';width:1.5rem;height:2px;background:var(--red)}
   .page-title{font-family:'Playfair Display',serif;font-weight:900;font-size:clamp(2rem,5vw,2.8rem);letter-spacing:-.02em;line-height:1.05;margin-bottom:.5rem}
-  .page-desc{color:var(--text-mid);font-size:.95rem;line-height:1.65;max-width:520px;margin-bottom:2.5rem}
+  .page-desc{color:var(--text);font-size:.95rem;line-height:1.65;max-width:520px;margin-bottom:2.5rem}
 
   /* ── section headers ── */
   .section-head{
@@ -66,7 +66,7 @@
   }
   .section-icon{font-size:1.2rem}
   .section-title{font-family:'Playfair Display',serif;font-weight:700;font-size:1.25rem}
-  .section-tag{font-family:'DM Mono',monospace;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-left:auto}
+  .section-tag{font-family:'DM Mono',monospace;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text);margin-left:auto}
 
   /* ── UG collection grid ── */
   .ug-grid{display:flex;flex-direction:column;gap:.5rem;margin-bottom:2.5rem}
@@ -79,7 +79,7 @@
   .ug-card-icon{font-size:1.4rem;flex-shrink:0}
   .ug-card-body{flex:1;min-width:0}
   .ug-card-name{font-size:.95rem;font-weight:600;display:block;margin-bottom:.2rem}
-  .ug-card-desc{font-size:.82rem;color:var(--text-mid);line-height:1.45}
+  .ug-card-desc{font-size:.82rem;color:var(--text);line-height:1.45}
   .ug-card-arrow{
     font-family:'DM Mono',monospace;font-size:.86rem;letter-spacing:.06em;
     text-transform:uppercase;color:var(--blue);flex-shrink:0;
@@ -90,7 +90,7 @@
   .divider{
     display:flex;align-items:center;gap:.75rem;margin:2rem 0;
     font-family:'DM Mono',monospace;font-size:.86rem;letter-spacing:.12em;
-    text-transform:uppercase;color:var(--text-dim);
+    text-transform:uppercase;color:var(--text);
   }
   .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
 
@@ -104,7 +104,7 @@
     background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%);
   }
   .upload-card-title{font-family:'Playfair Display',serif;font-weight:900;font-size:1.35rem}
-  .upload-card-desc{font-size:.85rem;color:var(--text-mid);margin-top:.3rem;line-height:1.55}
+  .upload-card-desc{font-size:.85rem;color:var(--text);margin-top:.3rem;line-height:1.55}
   .upload-card-body{padding:1.5rem}
 
   /* steps */
@@ -112,7 +112,7 @@
   .step-pill{
     display:flex;align-items:center;gap:.4rem;
     background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;
-    padding:.35rem .75rem;font-size:.86rem;font-weight:500;color:var(--text-mid);flex:1;
+    padding:.35rem .75rem;font-size:.86rem;font-weight:500;color:var(--text);flex:1;
   }
   .step-pill .num{
     width:18px;height:18px;border-radius:50%;background:var(--blue);color:white;
@@ -132,7 +132,6 @@
   .drop-icon{width:1.8rem;height:1.8rem;margin:0 auto .5rem;color:var(--text-dim)}
   .drop-zone:hover .drop-icon,.drop-zone.over .drop-icon{color:var(--blue)}
   .drop-main{font-size:.9rem;color:var(--text);margin-bottom:.2rem;font-weight:500}
-  .drop-sub{font-family:'DM Mono',monospace;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim)}
 
   .file-chosen{
     display:none;align-items:center;gap:.75rem;
@@ -296,8 +295,8 @@
     <div class="upload-card-body">
 
       <div class="steps">
-        <div class="step-pill"><span class="num">1</span> Get the PDF or screenshot</div>
-        <div class="step-pill"><span class="num">2</span> Drop it below</div>
+        <div class="step-pill"><span class="num">1</span> Find or download a song sheet</div>
+        <div class="step-pill"><span class="num">2</span> Upload it below</div>
         <div class="step-pill"><span class="num">3</span> Send to Vizi</div>
       </div>
 
@@ -307,7 +306,6 @@
           <path d="M12 3v13M7 8l5-5 5 5M4 17v1a2 2 0 002 2h12a2 2 0 002-2v-1"/>
         </svg>
         <div class="drop-main">Tap to choose file or take photo</div>
-        <div class="drop-sub">PDF · Image · Screenshot</div>
       </div>
 
       <div class="file-chosen" id="fileChosen">
