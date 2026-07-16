@@ -299,7 +299,7 @@
       </div>
 
       <button class="btn-send" id="submitBtn" disabled>
-        <span id="btnLabel">Choose a file or paste chords first</span>
+        <span id="btnLabel">Send to Vizi 🎸</span>
       </button>
       <div class="status" id="status"></div>
 
@@ -455,7 +455,6 @@
   function sync(){
     const ready = selectedFile || (textMode && chordsText.value.trim().length > 0);
     submitBtn.disabled = !ready;
-    btnLabel.textContent = ready ? 'Send to Vizi 🎸' : 'Choose a file or paste chords first';
   }
 
   function showStatus(type, msg){
