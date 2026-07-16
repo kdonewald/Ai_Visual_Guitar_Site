@@ -86,39 +86,22 @@
     background:rgba(79,142,247,0.10);padding:3px 8px;border-radius:4px;
   }
 
-  /* ── divider ── */
-  .divider{
-    display:flex;align-items:center;gap:.75rem;margin:2rem 0;
-    font-family:'DM Mono',monospace;font-size:.86rem;letter-spacing:.12em;
-    text-transform:uppercase;color:var(--text);
+  /* ── 3-step numbered list (replaces the old single-line divider) ── */
+  .divider-steps{ margin:2rem 0; }
+  .divider-steps-item{
+    display:flex;align-items:baseline;gap:.6rem;
+    font-size:.95rem;color:var(--text);line-height:1.6;margin-bottom:.5rem;
   }
-  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+  .divider-steps-item .ds-num{
+    font-family:'DM Mono',monospace;font-weight:700;color:var(--blue);flex-shrink:0;
+  }
 
   /* ── upload section ── */
   .upload-card{
     background:var(--surface);border:1.5px solid var(--border);
     border-radius:16px;box-shadow:0 6px 24px var(--shadow);overflow:hidden;
   }
-  .upload-card-head{
-    padding:1.25rem 1.5rem;border-bottom:1.5px solid var(--border);
-    background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%);
-  }
-  .upload-card-title{font-family:'Playfair Display',serif;font-weight:900;font-size:1.35rem}
-  .upload-card-desc{font-size:.85rem;color:var(--text);margin-top:.3rem;line-height:1.55}
   .upload-card-body{padding:1.5rem}
-
-  /* steps */
-  .steps{display:flex;gap:.6rem;margin-bottom:1.25rem}
-  .step-pill{
-    display:flex;align-items:center;gap:.4rem;
-    background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;
-    padding:.35rem .75rem;font-size:.86rem;font-weight:500;color:var(--text);flex:1;
-  }
-  .step-pill .num{
-    width:18px;height:18px;border-radius:50%;background:var(--blue);color:white;
-    font-family:'DM Mono',monospace;font-size:.85rem;font-weight:600;
-    display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  }
 
   /* drop zone */
   .drop-zone{
@@ -284,21 +267,15 @@
     </a>
   </div>
 
-  <div class="divider">Then upload your song sheet below</div>
+  <div class="divider-steps">
+    <div class="divider-steps-item"><span class="ds-num">1.</span> Download the song sheet to your phone or computer</div>
+    <div class="divider-steps-item"><span class="ds-num">2.</span> Upload your song sheet below</div>
+    <div class="divider-steps-item"><span class="ds-num">3.</span> Send it to Vizi to analyze</div>
+  </div>
 
   <!-- ── Upload a Song ── -->
   <div class="upload-card">
-    <div class="upload-card-head">
-      <div class="upload-card-title">Upload Your Song Sheet</div>
-      <div class="upload-card-desc">Download the PDF or take a screenshot from Ultimate Guitar, then send it to Vizi — she'll read the chords and light up your fretboard.</div>
-    </div>
     <div class="upload-card-body">
-
-      <div class="steps">
-        <div class="step-pill"><span class="num">1</span> Find or download a song sheet</div>
-        <div class="step-pill"><span class="num">2</span> Upload it below</div>
-        <div class="step-pill"><span class="num">3</span> Send to Vizi</div>
-      </div>
 
       <div class="drop-zone" id="dropZone">
         <input type="file" id="fileInput" accept=".pdf,.txt,.png,.jpg,.jpeg,image/*" />
