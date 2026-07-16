@@ -57,7 +57,7 @@
   .cat-head{padding:1.6rem 2rem 1.4rem;border-bottom:1.5px solid var(--border);background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%);display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;}
   .cat-stage-tag{font-family:'DM Mono',monospace;font-size:.87rem;letter-spacing:.16em;text-transform:uppercase;color:var(--red);margin-bottom:.4rem;}
   .cat-title{font-family:'Playfair Display',serif;font-weight:900;font-size:1.95rem;letter-spacing:-.01em;color:var(--text);}
-  .cat-desc{color:var(--text-mid);font-size:.92rem;margin-top:.5rem;max-width:480px;line-height:1.6;font-weight:400}
+  .cat-desc{color:var(--text);font-size:.92rem;margin-top:.5rem;max-width:480px;line-height:1.6;font-weight:500;opacity:.9}
   .cat-close{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;width:34px;height:34px;flex-shrink:0;cursor:pointer;font-size:1rem;color:var(--text-mid);transition:all .2s;}
   .cat-close:hover{border-color:var(--red);color:var(--red)}
   .cat-body{padding:1.4rem 1.75rem 2rem;}
@@ -97,6 +97,7 @@
   /* choice panel */
   .choice-panel-label{font-family:'DM Mono',monospace;font-size:.87rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-mid);margin-bottom:.75rem;display:block;font-weight:500;}
   .choice-panel-label.cp-label-bright{color:var(--text);font-weight:700;}
+  .choice-panel-label.cp-label-active-step{color:var(--gold);font-weight:700;}
   .cp-chord-reset-btn{
     display:block;margin:.75rem 0 1rem;padding:.5rem 1rem;
     font-family:'DM Mono',monospace;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
@@ -2194,7 +2195,7 @@
 
     // ── Root note picker ──
     const rootLabel = document.createElement('span'); rootLabel.className='choice-panel-label cp-label-bright';
-    rootLabel.textContent='Step 1 — Choose a root note';
+    rootLabel.textContent='Step 1 — Pick a root note — that will become the first note of your scale';
     wrap.appendChild(rootLabel);
     const noteGrid = document.createElement('div'); noteGrid.className='cb-note-grid';
     CHROMATIC.forEach(note => {
@@ -2208,7 +2209,7 @@
         cbStep=0; updateBuildBtn();
         clearSteps();
         const typeLabelEl = document.getElementById('cbStep2Label');
-        if(typeLabelEl) typeLabelEl.classList.add('cp-label-bright');
+        if(typeLabelEl) typeLabelEl.classList.add('cp-label-active-step');
       });
       noteGrid.appendChild(btn);
     });
@@ -2216,7 +2217,7 @@
 
     // ── Chord type picker ──
     const typeLabel = document.createElement('span'); typeLabel.id='cbStep2Label';
-    typeLabel.className='choice-panel-label'+(cbRoot?' cp-label-bright':'');
+    typeLabel.className='choice-panel-label'+(cbRoot?' cp-label-active-step':'');
     typeLabel.style.marginTop='.25rem'; typeLabel.style.display='block';
     typeLabel.textContent='Step 2 — Pick Major or Minor';
     wrap.appendChild(typeLabel);
