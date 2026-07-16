@@ -239,7 +239,7 @@
     font-family:'DM Mono',monospace;font-size:.78rem;color:var(--text-mid);
     min-width:7rem;text-align:center;
   }
-  .sheet-body{flex:1;overflow:auto;position:relative;}
+  .sheet-body{flex:1;overflow:auto;position:relative;touch-action:pan-x pan-y;}
   .sheet-content{transform-origin:top left;transition:transform .15s;width:100%;}
   .sheet-body iframe{width:100%;height:100%;border:none;display:block;min-height:400px}
   .sheet-body img{width:100%;height:auto;display:block}
@@ -719,6 +719,40 @@
   zoomOut.addEventListener('click',   e => { e.stopPropagation(); zoomLevel = Math.max(ZOOM_MIN, zoomLevel - ZOOM_STEP); applyZoom(); });
   zoomReset.addEventListener('click', e => { e.stopPropagation(); zoomLevel = 1.0; applyZoom(); });
 
+  // ── Pinch-to-zoom on the sheet body — same zoomLevel/applyZoom() the
+  // +/- buttons use, just driven by a two-finger gesture instead of taps.
+  const sheetBody = document.getElementById('sheetBody');
+  let pinchStartDist = null;
+  let pinchStartZoom = 1.0;
+
+  function touchDist(touches){
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(dx, dy);
+  }
+
+  sheetBody.addEventListener('touchstart', e => {
+    if (e.touches.length === 2){
+      pinchStartDist = touchDist(e.touches);
+      pinchStartZoom = zoomLevel;
+    }
+  }, {passive:true});
+
+  sheetBody.addEventListener('touchmove', e => {
+    if (e.touches.length === 2 && pinchStartDist){
+      e.preventDefault(); // stop the page itself from pinch-zooming underneath
+      const ratio = touchDist(e.touches) / pinchStartDist;
+      zoomLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, pinchStartZoom * ratio));
+      applyZoom();
+    }
+  }, {passive:false});
+
+  function endPinch(e){
+    if (e.touches.length < 2) pinchStartDist = null;
+  }
+  sheetBody.addEventListener('touchend', endPinch);
+  sheetBody.addEventListener('touchcancel', endPinch);
+
   let songPages = [];
   let songPageIdx = 0;
 
@@ -1012,7 +1046,7 @@
     const stageInstructions = {
       'chords': (()=>{
         const isArpeggio = exerciseName.includes('Arpeggio');
-        const isProgression = exerciseName.startsWith('Progression:') || exerciseName.startsWith('Progression step:');
+        const isProgression = exerciseName.startsWith('Progression:') || exerciseName.startsWith('Progression step:') || exerciseName.startsWith('Progression recap:');
         const isBarreDemo = exerciseName.includes('— Barre Demo');
         const isTriadDemo = exerciseName.includes('— Triad Demo');
         const isTriad = !isTriadDemo && exerciseName.includes('Triad');
@@ -1037,14 +1071,17 @@
         }
 
         if(isProgression){
-          const progStr = exerciseName.replace('Progression:','').replace('Progression step:','').trim();
+          const progStr = exerciseName.replace('Progression recap:','').replace('Progression:','').replace('Progression step:','').trim();
           const isSingleStep = exerciseName.startsWith('Progression step:');
           if(isSingleStep){
             const chordPart = progStr.replace(' — Chord','').replace(' — Arpeggio','').trim();
             const cleanCmd = stripToPlayableChordName(chordPart.replace(/ \(.*\)/,''));
             return 'Light the chord on the fretboard: CHORD '+cleanCmd+'. Say the chord name and one note — keep it to one sentence.';
           }
-          return 'The student built this chord progression: '+progStr+'. Walk through each chord one at a time — light each with a CHORD command, name it, and give one tip about the transition to the next chord. Tell them which scale this progression comes from if you recognise it. Keep each chord description to one sentence.';
+          // The whole sequence has already been lit on the fretboard, in
+          // order, before this page loaded — do not send any CHORD/TRIAD/
+          // SHAPE commands. Just narrate.
+          return 'The student just watched this chord progression light up on the fretboard in this order: '+progStr+'. It is already lit — do not send any fretboard commands. Briefly mention the chords in the order played and, if you recognise it, what scale or key this progression comes from. Keep it to 1-2 sentences.';
         }
 
         if(isTriad){
