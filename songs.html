@@ -316,7 +316,7 @@
   // ── Songs page intro video ──
   // Fill in once the video is recorded/uploaded (same format as other stage videos: a plain
   // youtube.com/watch?v=... or youtube.com/shorts/... link — no need to convert to embed format).
-  const SONGS_VIDEO_URL = 'https://youtube.com/shorts/_c_5qbTkt_M';
+  const SONGS_VIDEO_URL = 'https://youtube.com/shorts/OB7OcjZI7hk';
 
   const songsIntroBtn = document.getElementById('songsIntroBtn');
   const ytWrap    = document.getElementById('ytVideoWrap');
@@ -326,6 +326,7 @@
   function openSongsVideo(url){
     if(!ytIframe||!ytWrap||!url) return;
     const embedUrl = url
+      .replace('youtu.be/','youtube.com/embed/')
       .replace('youtube.com/shorts/','youtube.com/embed/')
       .replace('youtube.com/watch?v=','youtube.com/embed/')
       + (url.includes('?')?'&':'?') + 'rel=0&modestbranding=1&autoplay=1&enablejsapi=1';

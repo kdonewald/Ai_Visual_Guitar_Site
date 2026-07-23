@@ -1837,6 +1837,7 @@
     if(!ytIframe||!ytWrap||!url) return;
     // Convert watch/shorts URL to embed
     const embedUrl = url
+      .replace('youtu.be/','youtube.com/embed/')
       .replace('youtube.com/shorts/','youtube.com/embed/')
       .replace('youtube.com/watch?v=','youtube.com/embed/')
       + (url.includes('?')?'&':'?') + 'rel=0&modestbranding=1&autoplay=1&enablejsapi=1';
