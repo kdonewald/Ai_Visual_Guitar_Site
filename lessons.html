@@ -1547,7 +1547,7 @@
   const CHOICE_PANELS = {
     'warmup': {
       label:'Choose a scale to warm up with',
-      hint:'Vizi will light the scale on your fretboard and guide you up and down all six strings. Set the metronome to a comfortable tempo.',
+      hint:'Vizi will light the scale on your fretboard and guide you up and down all six strings. Set the metronome to a comfortable tempo. Heads up: not every position fits on a 13-fret neck, so Vizi shows the ones that do — in order, low to high — leaving out any that run off the top so the shapes stay clean.',
       cols:3,
       choices:[
         { icon:'☀️',  name:'G Major',  desc:'Open, bright — great starting scale' },
@@ -1593,7 +1593,7 @@
     },
     'soloing': {
       label:'Step 1 — Find a backing track',
-      hint:'Open the backing tracks in a new window, pick one you like, note the key shown in the track title, then choose the matching key and scale below.',
+      hint:'Open the backing tracks in a new window, pick one you like, note the key shown in the track title, then choose the matching key and scale below. Heads up: not every scale position fits on a 13-fret neck — Vizi lights the ones that fit, in order low to high, and leaves out any that run off the top so the shapes stay clean.',
       cols:1,
       bandcamp:'https://backing-tracks.bandcamp.com/album/easy-backing-tracks',
       groups:[
@@ -1991,6 +1991,13 @@
     scaleStatus.className='cb-fret-status'; scaleStatus.id='cbScaleStatus';
     wrap.appendChild(scaleStatus);
 
+    // Note: 13-fret neck can't hold every position of a scale at once
+    const scaleFitNote = document.createElement('div');
+    scaleFitNote.className='cb-fret-status';
+    scaleFitNote.style.opacity='0.75'; scaleFitNote.style.fontSize='0.85em';
+    scaleFitNote.textContent='Not every scale position fits on a 13-fret neck — Vizi lights the ones that fit, in order low to high, and leaves out any that run off the top so the shapes stay clean.';
+    wrap.appendChild(scaleFitNote);
+
     exList.appendChild(wrap);
 
     // Restore state if previously built
@@ -2039,7 +2046,9 @@
   async function lightScaleOnFretboardDirect(){
     if(!cbRoot||!cbType) return;
     const statusEl = document.getElementById('cbScaleStatus');
-    const scaleCmd = 'SCALE '+cbRoot+(cbType==='Minor'?'m':'')+' '+cbType.toLowerCase()+' ALL';
+    // Scale root must be a bare note (C, A, F#…); "minor" is a separate word.
+    // Appending "m" here made "Cm" — an invalid scale root — and error-flashed.
+    const scaleCmd = 'SCALE '+cbRoot+' '+cbType.toLowerCase()+' ALL';
     if(statusEl){ statusEl.textContent='Lighting scale...'; statusEl.style.color='var(--gold)'; }
     try{
       const res = await fetch(RAILWAY_URL+'/fretboard-command',{
