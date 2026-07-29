@@ -1301,6 +1301,38 @@
 
   
 
+  /* ── Chords stage rework (cx-) ── */
+  .cx-bar{position:sticky;top:0;z-index:40;background:#0f1117;border-bottom:1px solid #263042;padding:8px 4px;margin:0 0 8px;display:flex;flex-direction:column;gap:6px;}
+  .cx-row{display:flex;gap:6px;align-items:stretch;}
+  .cx-seg{display:flex;gap:5px;flex:1 1 auto;}
+  .cx-pill{flex:1 1 auto;min-width:52px;padding:9px 6px;border-radius:10px;border:1.5px solid #33415a;background:#161b26;color:#cdd6e6;font-size:13px;font-weight:600;text-align:center;cursor:pointer;line-height:1.1;}
+  .cx-pill.active{border-color:#3ddc84;color:#3ddc84;box-shadow:0 0 0 1px #3ddc84 inset;}
+  .cx-act{flex:1 1 auto;padding:10px 6px;border-radius:10px;border:1.5px solid #33415a;background:#161b26;color:#cdd6e6;font-weight:700;font-size:13px;cursor:pointer;}
+  .cx-act.light{border-color:#e0533d;color:#ff7a63;}
+  .cx-act.reset{border-color:#4a6fb0;color:#7aa3e6;}
+  .cx-act:disabled{opacity:.4;cursor:default;}
+  .cx-sel{text-align:center;font-size:12px;color:#9aa4b5;margin:2px 0 8px;min-height:15px;}
+  .cx-strip{display:flex;flex-wrap:wrap;gap:5px;align-items:center;padding:8px;border:1px solid #263042;border-radius:10px;background:#12161f;margin-bottom:8px;min-height:22px;}
+  .cx-strip-empty{color:#6b7688;font-size:12px;font-style:italic;}
+  .cx-chip{display:inline-flex;align-items:center;gap:6px;background:#1c2330;border:1px solid #33415a;border-radius:8px;padding:5px 9px;color:#e6ecf5;font-size:12px;}
+  .cx-chip-x{color:#ff7a63;font-weight:700;cursor:pointer;font-size:14px;line-height:1;}
+  .cx-arrow{color:#6b7688;}
+  .cx-chord-area{margin-top:2px;}
+  .cx-grid{display:grid;gap:5px;margin-bottom:4px;align-items:stretch;}
+  .cx-colhdr{font-size:10px;letter-spacing:.4px;color:#8b96a8;text-align:center;text-transform:uppercase;padding-bottom:1px;align-self:end;line-height:1.05;}
+  .cx-cell{padding:10px 2px;border-radius:8px;border:1.5px solid #33415a;background:#161b26;color:#e6ecf5;font-size:13px;font-weight:600;cursor:pointer;text-align:center;}
+  .cx-cell.open{border-color:#5a6b85;background:#1a2536;color:#eaf1fb;}
+  .cx-cell.fchord{border-color:#e0a53d;background:#241d10;color:#ffcf70;}
+  .cx-cell.barrecolor{border-color:#4a6fb0;background:#141c2b;color:#9bc0ff;}
+  .cx-cell.greyed{opacity:.35;cursor:default;border-style:dashed;color:#8b96a8;background:#12151c;}
+  .cx-cell:not(.greyed):active{transform:scale(.96);}
+  .cx-rootlabel{background:transparent;border:none;color:#cfd8e6;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:default;padding:0;}
+  .cx-note{font-size:12px;color:#8b96a8;font-style:italic;margin:10px 2px 4px;line-height:1.45;}
+  .cx-legend{display:flex;flex-wrap:wrap;gap:12px;margin:4px 2px 10px;font-size:11px;color:#9aa4b5;}
+  .cx-legend > span{display:inline-flex;align-items:center;gap:5px;}
+  .cx-legend .cx-sw{width:12px;height:12px;border-radius:3px;display:inline-block;flex:none;}
+  .cx-more-row{display:flex;gap:6px;margin-top:14px;padding-top:10px;border-top:1px solid #1e2634;}
+  .cx-slash-wrap{display:flex;flex-wrap:wrap;}
 </style>
 </head>
 <body>
@@ -2906,59 +2938,292 @@
     return btn;
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // CHORDS STAGE — rebuilt (simplified for beginners), July 28 2026
+  // Sticky two-row bar: Row 1 = Progression toggle · Major/Minor ·
+  // Open/Barre/Triad; Row 2 = Light · Clear · Reset. Progression OFF = tapping
+  // a chord lights it immediately (direct fire, stays on page). Progression ON
+  // = tapping adds to the strip silently (no board flash); it lights only on
+  // Light Progression. Voicing + quality persist. Reuses cpProgression,
+  // sendFretboardCmdDirect, playProgression.
+  // ═══════════════════════════════════════════════════════════════
+  const CX_ALL_ROOTS  = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const CX_OPEN_MAJ   = ['C','D','E','G','A'];
+  const CX_OPEN_MIN   = ['A','D','E'];
+  const CX_BARRE_COLS = ['E','A','D','C','G'];
+  const CX_TRIAD_COLS = ['HE','B','G','D','A','LE'];
+
+  let cpProgMode   = false;     // progression toggle
+  let cpVoicing    = 'open';    // 'open' | 'barre' | 'triad'
+  let cpQuality    = 'major';   // 'major' | 'minor'
+  let cpLastChord  = null;      // last committed chord (for Light Chord re-fire)
+  let cpExtraPanel = null;      // '7ths' | '6ths' | 'slash' | null
+
+  // Live element refs so a tap can update strip/light without a full re-render.
+  let cxStripEl=null, cxLightBtn=null, cxClearBtn=null, cxSelEl=null, cxStatusEl=null;
+
+  function cxPill(label, active, onClick, cls){
+    const b=document.createElement('button');
+    b.className='cx-pill'+(active?' active':'')+(cls?' '+cls:'');
+    b.textContent=label; b.addEventListener('click', onClick);
+    return b;
+  }
+
   function renderChordsPanel(){
     exList.innerHTML='';
 
-    renderByChordView(exList);
+    // ── Sticky two-row bar ──
+    const bar=document.createElement('div'); bar.className='cx-bar';
 
-    const actionWrap=document.createElement('div');
-    actionWrap.className='cp-chord-actions'; actionWrap.id='cpChordActions';
-    const selName=document.createElement('div'); selName.className='cp-selected-chord'; selName.id='cpSelName';
-    selName.textContent=cpSelectedChord?cpSelectedChord.label:'';
-    const actBtns=document.createElement('div'); actBtns.className='cp-action-btns';
-    const sendBtn=document.createElement('button'); sendBtn.className='cp-action-btn send'; sendBtn.textContent='🎸 Light Chord';
-    const progBtn=document.createElement('button'); progBtn.className='cp-action-btn prog'; progBtn.textContent='+ Add to Progression';
-    const arpBtn=document.createElement('button'); arpBtn.className='cp-action-btn arp'; arpBtn.textContent='🎵 Arpeggio';
-    actBtns.appendChild(sendBtn); actBtns.appendChild(progBtn); actBtns.appendChild(arpBtn);
-    actionWrap.appendChild(selName); actionWrap.appendChild(actBtns);
-    const holdHint=document.createElement('div'); holdHint.className='cp-hold-hint';
-    holdHint.textContent='Want it to stay lit? Turn Hold on before pressing Light Chord.';
-    actionWrap.appendChild(holdHint);
-    if(cpSelectedChord) actionWrap.classList.add('show');
-    exList.appendChild(actionWrap);
-
-    sendBtn.addEventListener('click',()=>{
-      if(!cpSelectedChord)return;
-      goToVizi('chords', cpSelectedChord.label+' — Chord');
+    const row1=document.createElement('div'); row1.className='cx-row';
+    row1.appendChild(cxPill(cpProgMode?'Progression ✓':'Progression', cpProgMode, ()=>{
+      cpProgMode=!cpProgMode; renderChordsPanel();
+    }));
+    const qSeg=document.createElement('div'); qSeg.className='cx-seg';
+    qSeg.appendChild(cxPill('Major', cpQuality==='major', ()=>{ cpQuality='major'; renderChordsPanel(); }));
+    qSeg.appendChild(cxPill('Minor', cpQuality==='minor', ()=>{ cpQuality='minor'; renderChordsPanel(); }));
+    row1.appendChild(qSeg);
+    const vSeg=document.createElement('div'); vSeg.className='cx-seg';
+    [['open','Open'],['barre','Barre'],['triad','Triad']].forEach(function(pair){
+      vSeg.appendChild(cxPill(pair[1], cpVoicing===pair[0] && !cpExtraPanel, ()=>{
+        cpVoicing=pair[0]; cpExtraPanel=null; renderChordsPanel();
+      }));
     });
-    arpBtn.addEventListener('click',()=>{
-      if(!cpSelectedChord)return;
-      goToVizi('chords', cpSelectedChord.label+' — Arpeggio');
-    });
-    progBtn.addEventListener('click',()=>{
-      if(!cpSelectedChord)return;
-      cpProgression.push({...cpSelectedChord});
-      updateProgBar();
-    });
+    row1.appendChild(vSeg);
+    bar.appendChild(row1);
 
-    // -- PROGRESSION BUILDER --
-    const progSec=buildProgSection();
-    exList.appendChild(progSec);
-
-    // Reset — now sits below Clear, at the very bottom, collapses everything
-    // back to the empty, nothing-selected state, including the Demo section's
-    // choices. Left as its own button (not merged with Clear) so collapsing
-    // the picker and wiping the progression stay two independent actions.
-    const resetBtn=document.createElement('button'); resetBtn.className='cp-chord-reset-btn';
-    resetBtn.textContent='Reset';
-    resetBtn.addEventListener('click',()=>{
-      resetChordPickerState();
-      demoMode=null;
-      demoShape=null;
-      demoString=null;
+    const row2=document.createElement('div'); row2.className='cx-row';
+    cxLightBtn=document.createElement('button'); cxLightBtn.className='cx-act light';
+    cxLightBtn.addEventListener('click', ()=>{
+      if(cxLightBtn._mode==='prog') playProgression(cxStatusEl, cxLightBtn);
+      else if(cxLightBtn._mode==='chord' && cpLastChord) sendFretboardCmdDirect(cpLastChord.cmd);
+    });
+    cxClearBtn=document.createElement('button'); cxClearBtn.className='cx-act'; cxClearBtn.textContent='Clear';
+    cxClearBtn.addEventListener('click', ()=>{ cpProgression.length=0; cxRefreshProg(); });
+    const resetBtn=document.createElement('button'); resetBtn.className='cx-act reset'; resetBtn.textContent='Reset';
+    resetBtn.addEventListener('click', ()=>{
+      cpProgression.length=0; cpLastChord=null; cpProgMode=false;
+      cpVoicing='open'; cpQuality='major'; cpExtraPanel=null;
+      sendFretboardCmdDirect('OFF');
       renderChordsPanel();
     });
-    exList.appendChild(resetBtn);
+    row2.appendChild(cxLightBtn); row2.appendChild(cxClearBtn); row2.appendChild(resetBtn);
+    bar.appendChild(row2);
+    exList.appendChild(bar);
+
+    cxSelEl=document.createElement('div'); cxSelEl.className='cx-sel';
+    cxSelEl.textContent = cpProgMode ? 'Progression on — tap chords to add them.' : 'Tap a chord to light it.';
+    exList.appendChild(cxSelEl);
+
+    if(cpProgMode){
+      cxStripEl=document.createElement('div'); cxStripEl.className='cx-strip';
+      exList.appendChild(cxStripEl); cxBuildStrip();
+      cxStatusEl=document.createElement('div'); cxStatusEl.className='cx-sel';
+      exList.appendChild(cxStatusEl);
+    } else { cxStripEl=null; cxStatusEl=null; }
+
+    const area=document.createElement('div'); area.className='cx-chord-area';
+    if(cpExtraPanel==='7ths')       cxRender7ths(area);
+    else if(cpExtraPanel==='6ths')  cxRender6ths(area);
+    else if(cpExtraPanel==='slash') cxRenderSlash(area);
+    else if(cpVoicing==='open')     cxRenderOpen(area);
+    else if(cpVoicing==='barre')    cxRenderBarre(area);
+    else                            cxRenderTriad(area);
+    exList.appendChild(area);
+
+    const moreRow=document.createElement('div'); moreRow.className='cx-more-row';
+    [['7ths','7ths'],['6ths','6ths'],['slash','Slash']].forEach(function(pair){
+      moreRow.appendChild(cxPill(pair[1], cpExtraPanel===pair[0], ()=>{
+        cpExtraPanel = (cpExtraPanel===pair[0]?null:pair[0]); renderChordsPanel();
+      }));
+    });
+    exList.appendChild(moreRow);
+
+    cxUpdateLightBtn();
+    cxSetStickyTop(bar);
+  }
+
+  // Drop the chord bar just below whatever is pinned above it (site nav and/or
+  // the widget's Hold/Theory strip), measured live so it works whatever their
+  // real heights are. Falls back to 0 if nothing is pinned.
+  function cxSetStickyTop(bar){
+    const measure=()=>{
+      let top=0;
+      const cands=[document.querySelector('nav'),
+                   (document.getElementById('vm-home')||{}).parentElement,
+                   (document.getElementById('vm-hold-toggle')||{}).parentElement];
+      cands.forEach(el=>{
+        if(!el||el===bar) return;
+        const cs=getComputedStyle(el);
+        if(cs.position==='sticky'||cs.position==='fixed'){
+          const r=el.getBoundingClientRect();
+          if(r.top<=2 && r.height>0) top=Math.max(top, r.bottom);
+        }
+      });
+      bar.style.top=top+'px';
+    };
+    requestAnimationFrame(measure);
+    if(!window.__cxStickyBound){ window.__cxStickyBound=true;
+      window.addEventListener('resize',()=>{ const b=document.querySelector('.cx-bar'); if(b) cxSetStickyTop(b); }); }
+  }
+
+  function cxCommit(label, cmd){
+    if(cpProgMode){
+      cpProgression.push({label:label, cmd:cmd, type:'chord'});
+      cxRefreshProg();
+      if(cxSelEl) cxSelEl.textContent='Added '+label+'.';
+    } else {
+      cpLastChord={label:label, cmd:cmd};
+      sendFretboardCmdDirect(cmd);
+      if(cxSelEl) cxSelEl.textContent=label+' — lit. Tap another to light it.';
+      cxUpdateLightBtn();
+    }
+  }
+
+  function cxRefreshProg(){ cxBuildStrip(); cxUpdateLightBtn(); }
+
+  function cxBuildStrip(){
+    if(!cxStripEl) return;
+    cxStripEl.innerHTML='';
+    if(!cpProgression.length){
+      const e=document.createElement('span'); e.className='cx-strip-empty';
+      e.textContent='Tap chords to add them here.'; cxStripEl.appendChild(e); return;
+    }
+    cpProgression.forEach(function(ch,i){
+      const chip=document.createElement('span'); chip.className='cx-chip';
+      const lbl=document.createElement('span'); lbl.textContent=ch.label;
+      const x=document.createElement('span'); x.className='cx-chip-x'; x.textContent='×';
+      x.addEventListener('click', ()=>{ cpProgression.splice(i,1); cxRefreshProg(); });
+      chip.appendChild(lbl); chip.appendChild(x); cxStripEl.appendChild(chip);
+      if(i<cpProgression.length-1){ const a=document.createElement('span'); a.className='cx-arrow'; a.textContent='→'; cxStripEl.appendChild(a); }
+    });
+  }
+
+  function cxUpdateLightBtn(){
+    if(!cxLightBtn) return;
+    if(cpProgMode && cpProgression.length){
+      cxLightBtn.textContent='🎸 Light Progression'; cxLightBtn.disabled=false; cxLightBtn._mode='prog';
+    } else if(!cpProgMode && cpLastChord){
+      cxLightBtn.textContent='🎸 Light Chord'; cxLightBtn.disabled=false; cxLightBtn._mode='chord';
+    } else {
+      cxLightBtn.textContent = cpProgMode ? '🎸 Light Progression' : '🎸 Light Chord';
+      cxLightBtn.disabled=true; cxLightBtn._mode=null;
+    }
+    if(cxClearBtn) cxClearBtn.disabled = !cpProgMode || !cpProgression.length;
+  }
+
+  // ── grid helpers ──
+  function cxGrid(area, colLabels, tmplCols){
+    const g=document.createElement('div'); g.className='cx-grid'; g.style.gridTemplateColumns=tmplCols;
+    const blank=document.createElement('div'); blank.className='cx-colhdr'; blank.textContent=''; g.appendChild(blank);
+    colLabels.forEach(function(c){ const h=document.createElement('div'); h.className='cx-colhdr'; h.textContent=c; g.appendChild(h); });
+    area.appendChild(g); return g;
+  }
+  function cxRootLabel(g, root){ const l=document.createElement('div'); l.className='cx-cell cx-rootlabel'; l.textContent=root; g.appendChild(l); }
+  function cxCellBtn(text, cls, cmd, label){
+    const b=document.createElement('button'); b.className='cx-cell'+(cls?' '+cls:''); b.textContent=text;
+    if(cls==='greyed'){ b.disabled=true; }
+    else b.addEventListener('click', ()=>cxCommit(label, cmd));
+    return b;
+  }
+
+  function cxRenderOpen(area){
+    const leg=document.createElement('div'); leg.className='cx-legend';
+    leg.innerHTML='<span><span class="cx-sw" style="background:#1a2536;border:1px solid #5a6b85"></span>Open shape</span>'+
+                  '<span><span class="cx-sw" style="background:#241d10;border:1px solid #e0a53d"></span>Basic (not true open)</span>'+
+                  '<span><span class="cx-sw" style="background:#12151c;border:1px dashed #33415a"></span>Not available</span>';
+    area.appendChild(leg);
+    const g=cxGrid(area, ['Major','Minor'], 'minmax(38px,0.7fr) 1fr 1fr');
+    CX_ALL_ROOTS.forEach(function(root){
+      cxRootLabel(g, root);
+      if(CX_OPEN_MAJ.indexOf(root)>=0) g.appendChild(cxCellBtn(root,'open','CHORD '+root,'Open '+root+' Major'));
+      else if(root==='F')              g.appendChild(cxCellBtn('F','fchord','CHORD F','F Major'));
+      else                             g.appendChild(cxCellBtn(root,'greyed',null,null));
+      if(CX_OPEN_MIN.indexOf(root)>=0) g.appendChild(cxCellBtn(root+'m','open','CHORD '+root+'m','Open '+root+' Minor'));
+      else                             g.appendChild(cxCellBtn(root+'m','greyed',null,null));
+    });
+    const n=document.createElement('div'); n.className='cx-note';
+    n.textContent="F isn't a true open chord, but it's a must-know basic — shown in gold. Roots without an open shape are greyed; switch to Barre to play those.";
+    area.appendChild(n);
+  }
+
+  function cxRenderBarre(area){
+    const minor = cpQuality==='minor';
+    const g=cxGrid(area, CX_BARRE_COLS.map(function(s){return s+' shape';}), 'minmax(34px,0.55fr) repeat(5,1fr)');
+    CX_ALL_ROOTS.forEach(function(root){
+      cxRootLabel(g, root);
+      CX_BARRE_COLS.forEach(function(shape){
+        if(minor && (shape==='C'||shape==='G')){ g.appendChild(cxCellBtn(root,'greyed',null,null)); return; }
+        const cmd=shape+' SHAPE '+root+(minor?'m':'');
+        const label=root+' '+(minor?'Minor':'Major')+' — '+shape+' shape';
+        g.appendChild(cxCellBtn(root,'barrecolor',cmd,label));
+      });
+    });
+    const n=document.createElement('div'); n.className='cx-note';
+    n.textContent = minor
+      ? 'Quality is set to Minor. C and G shapes have no standard minor — use E, A, or D shape (greyed here).'
+      : 'Quality is set to Major (change it in the bar). Any shape plays any root — pick the one nearest your hand.';
+    area.appendChild(n);
+  }
+
+  function cxRenderTriad(area){
+    const minor = cpQuality==='minor';
+    const g=cxGrid(area, CX_TRIAD_COLS, 'minmax(30px,0.5fr) repeat(6,1fr)');
+    CX_ALL_ROOTS.forEach(function(root){
+      cxRootLabel(g, root);
+      CX_TRIAD_COLS.forEach(function(str){
+        const cmd='TRIAD '+str+' '+root+(minor?'M':'');
+        const label=root+' '+(minor?'Minor':'Major')+' triad ('+str+')';
+        g.appendChild(cxCellBtn(root,'barrecolor',cmd,label));
+      });
+    });
+    const n=document.createElement('div'); n.className='cx-note';
+    n.textContent='Columns are the string the root sits on (HE = high E … LE = low E). Quality follows the Major/Minor setting in the bar.';
+    area.appendChild(n);
+  }
+
+  function cxRender7ths(area){
+    const g=cxGrid(area, ['7th','Min7th','Maj7'], 'minmax(38px,0.7fr) 1fr 1fr 1fr');
+    CX_ALL_ROOTS.forEach(function(root){
+      cxRootLabel(g, root);
+      const o7=OPEN_VOICINGS[root+'7'];
+      g.appendChild(cxCellBtn(root+'7', o7?'open':'barrecolor', o7||('E SHAPE '+root+'7'), root+' 7th'));
+      const om=OPEN_VOICINGS[root+'min7'];
+      g.appendChild(cxCellBtn(root+'m7', om?'open':'barrecolor', om||('E SHAPE '+root+'min7'), root+' Minor 7th'));
+      g.appendChild(cxCellBtn(root+'M7','barrecolor','E SHAPE '+root+'maj7', root+' Major 7th'));
+    });
+    const n=document.createElement('div'); n.className='cx-note';
+    n.textContent='White = real open 7th shape. Blue = barre (E-shape), which covers every root. Maj7 has no open shape yet, so it always uses the barre.';
+    area.appendChild(n);
+  }
+
+  function cxRender6ths(area){
+    const naturals=['C','D','E','F','G','A','B'];
+    const g=cxGrid(area, ['6th','Minor 6th'], 'minmax(38px,0.7fr) 1fr 1fr');
+    naturals.forEach(function(root){
+      cxRootLabel(g, root);
+      g.appendChild(cxCellBtn(root+'6','open','CHORD '+root+'6', root+' 6th'));
+      g.appendChild(cxCellBtn(root+'m6','open','CHORD '+root+'m6', root+' Minor 6th'));
+    });
+    const n=document.createElement('div'); n.className='cx-note';
+    n.textContent='Open-position 6th chords for the natural roots.';
+    area.appendChild(n);
+  }
+
+  function cxRenderSlash(area){
+    const slash=['AM/F#','AM7/G','C/B','C/G','D/A','D/F#','EM/B','EM/G','F/A','G/B','G/F#'];
+    const wrap=document.createElement('div'); wrap.className='cx-slash-wrap';
+    slash.forEach(function(sc){
+      const disp=sc.replace('M/','m/').replace(/^AM7/,'Am7');
+      const b=document.createElement('button'); b.className='cx-cell barrecolor'; b.style.margin='3px'; b.style.minWidth='68px';
+      b.textContent=disp;
+      b.addEventListener('click', ()=>cxCommit(disp, 'CHORD '+sc));
+      wrap.appendChild(b);
+    });
+    area.appendChild(wrap);
+    const n=document.createElement('div'); n.className='cx-note';
+    n.textContent='Heads up: slash chords are being reworked and may not all be correct yet.';
+    area.appendChild(n);
   }
 
   function buildProgSection(){
