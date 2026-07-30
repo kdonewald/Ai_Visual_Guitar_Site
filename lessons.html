@@ -1337,6 +1337,11 @@
   .cx-lit{color:#3ddc84;font-weight:800;}
   .cx-progpill{flex:0 0 auto;min-width:60px;}
   .cx-act.light{flex:1.5 1 auto;}
+  .cx-div{flex:0 0 auto;width:1px;align-self:stretch;background:#33415a;margin:3px 4px;}
+  .cx-progpill{flex:0 0 auto;min-width:64px;border-style:dashed;}
+  .cx-progpill.active{border-style:solid;}
+  .cx-qrow{margin-top:6px;padding-top:7px;border-top:1px solid #232c3c;align-items:center;}
+  .cx-qlabel{flex:0 0 auto;font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#8b96a8;padding:0 8px 0 2px;}
   .cx-slash-wrap{display:flex;flex-wrap:wrap;}
 </style>
 </head>
@@ -2977,32 +2982,29 @@
   function renderChordsPanel(){
     exList.innerHTML='';
 
-    // ── Sticky two-row bar ──
+    // ── Sticky bar: Row 1 = voicing + Prog · Row 2 = actions ──
+    // Quality (Major/Minor) is NOT in the bar — it only applies to Barre/Triad,
+    // where it shows as a strip under the bar. Open already shows both qualities,
+    // and 7ths/6ths/Slash carry their own quality in their columns.
     const bar=document.createElement('div'); bar.className='cx-bar';
 
-    // Row 1 — quality + voicing. Hidden entirely while a 7ths/6ths/Slash panel
-    // is open: those have their own fixed voicings, so Major/Minor and
-    // Open/Barre/Triad don't apply there and only cause confusion.
-    if(!cpExtraPanel){
-      const row1=document.createElement('div'); row1.className='cx-row';
-      const qSeg=document.createElement('div'); qSeg.className='cx-seg';
-      qSeg.appendChild(cxPill('Major', cpQuality==='major', ()=>{ cpQuality='major'; renderChordsPanel(); }));
-      qSeg.appendChild(cxPill('Minor', cpQuality==='minor', ()=>{ cpQuality='minor'; renderChordsPanel(); }));
-      row1.appendChild(qSeg);
-      const vSeg=document.createElement('div'); vSeg.className='cx-seg';
-      [['open','Open'],['barre','Barre'],['triad','Triad']].forEach(function(pair){
-        vSeg.appendChild(cxPill(pair[1], cpVoicing===pair[0], ()=>{
-          cpVoicing=pair[0]; cpExtraPanel=null; renderChordsPanel();
-        }));
-      });
-      row1.appendChild(vSeg);
-      bar.appendChild(row1);
-    }
-
-    const row2=document.createElement('div'); row2.className='cx-row';
-    row2.appendChild(cxPill(cpProgMode?'Prog \u2713':'Prog', cpProgMode, ()=>{
+    // Row 1 — voicing selector (pick one) + progression toggle
+    const row1=document.createElement('div'); row1.className='cx-row';
+    const vSeg=document.createElement('div'); vSeg.className='cx-seg';
+    [['open','Open'],['barre','Barre'],['triad','Triad']].forEach(function(pair){
+      vSeg.appendChild(cxPill(pair[1], cpVoicing===pair[0] && !cpExtraPanel, ()=>{
+        cpVoicing=pair[0]; cpExtraPanel=null; renderChordsPanel();
+      }));
+    });
+    row1.appendChild(vSeg);
+    const vdiv=document.createElement('div'); vdiv.className='cx-div'; row1.appendChild(vdiv);
+    row1.appendChild(cxPill(cpProgMode?'Prog \u2713':'Prog', cpProgMode, ()=>{
       cpProgMode=!cpProgMode; renderChordsPanel();
     }, 'cx-progpill'));
+    bar.appendChild(row1);
+
+    // Row 2 — actions
+    const row2=document.createElement('div'); row2.className='cx-row';
     cxLightBtn=document.createElement('button'); cxLightBtn.className='cx-act light';
     cxLightBtn.addEventListener('click', ()=>{
       if(cxLightBtn._mode==='prog') playProgression(cxStatusEl, cxLightBtn);
@@ -3019,6 +3021,19 @@
     });
     row2.appendChild(cxLightBtn); row2.appendChild(cxClearBtn); row2.appendChild(resetBtn);
     bar.appendChild(row2);
+
+    // Quality strip — Barre / Triad only, pinned inside the sticky bar
+    if(!cpExtraPanel && (cpVoicing==='barre' || cpVoicing==='triad')){
+      const qRow=document.createElement('div'); qRow.className='cx-row cx-qrow';
+      const qLbl=document.createElement('span'); qLbl.className='cx-qlabel'; qLbl.textContent='Quality';
+      qRow.appendChild(qLbl);
+      const qSeg=document.createElement('div'); qSeg.className='cx-seg';
+      qSeg.appendChild(cxPill('Major', cpQuality==='major', ()=>{ cpQuality='major'; renderChordsPanel(); }));
+      qSeg.appendChild(cxPill('Minor', cpQuality==='minor', ()=>{ cpQuality='minor'; renderChordsPanel(); }));
+      qRow.appendChild(qSeg);
+      bar.appendChild(qRow);
+    }
+
     exList.appendChild(bar);
 
     cxSelEl=document.createElement('div'); cxSelEl.className='cx-sel';
