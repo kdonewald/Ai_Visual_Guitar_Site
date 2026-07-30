@@ -1342,6 +1342,9 @@
   .cx-progpill.active{border-style:solid;}
   .cx-qrow{margin-top:6px;padding-top:7px;border-top:1px solid #232c3c;align-items:center;}
   .cx-qlabel{flex:0 0 auto;font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#8b96a8;padding:0 8px 0 2px;}
+  .cx-demohdr{cursor:pointer;background:transparent;border:none;color:#3ddc84;font-family:inherit;font-weight:800;padding:2px 0 1px;font-size:10.5px;letter-spacing:.4px;text-transform:uppercase;white-space:nowrap;}
+  .cx-demohdr:active{opacity:.55;}
+  .cx-democap{font-size:12px;color:#9aa4b5;font-style:italic;margin:2px 2px 9px;}
   .cx-slash-wrap{display:flex;flex-wrap:wrap;}
 </style>
 </head>
@@ -3145,8 +3148,24 @@
   function cxGrid(area, colLabels, tmplCols){
     const g=document.createElement('div'); g.className='cx-grid'; g.style.gridTemplateColumns=tmplCols;
     const blank=document.createElement('div'); blank.className='cx-colhdr'; blank.textContent=''; g.appendChild(blank);
-    colLabels.forEach(function(c){ const h=document.createElement('div'); h.className='cx-colhdr'; h.textContent=c; g.appendChild(h); });
+    colLabels.forEach(function(c){
+      if(c && c.demoCmd){
+        const h=document.createElement('button'); h.className='cx-colhdr cx-demohdr';
+        h.textContent=c.label+' \u25B6'; h.title='Play the '+c.label+' shape up the neck';
+        h.addEventListener('click', ()=>cxFireDemo(c.demoCmd, c.demoName||c.label));
+        g.appendChild(h);
+      } else {
+        const h=document.createElement('div'); h.className='cx-colhdr'; h.textContent=(c&&c.label)?c.label:c; g.appendChild(h);
+      }
+    });
     area.appendChild(g); return g;
+  }
+  // Column-header demos: fire the slide-up animation directly. It is a
+  // demonstration, not a chord for the strip, so it bypasses cxCommit and runs
+  // even in Progression mode. CANCEL / Reset stop it mid-slide.
+  function cxFireDemo(cmd, name){
+    sendFretboardCmdDirect(cmd);
+    if(cxSelEl) cxSelEl.innerHTML='Demo: <span class="cx-lit">'+name+'</span> climbing the neck — Reset to stop';
   }
   function cxRootLabel(g, root){ const l=document.createElement('div'); l.className='cx-cell cx-rootlabel'; l.textContent=root; g.appendChild(l); }
   function cxCellBtn(text, cls, cmd, label){
@@ -3181,7 +3200,12 @@
 
   function cxRenderBarre(area){
     const minor = cpQuality==='minor';
-    const g=cxGrid(area, CX_BARRE_COLS.map(function(s){return s+' shape';}), 'minmax(34px,0.55fr) repeat(5,1fr)');
+    const cap=document.createElement('div'); cap.className='cx-democap'; cap.textContent='Tap a column \u25B6 to watch that shape climb the neck.'; area.appendChild(cap);
+    const heads=CX_BARRE_COLS.map(function(s){
+      const canMinor=(s==='E'||s==='A'||s==='D');
+      return {label:s, demoCmd:s+' SHAPE PLAY'+((minor&&canMinor)?' MINOR':''), demoName:s+' shape'+((minor&&canMinor)?' (minor)':'')};
+    });
+    const g=cxGrid(area, heads, 'minmax(34px,0.55fr) repeat(5,1fr)');
     CX_ALL_ROOTS.forEach(function(root){
       cxRootLabel(g, root);
       CX_BARRE_COLS.forEach(function(shape){
@@ -3200,7 +3224,11 @@
 
   function cxRenderTriad(area){
     const minor = cpQuality==='minor';
-    const g=cxGrid(area, CX_TRIAD_COLS, 'minmax(30px,0.5fr) repeat(6,1fr)');
+    const cap=document.createElement('div'); cap.className='cx-democap'; cap.textContent='Tap a column \u25B6 to watch that shape climb the string.'; area.appendChild(cap);
+    const heads=CX_TRIAD_COLS.map(function(str){
+      return {label:str, demoCmd:'TRIAD '+str+' PLAY'+(minor?' MINOR':''), demoName:str+' triad'+(minor?' (minor)':'')};
+    });
+    const g=cxGrid(area, heads, 'minmax(30px,0.5fr) repeat(6,1fr)');
     CX_ALL_ROOTS.forEach(function(root){
       cxRootLabel(g, root);
       CX_TRIAD_COLS.forEach(function(str){
