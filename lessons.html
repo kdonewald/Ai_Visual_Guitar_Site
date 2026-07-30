@@ -18,7 +18,7 @@
     --red:#e05540; --red-dark:#c44432; --blue:#4f8ef7;
     --gold:#e8a020; --teal:#2dd4bf; --green:#3dba72;
     --vizi:#3dba72; --vizi-light:#2e9658;
-    --text:#f0ede8; --text-mid:#a89f94; --text-light:#6b6560;
+    --text:#f0ede8; --text-mid:#cbc4ba; --text-light:#b0a89e;
     --white:#1a1d2e; --shadow:rgba(0,0,0,0.35); --shadow-lg:rgba(0,0,0,0.55);
     --cream:#0f1117; --cream-dark:rgba(255,255,255,0.10); --cream-mid:rgba(255,255,255,0.06);
     /* strum player */
@@ -552,8 +552,8 @@
   .tab-btn.primary{background:var(--teal);border-color:var(--teal);color:white;font-weight:600}
   .tab-notes-row{display:flex;gap:.5rem;margin-bottom:.6rem}
   .tab-notes-box{flex:1;background:#0a0a0a;border-radius:8px;padding:.6rem .75rem;min-height:36px}
-  .tab-notes-label{font-family:'DM Mono',monospace;font-size:.87rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-bottom:.3rem}
-  .tab-notes-content{font-family:'DM Mono',monospace;font-size:.87rem;color:rgba(255,255,255,0.75);line-height:1.5;word-break:break-all}
+  .tab-notes-label{font-family:'DM Mono',monospace;font-size:.87rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.86);margin-bottom:.3rem}
+  .tab-notes-content{font-family:'DM Mono',monospace;font-size:.87rem;color:rgba(255,255,255,0.92);line-height:1.5;word-break:break-all}
   .tab-stepper{display:flex;align-items:center;gap:.5rem;background:var(--cream);border:2px solid var(--cream-dark);border-radius:10px;padding:.6rem .85rem;margin-bottom:.5rem}
   .tab-step-btn{width:34px;height:34px;border-radius:50%;border:2px solid var(--cream-dark);background:var(--white);font-size:1rem;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .tab-step-btn:hover{border-color:var(--blue)}
@@ -3388,6 +3388,31 @@
     window.location.href='vizi.html?'+p.toString();
   }
 
+  // Warmup scales as a compact grid: rows = root, columns = Major / Minor /
+  // Pentatonic. Far less scrolling than the tall card list. Tapping a cell does
+  // exactly what the old card did (Hold on, then hand the scale to Vizi).
+  function renderWarmupScaleGrid(def){
+    const roots=['G','A','C','D','E'];
+    const cols=[['Major','Major'],['Minor','Minor'],['Pentatonic','Minor Pentatonic']];
+    const area=document.createElement('div'); area.className='cx-chord-area';
+    const cap=document.createElement('div'); cap.className='cx-democap'; cap.textContent='Tap a scale to light it on the neck and warm up.'; area.appendChild(cap);
+    const g=document.createElement('div'); g.className='cx-grid'; g.style.gridTemplateColumns='minmax(30px,0.5fr) repeat(3,1fr)';
+    const blank=document.createElement('div'); blank.className='cx-colhdr'; blank.textContent=''; g.appendChild(blank);
+    cols.forEach(function(c){ const h=document.createElement('div'); h.className='cx-colhdr'; h.textContent=c[0]; g.appendChild(h); });
+    roots.forEach(function(root){
+      const rl=document.createElement('div'); rl.className='cx-cell cx-rootlabel'; rl.textContent=root; g.appendChild(rl);
+      cols.forEach(function(c){
+        const name=root+' '+c[1];
+        const b=document.createElement('button'); b.className='cx-cell'; b.textContent=root;
+        b.title=name;
+        b.addEventListener('click', async ()=>{ await activateHoldOnly(); goToVizi('warmup', name); });
+        g.appendChild(b);
+      });
+    });
+    area.appendChild(g);
+    exList.appendChild(area);
+  }
+
   function renderChoicePanel(stage){
     if (stage.id==='strumming'){
       renderStrummingPanel();
@@ -3418,6 +3443,8 @@
     // showStageTipOrNote), not here, so it's not duplicated on the page.
     if (stage.id === 'warmup'){
       activateHoldOnly();
+      renderWarmupScaleGrid(def);
+      return;
     }
 
     // Soloing: Bandcamp + grouped key/scale
