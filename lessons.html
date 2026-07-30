@@ -4123,6 +4123,20 @@
       E: { He:[0,2,3], B:[0,2,3], G:[0,1,2], D:[2,4,5], A:[2,4,5], Le:[0,2,3] },
     };
 
+    // ── Public-domain melodies (single-note; ≤8 notes/page fill the 2×4 grid) ──
+    const MELODIES=[
+      {name:'Ode to Joy', key:'C', pages:[['SHe0','SHe0','SHe1','SHe3','SHe3','SHe1','SHe0','SB3'],['SB1','SB1','SB3','SHe0','SHe0','SB3','SB3']]},
+      {name:'Twinkle / ABC', key:'D', pages:[['SD0','SD0','SG2','SG2','SB0','SB0','SG2'],['SG0','SG0','SD4','SD4','SD2','SD2','SD0']]},
+      {name:'Mary Had a Little Lamb', key:'C', pages:[['SHe0','SB3','SB1','SB3','SHe0','SHe0','SHe0'],['SB3','SB3','SB3','SHe0','SHe3','SHe3']]},
+      {name:'Amazing Grace', key:'G', pages:[['SD0','SG0','SB0','SG0','SB0','SG2','SG0']]},
+      {name:'When the Saints', key:'C', pages:[['SB1','SHe0','SHe1','SHe3','SB1','SHe0','SHe1','SHe3'],['SHe3','SHe0','SB1','SHe0','SB3']]},
+      {name:'Jingle Bells', key:'C', pages:[['SHe0','SHe0','SHe0','SHe0','SHe0','SHe0','SHe0','SHe3'],['SB1','SB3','SHe0']]},
+      {name:'Happy Birthday', key:'G', pages:[['SD0','SD0','SD2','SD0','SG0','SD4'],['SD0','SD0','SD2','SD0','SG2','SG0']]},
+      {name:'Frère Jacques', key:'G', pages:[['SG0','SG2','SB0','SG0','SG0','SG2','SB0','SG0'],['SB0','SB1','SB3','SB0','SB1','SB3']]},
+      {name:'Scarborough Fair', key:'Em', pages:[['SD2','SG4','SG4','SG2','SG4','SG2','SG0']]},
+      {name:'Auld Lang Syne', key:'G', pages:[['SD0','SG0','SG0','SG0','SB0','SG2','SG0','SG2']]},
+    ];
+
     // Grid: grid[measure][beat][string] = fret|null
     const grid = [
       [[null,null,null,null,null,null],[null,null,null,null,null,null],[null,null,null,null,null,null],[null,null,null,null,null,null]],
@@ -4130,6 +4144,7 @@
     ];
 
     let tbSelectedCell=null;
+    let tbMode='builder', tbCurMelody=null, tbCurPage=0;
 
     // ── CSS ──────────────────────────────────────────────────
     if(!document.getElementById('tbCSS')){
@@ -4203,6 +4218,18 @@
         .tb-action-btn.clr{background:transparent;color:var(--text-mid);border:1.5px solid var(--border);font-size:.82rem;}
         .tb-action-btn.clr:hover{border-color:var(--red);color:var(--red);}
         .tb-clr-row{display:flex;gap:.4rem;margin-bottom:.75rem;}
+        .tb-mode-row{display:flex;gap:.4rem;margin-bottom:.75rem;}
+        .tb-mode-btn{font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:700;flex:1;padding:.5rem .9rem;border-radius:9px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.6);cursor:pointer;transition:all .18s;}
+        .tb-mode-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(232,160,32,.12);}
+        .tb-melody-row{display:flex;gap:.4rem;margin-bottom:.75rem;flex-wrap:wrap;}
+        .tb-melody-btn{font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;padding:.4rem .8rem;border-radius:20px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.65);cursor:pointer;transition:all .18s;}
+        .tb-melody-btn:hover{border-color:var(--green);color:var(--green);background:rgba(61,186,114,.08);}
+        .tb-melody-btn.active{border-color:var(--green);color:var(--green);background:rgba(61,186,114,.14);}
+        .tb-page-row{display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:.75rem;}
+        .tb-page-btn{font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:700;padding:.45rem 1rem;border-radius:9px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.7);cursor:pointer;transition:all .18s;}
+        .tb-page-btn:hover:not(:disabled){border-color:var(--blue);color:var(--blue);}
+        .tb-page-btn:disabled{opacity:.35;cursor:not-allowed;}
+        .tb-page-counter{font-family:'DM Mono',monospace;font-size:.8rem;color:var(--text-mid);min-width:6rem;text-align:center;}
       `;
       document.head.appendChild(st);
     }
@@ -4214,6 +4241,13 @@
     const topRow=document.createElement('div'); topRow.className='tb-top-row';
     topRow.innerHTML='<span class="tb-title">Tab Builder</span>';
     wrap.appendChild(topRow);
+
+    // Mode toggle: Builder (training) ↔ Melodies
+    const modeRow=document.createElement('div'); modeRow.className='tb-mode-row';
+    const modeBuilderBtn=document.createElement('button'); modeBuilderBtn.className='tb-mode-btn active'; modeBuilderBtn.textContent='Builder';
+    const modeMelodyBtn=document.createElement('button'); modeMelodyBtn.className='tb-mode-btn'; modeMelodyBtn.textContent='Melodies';
+    modeRow.appendChild(modeBuilderBtn); modeRow.appendChild(modeMelodyBtn);
+    wrap.appendChild(modeRow);
 
 
 
@@ -4227,6 +4261,11 @@
       presetRow.appendChild(pb);
     });
     wrap.appendChild(presetRow);
+
+    // Melody picker (hidden until Melodies mode)
+    const melodyRow=document.createElement('div'); melodyRow.className='tb-melody-row'; melodyRow.style.display='none';
+    MELODIES.forEach((tune,ti)=>{ const mb=document.createElement('button'); mb.className='tb-melody-btn'; mb.textContent=tune.name; mb.addEventListener('click',()=>selectMelody(ti)); melodyRow.appendChild(mb); });
+    wrap.appendChild(melodyRow);
 
     // Grid
     const gridWrap=document.createElement('div'); gridWrap.className='tb-grid-wrap';
@@ -4266,6 +4305,16 @@
       if(m===0){ const div=document.createElement('div'); div.className='tb-divider'; gridWrap.appendChild(div); }
     }
     wrap.appendChild(gridWrap);
+
+    // Paging (Melodies mode; hidden until a tune is picked)
+    const pageRow=document.createElement('div'); pageRow.className='tb-page-row'; pageRow.style.display='none';
+    const prevBtn=document.createElement('button'); prevBtn.className='tb-page-btn'; prevBtn.innerHTML='&#9664; Prev 8';
+    const pageCounter=document.createElement('div'); pageCounter.className='tb-page-counter'; pageCounter.textContent='';
+    const nextBtn=document.createElement('button'); nextBtn.className='tb-page-btn'; nextBtn.innerHTML='Next 8 &#9654;';
+    prevBtn.addEventListener('click',()=>{ if(tbCurMelody&&tbCurPage>0){ tbCurPage--; loadMelodyPage(); } });
+    nextBtn.addEventListener('click',()=>{ if(tbCurMelody&&tbCurPage<tbCurMelody.pages.length-1){ tbCurPage++; loadMelodyPage(); } });
+    pageRow.appendChild(prevBtn); pageRow.appendChild(pageCounter); pageRow.appendChild(nextBtn);
+    wrap.appendChild(pageRow);
 
     // Clear buttons
     const clrRow=document.createElement('div'); clrRow.className='tb-clr-row';
@@ -4309,6 +4358,7 @@
     }
 
     function selectCell(m,b,s){
+      if(tbMode==='melody')return;
       if(tbSelectedCell){ const {m:pm,b:pb,s:ps}=tbSelectedCell; cells[pm][pb][ps].classList.remove('selected'); }
       tbSelectedCell={m,b,s};
       cells[m][b][s].classList.remove('empty-ph'); cells[m][b][s].classList.add('selected');
@@ -4348,6 +4398,38 @@
       }
       status.textContent=['Single','Double','Triple'][type]+' note pattern — tap again for a different one';
     }
+
+    // ── Melodies mode ────────────────────────────────────────
+    function parseTokTB(t){ const mm=t.match(/^S(He|B|G|D|A|Le)(\d+)$/); if(!mm)return null; const idx={He:0,B:1,G:2,D:3,A:4,Le:5}; return {s:idx[mm[1]], f:parseInt(mm[2],10)}; }
+    function loadMelodyPage(){
+      clearAll();
+      tbCurMelody.pages[tbCurPage].forEach((tok,k)=>{ const pp=parseTokTB(tok); if(!pp)return; const m=Math.floor(k/4),b=k%4; grid[m][b][pp.s]=pp.f; updateCell(m,b,pp.s); });
+      pageCounter.textContent=tbCurMelody.name+' · '+(tbCurPage+1)+'/'+tbCurMelody.pages.length;
+      prevBtn.disabled=(tbCurPage===0);
+      nextBtn.disabled=(tbCurPage===tbCurMelody.pages.length-1);
+      pageRow.style.display='flex';
+      status.textContent='Tap Show to light this page — Prev/Next to move.';
+    }
+    function selectMelody(ti){
+      tbCurMelody=MELODIES[ti]; tbCurPage=0;
+      Array.from(melodyRow.children).forEach((b,i)=>b.classList.toggle('active',i===ti));
+      loadMelodyPage();
+    }
+    function applyMode(mode){
+      tbMode=mode; const melody=(mode==='melody');
+      modeBuilderBtn.classList.toggle('active',!melody);
+      modeMelodyBtn.classList.toggle('active',melody);
+      presetRow.style.display=melody?'none':'flex';
+      numWrap.style.display=melody?'none':'flex';
+      clrRow.style.display=melody?'none':'flex';
+      melodyRow.style.display=melody?'flex':'none';
+      clearAll();
+      tbCurMelody=null; tbCurPage=0; pageRow.style.display='none';
+      Array.from(melodyRow.children).forEach(b=>b.classList.remove('active'));
+      status.textContent=melody?'Pick a tune to load it into the grid.':'Choose a preset or tap a cell to start';
+    }
+    modeBuilderBtn.addEventListener('click',()=>applyMode('builder'));
+    modeMelodyBtn.addEventListener('click',()=>applyMode('melody'));
 
     // ── Show: hand the whole sequence to the fretboard, no JS timing ──
     async function sendFretboardCmd(cmd){
