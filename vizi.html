@@ -1225,13 +1225,30 @@
         body: JSON.stringify({ message, mode: requestMode })
       });
       if (res.ok && !(res.headers.get('content-type')||'').includes('application/json')){
-        pendingIntroText = dec(res.headers.get('X-Vizi-Text'));
-        pendingIntroCmd  = dec(res.headers.get('X-Vizi-Commands'));
-        pendingIntroBlob = await res.blob();
-        setBtn('intro');
-        btn.innerHTML = 'Tap to<br>start';
-        setStatus('Ready \u2014 tap to hear Vizi');
-        applyMetronomeCommand(pendingIntroCmd || '');
+        const vText = dec(res.headers.get('X-Vizi-Text'));
+        const vCmd  = dec(res.headers.get('X-Vizi-Commands'));
+        if (stageId === 'warmup'){
+          // Warmup: no spoken reply. The student was already told to pick a
+          // scale, so we just light it — the SCALE command Vizi returned is
+          // already queued to the fretboard server-side. Drain (don't play)
+          // the audio, show her text for reference, and leave the button ready
+          // so they can hold-to-talk and ask; she still has the pick in
+          // context. Also sidesteps the mobile audio-autoplay block.
+          try { await res.blob(); } catch(e){}
+          if (vText) showPanel('pVizi','bVizi', vText);
+          applyMetronomeCommand(vCmd || '');
+          setBtn('');
+          btn.innerHTML = 'Hold<br>to Talk';
+          setStatus('Scale lit \u2014 hold to talk if you have a question');
+        } else {
+          pendingIntroText = vText;
+          pendingIntroCmd  = vCmd;
+          pendingIntroBlob = await res.blob();
+          setBtn('intro');
+          btn.innerHTML = 'Tap to<br>start';
+          setStatus('Ready \u2014 tap to hear Vizi');
+          applyMetronomeCommand(pendingIntroCmd || '');
+        }
       } else {
         setBtn('');
         btn.innerHTML = 'Hold<br>to Talk';
