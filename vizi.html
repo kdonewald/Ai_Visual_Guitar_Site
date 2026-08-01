@@ -551,6 +551,26 @@
     } catch(e){ return '000000'; }
   }
 
+  // ── P2: OPEN <stage> routing ──
+  // Vizi emits e.g. "| OPEN strumming". Map the category name to the real
+  // stage id, stash it, and navigate to the stage hub, which auto-opens it
+  // (lessons.html reads sessionStorage.viziReturnStage on load).
+  const OPEN_STAGE_MAP = {
+    warmup:'warmup', strumming:'strumming', chords:'chords', song:'song',
+    soloing:'soloing', tab:'tab', tuning:'tuning',
+    theory:'chord-theory', build:'chord-theory', 'chord-theory':'chord-theory'
+  };
+  function maybeOpenStage(commandsStr){
+    if (!commandsStr) return false;
+    const m = commandsStr.match(/\bOPEN\s+([a-z-]+)/i);
+    if (!m) return false;
+    const id = OPEN_STAGE_MAP[m[1].toLowerCase()];
+    if (!id) return false;
+    try { sessionStorage.setItem('viziReturnStage', id); } catch(e){}
+    window.location.href = 'lessons.html';
+    return true;
+  }
+
   async function sendToVizi(b64){
     setBtn('thinking'); btn.innerHTML = 'Vizi is<br>Thinking'; setStatus('Vizi is thinking…');
     try {
@@ -574,6 +594,7 @@
       const blob = await res.blob();
       setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('');
       await playBlob(blob);
+      if (maybeOpenStage(commands)) return;   // she routed us to a stage — go now that she's done talking
       if (currentMode === 'song') currentMode = 'talk';
       if (!pendingIntroBlob) setStatus('Ready');
     } catch(e){ setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Could not reach Vizi — check connection'); resumeBackingTrackInOpener(); }
