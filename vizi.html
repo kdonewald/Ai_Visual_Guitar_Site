@@ -436,8 +436,20 @@
   }
 
   async function ensureMic(){
-    if (micReady) return;
+    // Always resume first — the browser suspends the AudioContext after idle.
     await ensureAudioCtx();
+    // Is the existing mic still alive? After idle the OS can end the track,
+    // yet micReady stays true — that stale state was the "didn't catch that"
+    // bug (recording into a dead pipeline until the app was reopened).
+    const live = micReady && stream &&
+                 stream.getTracks().some(t => t.readyState === 'live');
+    if (live) return;
+    // Rebuild from scratch: drop any stale nodes/stream, then re-acquire.
+    try { if (processor) processor.disconnect(); } catch(e){}
+    try { if (source)    source.disconnect(); }    catch(e){}
+    try { if (sink)      sink.disconnect(); }      catch(e){}
+    try { if (stream)    stream.getTracks().forEach(t => t.stop()); } catch(e){}
+    micReady = false;
     stream    = await navigator.mediaDevices.getUserMedia({
       audio:{ channelCount:1, echoCancellation:true, noiseSuppression:true, autoGainControl:true }
     });
@@ -513,12 +525,38 @@
     finally { showIdle(); resumeBackingTrackInOpener(); }
   }
 
+  // ── Progress code (P5): 6 positional digits, one per category ──
+  // Order = code position: 1 warmup, 2 strumming, 3 chords, 4 song, 5 soloing, 6 theory.
+  // Digit = the student's level (0-9); 0 = intro video watched, not started.
+  const PROGRESS_CATS = ['warmup','strumming','chords','song','soloing','theory'];
+  // Test override: visiting with ?progress=313040 seeds the levels (no code-entry UI yet).
+  (function initProgressOverride(){
+    try {
+      const q = new URLSearchParams(location.search).get('progress');
+      if (q && /^[0-9]{6}$/.test(q)){
+        const pr = JSON.parse(localStorage.getItem('viziProgress')||'{}');
+        pr.levels = {};
+        PROGRESS_CATS.forEach((c,i)=> pr.levels[c] = parseInt(q[i],10));
+        localStorage.setItem('viziProgress', JSON.stringify(pr));
+      }
+    } catch(e){}
+  })();
+  function getProgressCode(){
+    try {
+      const lv = (JSON.parse(localStorage.getItem('viziProgress')||'{}').levels) || {};
+      return PROGRESS_CATS.map(c => {
+        const n = parseInt(lv[c],10);
+        return (Number.isFinite(n) && n>=0 && n<=9) ? String(n) : '0';
+      }).join('');
+    } catch(e){ return '000000'; }
+  }
+
   async function sendToVizi(b64){
     setBtn('thinking'); btn.innerHTML = 'Vizi is<br>Thinking'; setStatus('Vizi is thinking…');
     try {
       const res = await fetch(RAILWAY_URL + '/stt-claude-tts', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ audio:b64, sampleRate:TARGET_RATE, mode:currentMode })
+        body: JSON.stringify({ audio:b64, sampleRate:TARGET_RATE, mode:currentMode, progress:getProgressCode() })
       });
       const ct = (res.headers.get('content-type') || '');
       if (ct.includes('application/json')){
@@ -928,7 +966,7 @@
       const res = await fetch(RAILWAY_URL + '/claude-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg, mode: 'talk' })
+        body: JSON.stringify({ message: msg, mode: 'talk', progress:getProgressCode() })
       });
       if (res.ok && !(res.headers.get('content-type')||'').includes('application/json')){
         pendingIntroText = dec(res.headers.get('X-Vizi-Text'));
@@ -1222,7 +1260,7 @@
       const res = await fetch(RAILWAY_URL + '/claude-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, mode: requestMode })
+        body: JSON.stringify({ message, mode: requestMode, progress:getProgressCode() })
       });
       if (res.ok && !(res.headers.get('content-type')||'').includes('application/json')){
         const vText = dec(res.headers.get('X-Vizi-Text'));
@@ -1235,7 +1273,8 @@
           // so they can hold-to-talk and ask; she still has the pick in
           // context. Also sidesteps the mobile audio-autoplay block.
           try { await res.blob(); } catch(e){}
-          if (vText) showPanel('pVizi','bVizi', vText);
+          // No message from Vizi on the warmup screen — just light the scale.
+          // (vText is intentionally not shown; she still has the pick in context.)
           applyMetronomeCommand(vCmd || '');
           setBtn('');
           btn.innerHTML = 'Hold<br>to Talk';
