@@ -3388,6 +3388,37 @@
     window.location.href='vizi.html?'+p.toString();
   }
 
+  // Reusable OFF|ON slide switch for true on/off settings (Pentatonic, and
+  // later Hold/Theory/Metro in the nav strip). The label lives OUTSIDE the
+  // switch; the pill shows both words with a thumb that slides to the active
+  // side, so "On" can never be misread as a command. Tap anywhere to flip.
+  // Returns { el, set(on), get() }; onChange(on) fires only on user toggle.
+  // NOTE: for pick-one-of-many rows (Shape, scale grid) use the selected-
+  // highlight pattern instead — a two-position switch can't represent them.
+  function makeSlideToggle(initialOn, onChange){
+    let on = !!initialOn;
+    const wrap=document.createElement('button'); wrap.type='button'; wrap.setAttribute('role','switch');
+    wrap.style.cssText='position:relative;display:inline-flex;align-items:center;width:96px;height:30px;padding:0;border:1.5px solid #46587a;border-radius:999px;background:#141a26;cursor:pointer;overflow:hidden;flex:0 0 auto;transition:border-color .18s;';
+    const offL=document.createElement('span'); offL.textContent='Off';
+    const onL=document.createElement('span');  onL.textContent='On';
+    const lblCss='flex:1;text-align:center;font-family:DM Sans,sans-serif;font-weight:700;font-size:.8rem;z-index:2;transition:color .15s;pointer-events:none;';
+    offL.style.cssText=lblCss; onL.style.cssText=lblCss;
+    const thumb=document.createElement('span');
+    thumb.style.cssText='position:absolute;top:2px;left:2px;width:calc(50% - 3px);height:calc(100% - 4px);border-radius:999px;z-index:1;transition:transform .18s ease, background .18s;';
+    wrap.appendChild(offL); wrap.appendChild(onL); wrap.appendChild(thumb);
+    function paint(){
+      thumb.style.transform = on ? 'translateX(calc(100% + 2px))' : 'translateX(0)';
+      thumb.style.background = on ? '#e8c14a' : '#5b6b85';
+      onL.style.color  = on ? '#0b0f14' : '#7d8ba1';
+      offL.style.color = on ? '#7d8ba1' : '#e6ecf5';
+      wrap.style.borderColor = on ? '#e8c14a' : '#46587a';
+      wrap.setAttribute('aria-checked', on ? 'true' : 'false');
+    }
+    paint();
+    wrap.addEventListener('click', ()=>{ on=!on; paint(); if(onChange) onChange(on); });
+    return { el:wrap, set(v){ on=!!v; paint(); }, get(){ return on; } };
+  }
+
   // Warmup scales as a compact grid: rows = root, columns = Major / Minor.
   // A "Pentatonic" toggle near the Shape row flips the picked scale to its
   // 5-note version (firmware handles all four combos). Tapping a cell lights
@@ -3398,7 +3429,6 @@
     const cols=['Major','Minor'];   // base scale type; Pentatonic is a separate toggle
     // Firmware shape colors: 1 green, 2 teal, 3 purple, 4 orange, 5 blue.
     const SHAPE_COLORS={ '1':'#3dba72','2':'#2dd4bf','3':'#a855f7','4':'#e8a020','5':'#4a9eff' };
-    const PENTA_COL='#e8c14a';
     let wuShape='all';               // 'all' or '1'..'5'
     let wuRoot='E', wuType='Minor';  // default beginner pick
     let wuPenta=true;                // pentatonic on by default
@@ -3420,14 +3450,11 @@
     Object.keys(shapeBtns).forEach(k=>styleShapeBtn(k,k==='all'));
     area.appendChild(shapeRow);
 
-    // ── Pentatonic toggle (sits right under the Shape row) ──
-    const pentaRow=document.createElement('div'); pentaRow.style.cssText='display:flex;gap:.5rem;align-items:center;margin:0 0 .55rem;';
+    // ── Pentatonic slide switch (Off|On) — sits right under the Shape row ──
+    const pentaRow=document.createElement('div'); pentaRow.style.cssText='display:flex;gap:.55rem;align-items:center;margin:0 0 .55rem;';
     const pentaLbl=document.createElement('span'); pentaLbl.textContent='Pentatonic:'; pentaLbl.style.cssText='font-family:DM Mono,monospace;font-size:.8rem;opacity:.7;'; pentaRow.appendChild(pentaLbl);
-    const pentaBtn=document.createElement('button');
-    function stylePenta(){ pentaBtn.textContent=wuPenta?'On':'Off'; pentaBtn.setAttribute('aria-pressed', wuPenta?'true':'false'); pentaBtn.style.cssText='font-family:DM Sans,sans-serif;font-weight:700;font-size:.85rem;min-width:3rem;padding:.35rem .85rem;border-radius:999px;cursor:pointer;transition:all .15s;border:1.5px solid '+PENTA_COL+';color:'+(wuPenta?'#0b0f14':PENTA_COL)+';background:'+(wuPenta?PENTA_COL:'transparent')+';'; }
-    stylePenta();
-    pentaBtn.addEventListener('click', ()=>{ wuPenta=!wuPenta; stylePenta(); lightWarmup(); });
-    pentaRow.appendChild(pentaBtn);
+    const pentaSw=makeSlideToggle(wuPenta, on=>{ wuPenta=on; lightWarmup(); });
+    pentaRow.appendChild(pentaSw.el);
     area.appendChild(pentaRow);
 
     // ── Live readout: names exactly what's lit (reinforces the scale name) ──
