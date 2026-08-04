@@ -66,26 +66,32 @@ nav .nav-links, .site-nav .nav-links {
 }
 #vm-home:hover { border-color: var(--vizi, #3dba72); background: rgba(61,186,114,0.20); }
 
-/* Hold toggle — single button, style driven by data-state.
-   data-state="off" = hold is currently off, button offers "Hold On" (gold).
-   data-state="on"  = hold is currently on,  button offers "Hold Off" (red). */
-#vm-hold-toggle[data-state="off"] { border-color: rgba(232,160,32,0.4); color: var(--gold, #e8a020); }
-#vm-hold-toggle[data-state="off"]:hover { border-color: var(--gold, #e8a020); background: rgba(232,160,32,0.12); }
-#vm-hold-toggle[data-state="on"] { border-color: rgba(224,85,64,0.3); color: rgba(224,85,64,0.85); }
-#vm-hold-toggle[data-state="on"]:hover { border-color: rgba(224,85,64,0.7); color: #e05540; background: rgba(224,85,64,0.08); }
+/* Hold + Theory toggles — label reflects STATE, color reflects active/inactive.
+   The button now READS OUT the setting instead of offering an action, which is
+   why the word can no longer be misread as a command:
+   data-state="on"  = setting IS on  → lit gold + faint fill. Label "Hold On" / "Theory On".
+   data-state="off" = setting IS off → grayed out.           Label "Hold Off" / "Theory Off". */
+#vm-hold-toggle[data-state="on"], #vm-theory-toggle[data-state="on"] {
+  border-color: var(--gold, #e8a020);
+  color: var(--gold, #e8a020);
+  background: rgba(232,160,32,0.16);
+  font-weight: 700;
+}
+#vm-hold-toggle[data-state="off"], #vm-theory-toggle[data-state="off"] {
+  border-color: rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.4);
+  background: transparent;
+}
+#vm-hold-toggle[data-state="off"]:hover, #vm-theory-toggle[data-state="off"]:hover {
+  border-color: rgba(232,160,32,0.5);
+  color: var(--gold, #e8a020);
+}
 
-/* Theory/Fingering toggle — single button, style driven by data-state.
-   data-state="off" = finger-color mode is active, button offers "Theory On" (gold).
-   data-state="on"  = theory-color mode is active, button offers "Theory Off" (red). */
-#vm-theory-toggle[data-state="off"] { border-color: rgba(232,160,32,0.4); color: var(--gold, #e8a020); }
-#vm-theory-toggle[data-state="off"]:hover { border-color: var(--gold, #e8a020); background: rgba(232,160,32,0.12); }
-#vm-theory-toggle[data-state="on"] { border-color: rgba(224,85,64,0.3); color: rgba(224,85,64,0.85); }
-#vm-theory-toggle[data-state="on"]:hover { border-color: rgba(224,85,64,0.7); color: #e05540; background: rgba(224,85,64,0.08); }
-
-/* Metronome toggle */
-#vm-metro-toggle { border-color: rgba(45,212,191,0.35); color: rgba(45,212,191,0.85); }
-#vm-metro-toggle:hover { border-color: var(--teal, #2dd4bf); color: var(--teal, #2dd4bf); background: rgba(45,212,191,0.08); }
-#vm-metro-toggle.open { border-color: var(--teal, #2dd4bf); color: var(--teal, #2dd4bf); background: rgba(45,212,191,0.14); }
+/* Metronome toggle — grayed when the metro bar is closed, lit teal when open
+   (the bar appearing below is its own confirmation, so no On/Off word needed). */
+#vm-metro-toggle { border-color: rgba(255,255,255,0.14); color: rgba(255,255,255,0.4); }
+#vm-metro-toggle:hover { border-color: rgba(45,212,191,0.55); color: var(--teal, #2dd4bf); }
+#vm-metro-toggle.open { border-color: var(--teal, #2dd4bf); color: var(--teal, #2dd4bf); background: rgba(45,212,191,0.16); font-weight: 700; }
 
 /* Reset */
 #vm-reset { border-color: rgba(79,142,247,0.35); color: rgba(79,142,247,0.85); }
@@ -171,23 +177,23 @@ nav .nav-links, .site-nav .nav-links {
     homeBtn.href = 'index.html';
     homeBtn.textContent = 'Home';
 
-    // Single toggle button — label/color flips between "Hold On" and "Hold Off"
-    // based on data-state, instead of showing both buttons at once.
+    // Single toggle button — label reads out state ("Hold On" lit / "Hold Off" gray)
+    // and color shows active/inactive, so the word can't be misread as an action.
     const holdToggleBtn = document.createElement('button');
     holdToggleBtn.id = 'vm-hold-toggle';
     holdToggleBtn.className = 'nav-ctrl-btn';
-    holdToggleBtn.dataset.state = 'off'; // 'off' = hold is off, button offers "Hold On"
+    holdToggleBtn.dataset.state = 'off'; // 'off' = hold is off → label "Hold Off" (gray)
     holdToggleBtn.title = 'Toggle fretboard LED hold';
-    holdToggleBtn.textContent = 'Hold On';
+    holdToggleBtn.textContent = 'Hold Off';
 
-    // Single toggle button — label/color flips between "Theory On" and "Theory Off",
+    // Single toggle button — label reads out state ("Theory On" lit / "Theory Off" gray),
     // same pattern as the hold toggle. Sends COLOR T / COLOR F.
     const theoryToggleBtn = document.createElement('button');
     theoryToggleBtn.id = 'vm-theory-toggle';
     theoryToggleBtn.className = 'nav-ctrl-btn';
-    theoryToggleBtn.dataset.state = 'off'; // 'off' = finger-color mode, button offers "Theory On"
+    theoryToggleBtn.dataset.state = 'off'; // 'off' = finger-color mode → label "Theory Off" (gray)
     theoryToggleBtn.title = 'Toggle root/3rd/5th theory coloring';
-    theoryToggleBtn.textContent = 'Theory On';
+    theoryToggleBtn.textContent = 'Theory Off';
 
     const metroToggleBtn = document.createElement('button');
     metroToggleBtn.id = 'vm-metro-toggle';
@@ -268,11 +274,11 @@ nav .nav-links, .site-nav .nav-links {
     bpmNumEl.textContent = bpm;
 
     // ── Hold toggle ──────────────────────────────────────────
-    // "off" → button offers "Hold On" (gold). "on" → button offers "Hold Off" (red).
+    // Label reads out the STATE: on → "Hold On" (lit), off → "Hold Off" (gray).
     function renderHoldToggle(){
       const holdBtn = document.getElementById('vm-hold-toggle');
       if (!holdBtn) return;
-      holdBtn.textContent = holdBtn.dataset.state === 'on' ? 'Hold Off' : 'Hold On';
+      holdBtn.textContent = holdBtn.dataset.state === 'on' ? 'Hold On' : 'Hold Off';
     }
 
     async function sendHoldToggle() {
@@ -318,11 +324,11 @@ nav .nav-links, .site-nav .nav-links {
     }
 
     // ── Theory/Fingering toggle ──────────────────────────────
-    // "off" → button offers "Theory On" (gold). "on" → button offers "Theory Off" (red).
+    // Label reads out the STATE: on → "Theory On" (lit), off → "Theory Off" (gray).
     function renderTheoryToggle(){
       const theoryBtn = document.getElementById('vm-theory-toggle');
       if (!theoryBtn) return;
-      theoryBtn.textContent = theoryBtn.dataset.state === 'on' ? 'Theory Off' : 'Theory On';
+      theoryBtn.textContent = theoryBtn.dataset.state === 'on' ? 'Theory On' : 'Theory Off';
     }
 
     async function sendTheoryToggle() {

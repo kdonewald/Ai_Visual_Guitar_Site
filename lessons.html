@@ -3457,11 +3457,22 @@
     pentaRow.appendChild(pentaSw.el);
     area.appendChild(pentaRow);
 
-    // ── Live readout: names exactly what's lit (reinforces the scale name) ──
-    const readout=document.createElement('div'); readout.style.cssText='font-family:DM Mono,monospace;font-size:.8rem;color:#3ddc84;margin:0 2px .7rem;min-height:1em;';
+    // ── Live readout: flashes a "watch your fretboard" activation cue on each
+    // change (same confirmation the Test-LEDs button gives), then settles to a
+    // steady line naming exactly what's lit so the scale name stays on screen. ──
+    const readout=document.createElement('div'); readout.style.cssText='font-family:DM Mono,monospace;font-size:.8rem;color:#3ddc84;margin:0 2px .7rem;min-height:1em;transition:color .15s;';
+    let readoutTimer=null;
     function scaleName(){ return wuRoot+' '+wuType+(wuPenta?' Pentatonic':''); }
     function shapeName(){ return wuShape==='all'?'all shapes':('shape '+wuShape); }
-    function updateReadout(){ readout.textContent='Lighting: '+scaleName()+' · '+shapeName(); }
+    function updateReadout(){
+      clearTimeout(readoutTimer);
+      readout.textContent='⚡ Watch your fretboard — '+scaleName()+'!';
+      readout.style.color='#5eead4'; readout.style.fontWeight='700';
+      readoutTimer=setTimeout(function(){
+        readout.textContent='Lit: '+scaleName()+' · '+shapeName();
+        readout.style.color='#3ddc84'; readout.style.fontWeight='400';
+      }, 1700);
+    }
     area.appendChild(readout);
 
     // Light the picked scale in the active shape, in place, on this stage.
