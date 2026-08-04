@@ -82,9 +82,13 @@ nav .nav-links, .site-nav .nav-links {
   color: rgba(255,255,255,0.4);
   background: transparent;
 }
+/* Off-state hover stays GRAY (never gold). On touch screens :hover sticks to the
+   last-tapped element, so a gold off-hover made a just-turned-off toggle look lit
+   ("Hold Off" but still gold). Keeping off gray in every state fixes that. */
 #vm-hold-toggle[data-state="off"]:hover, #vm-theory-toggle[data-state="off"]:hover {
-  border-color: rgba(232,160,32,0.5);
-  color: var(--gold, #e8a020);
+  border-color: rgba(255,255,255,0.32);
+  color: rgba(255,255,255,0.65);
+  background: transparent;
 }
 
 /* Metronome toggle — grayed when the metro bar is closed, lit teal when open
