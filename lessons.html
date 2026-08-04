@@ -3388,23 +3388,27 @@
     window.location.href='vizi.html?'+p.toString();
   }
 
-  // Warmup scales as a compact grid: rows = root, columns = Major / Minor /
-  // Pentatonic. Far less scrolling than the tall card list. Tapping a cell does
-  // exactly what the old card did (Hold on, then hand the scale to Vizi).
+  // Warmup scales as a compact grid: rows = root, columns = Major / Minor.
+  // A "Pentatonic" toggle near the Shape row flips the picked scale to its
+  // 5-note version (firmware handles all four combos). Tapping a cell lights
+  // that scale in place (Hold on via the relay's auto HOLD-ON, no page jump).
+  // Defaults tee up E minor pentatonic (all shapes) for a beginner on arrival.
   function renderWarmupScaleGrid(def){
     const roots=['G','A','C','D','E'];
-    const cols=[['Major','Major'],['Minor','Minor'],['Pentatonic','Minor Pentatonic']];
+    const cols=['Major','Minor'];   // base scale type; Pentatonic is a separate toggle
     // Firmware shape colors: 1 green, 2 teal, 3 purple, 4 orange, 5 blue.
     const SHAPE_COLORS={ '1':'#3dba72','2':'#2dd4bf','3':'#a855f7','4':'#e8a020','5':'#4a9eff' };
-    let wuShape='all';            // 'all' or '1'..'5'
-    let wuRoot=null, wuType=null; // last-picked scale
+    const PENTA_COL='#e8c14a';
+    let wuShape='all';               // 'all' or '1'..'5'
+    let wuRoot='E', wuType='Minor';  // default beginner pick
+    let wuPenta=true;                // pentatonic on by default
     let selCell=null;
 
     const area=document.createElement('div'); area.className='cx-chord-area';
-    const cap=document.createElement('div'); cap.className='cx-democap'; cap.textContent='Pick a shape (or All), then tap a scale to light it and warm up.'; area.appendChild(cap);
+    const cap=document.createElement('div'); cap.className='cx-democap'; cap.textContent='Pick a scale and a shape to light it and warm up. Pentatonic is the beginner-friendly 5-note version — leave it on to start.'; area.appendChild(cap);
 
     // ── Shape selector row: All / 1-5, tinted in each shape's color ──
-    const shapeRow=document.createElement('div'); shapeRow.style.cssText='display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin:.3rem 0 .9rem;';
+    const shapeRow=document.createElement('div'); shapeRow.style.cssText='display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin:.3rem 0 .55rem;';
     const shapeLbl=document.createElement('span'); shapeLbl.textContent='Shape:'; shapeLbl.style.cssText='font-family:DM Mono,monospace;font-size:.8rem;opacity:.7;'; shapeRow.appendChild(shapeLbl);
     const shapeBtns={};
     function styleShapeBtn(key,on){ const b=shapeBtns[key]; const col=(key==='all')?'#8aa0b4':SHAPE_COLORS[key]; b.style.cssText='font-family:DM Sans,sans-serif;font-weight:700;font-size:.85rem;min-width:2.2rem;padding:.35rem .55rem;border-radius:8px;cursor:pointer;transition:all .15s;border:1.5px solid '+col+';color:'+(on?'#0b0f14':col)+';background:'+(on?col:'transparent')+';'; }
@@ -3416,32 +3420,58 @@
     Object.keys(shapeBtns).forEach(k=>styleShapeBtn(k,k==='all'));
     area.appendChild(shapeRow);
 
+    // ── Pentatonic toggle (sits right under the Shape row) ──
+    const pentaRow=document.createElement('div'); pentaRow.style.cssText='display:flex;gap:.5rem;align-items:center;margin:0 0 .55rem;';
+    const pentaLbl=document.createElement('span'); pentaLbl.textContent='Pentatonic:'; pentaLbl.style.cssText='font-family:DM Mono,monospace;font-size:.8rem;opacity:.7;'; pentaRow.appendChild(pentaLbl);
+    const pentaBtn=document.createElement('button');
+    function stylePenta(){ pentaBtn.textContent=wuPenta?'On':'Off'; pentaBtn.setAttribute('aria-pressed', wuPenta?'true':'false'); pentaBtn.style.cssText='font-family:DM Sans,sans-serif;font-weight:700;font-size:.85rem;min-width:3rem;padding:.35rem .85rem;border-radius:999px;cursor:pointer;transition:all .15s;border:1.5px solid '+PENTA_COL+';color:'+(wuPenta?'#0b0f14':PENTA_COL)+';background:'+(wuPenta?PENTA_COL:'transparent')+';'; }
+    stylePenta();
+    pentaBtn.addEventListener('click', ()=>{ wuPenta=!wuPenta; stylePenta(); lightWarmup(); });
+    pentaRow.appendChild(pentaBtn);
+    area.appendChild(pentaRow);
+
+    // ── Live readout: names exactly what's lit (reinforces the scale name) ──
+    const readout=document.createElement('div'); readout.style.cssText='font-family:DM Mono,monospace;font-size:.8rem;color:#3ddc84;margin:0 2px .7rem;min-height:1em;';
+    function scaleName(){ return wuRoot+' '+wuType+(wuPenta?' Pentatonic':''); }
+    function shapeName(){ return wuShape==='all'?'all shapes':('shape '+wuShape); }
+    function updateReadout(){ readout.textContent='Lighting: '+scaleName()+' · '+shapeName(); }
+    area.appendChild(readout);
+
     // Light the picked scale in the active shape, in place, on this stage.
+    // Command format: SCALE <root> <major|minor>[ pentatonic] <all|SHAPE n>.
     // The /fretboard-command relay auto-prepends HOLD ON before any SCALE, so
     // Hold stays correct without leaving the page (no jump to the Vizi screen).
     async function lightWarmup(){
       if(!wuRoot) return;
+      updateReadout();
       const shapePart=(wuShape==='all')?'all':('SHAPE '+wuShape);
-      const cmd='SCALE '+wuRoot+' '+wuType.toLowerCase()+' '+shapePart;
+      const penta=wuPenta?' pentatonic':'';
+      const cmd='SCALE '+wuRoot+' '+wuType.toLowerCase()+penta+' '+shapePart;
       await activateHoldOnly();
       sendFretboardCmdDirect(cmd);
     }
 
-    const g=document.createElement('div'); g.className='cx-grid'; g.style.gridTemplateColumns='minmax(30px,0.5fr) repeat(3,1fr)';
+    const g=document.createElement('div'); g.className='cx-grid'; g.style.gridTemplateColumns='minmax(30px,0.5fr) repeat(2,1fr)';
     const blank=document.createElement('div'); blank.className='cx-colhdr'; blank.textContent=''; g.appendChild(blank);
-    cols.forEach(function(c){ const h=document.createElement('div'); h.className='cx-colhdr'; h.textContent=c[0]; g.appendChild(h); });
+    cols.forEach(function(c){ const h=document.createElement('div'); h.className='cx-colhdr'; h.textContent=c; g.appendChild(h); });
+    let defaultCell=null;
     roots.forEach(function(root){
       const rl=document.createElement('div'); rl.className='cx-cell cx-rootlabel'; rl.textContent=root; g.appendChild(rl);
-      cols.forEach(function(c){
-        const name=root+' '+c[1];
+      cols.forEach(function(col){
         const b=document.createElement('button'); b.className='cx-cell'; b.textContent=root;
-        b.title=name;
-        b.addEventListener('click', ()=>{ wuRoot=root; wuType=c[1]; if(selCell) selCell.style.outline=''; selCell=b; b.style.outline='2px solid var(--green,#3dba72)'; lightWarmup(); });
+        b.title=root+' '+col;
+        b.addEventListener('click', ()=>{ wuRoot=root; wuType=col; if(selCell) selCell.classList.remove('selected'); selCell=b; b.classList.add('selected'); lightWarmup(); });
+        if(root===wuRoot && col===wuType) defaultCell=b;
         g.appendChild(b);
       });
     });
     area.appendChild(g);
     exList.appendChild(area);
+
+    // Pre-tee the default beginner warm-up: E minor pentatonic, all shapes —
+    // selected and lit on arrival so a beginner has a ready starting point.
+    if(defaultCell){ selCell=defaultCell; defaultCell.classList.add('selected'); }
+    lightWarmup();
   }
 
   function renderChoicePanel(stage){
