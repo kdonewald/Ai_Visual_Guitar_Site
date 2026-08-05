@@ -3431,11 +3431,11 @@
     const SHAPE_COLORS={ '1':'#3dba72','2':'#2dd4bf','3':'#a855f7','4':'#e8a020','5':'#4a9eff' };
     let wuShape='all';               // 'all' or '1'..'5'
     let wuRoot='E', wuType='Minor';  // default beginner pick
-    let wuPenta=true;                // pentatonic on by default
+    let wuPenta=false;               // pentatonic OFF by default
     let selCell=null;
 
     const area=document.createElement('div'); area.className='cx-chord-area';
-    const cap=document.createElement('div'); cap.className='cx-democap'; cap.textContent='Set your scale, shape, and pentatonic, then tap Light Scale. Pentatonic is the beginner-friendly 5-note version — leave it on to start.'; area.appendChild(cap);
+    const cap=document.createElement('div'); cap.className='cx-democap'; cap.textContent='Set your scale, shape, and pentatonic, then tap Light Scale. Pentatonic is the simpler 5-note version — flip it on whenever you want it.'; area.appendChild(cap);
 
     // ── Shape selector row: All / 1-5, tinted in each shape's color ──
     const shapeRow=document.createElement('div'); shapeRow.style.cssText='display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin:.3rem 0 .55rem;';
@@ -3511,10 +3511,12 @@
     area.appendChild(g);
 
     // ── Light Scale — the ONLY control that fires the scale, so the student can
-    // change shape / scale / pentatonic freely and light it when ready. ──
+    // change shape / scale / pentatonic freely and light it when ready. Matches
+    // the builder's Light Scale button (cb-vizi-btn: blue outline, mono, 🎸). ──
     const lightBtn=document.createElement('button');
-    lightBtn.textContent='Light Scale';
-    lightBtn.style.cssText='display:block;width:100%;margin:.85rem 0 .1rem;padding:.65rem;border:none;border-radius:10px;background:#3ddc84;color:#0b1210;font-family:DM Sans,sans-serif;font-weight:800;font-size:1rem;cursor:pointer;';
+    lightBtn.className='cb-vizi-btn';
+    lightBtn.textContent='🎸 Light Scale';
+    lightBtn.style.cssText='display:block;width:100%;margin:.85rem 0 .1rem;';
     lightBtn.addEventListener('click', lightWarmup);
     area.appendChild(lightBtn);
 
