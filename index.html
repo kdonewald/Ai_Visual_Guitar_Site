@@ -142,6 +142,22 @@
   /* Stage strip hidden by default (body.stages-hidden set on <body>); the nav-row
      "Stages" toggle reveals it, so Vizi is the one who surfaces stages. */
   body.stages-hidden .fretboard-section{ display:none; }
+
+  /* Prominent "Learning Stages" reveal button — sits between the nav and the
+     Welcome Video, its own line, wider + decorative. Toggles body.stages-hidden. */
+  .stages-toggle{
+    display:flex;align-items:center;justify-content:center;gap:.55rem;
+    width:calc(100% - 2.5rem);max-width:520px;margin:1.1rem auto .2rem;padding:.85rem 1.25rem;
+    border:1.5px solid rgba(45,212,191,0.45);border-radius:14px;
+    background:linear-gradient(180deg,rgba(45,212,191,0.10),rgba(45,212,191,0.03));
+    color:var(--teal,#2dd4bf);font-family:'DM Mono',monospace;font-weight:700;
+    font-size:.92rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;
+    transition:all .18s;box-shadow:0 6px 20px rgba(45,212,191,0.08);
+  }
+  .stages-toggle:hover{ background:linear-gradient(180deg,rgba(45,212,191,0.16),rgba(45,212,191,0.06));border-color:rgba(45,212,191,0.7); }
+  .stages-toggle .st-chev{ transition:transform .2s;font-size:.8rem;opacity:.85; }
+  body:not(.stages-hidden) .stages-toggle{ border-color:var(--teal,#2dd4bf);background:linear-gradient(180deg,rgba(45,212,191,0.20),rgba(45,212,191,0.08)); }
+  body:not(.stages-hidden) .stages-toggle .st-chev{ transform:rotate(180deg); }
   .fretboard-label{
     font-family:'DM Mono',monospace;font-size:.86rem;letter-spacing:.14em;text-transform:uppercase;
     color:var(--text-mid);text-align:center;margin-bottom:.65rem;font-weight:600;font-size:.80rem;letter-spacing:.12em;
@@ -198,6 +214,30 @@
       <a href="index.html" class="nav-link active">Home</a>
     </div>
 </nav>
+
+<!-- Learning-stages reveal — prominent toggle; the strip below starts hidden -->
+<button id="stagesToggle" class="stages-toggle" aria-expanded="false" aria-controls="fretsRow">
+  <span class="st-icon">🎸</span>
+  <span class="st-label">Show Learning Stages</span>
+  <span class="st-chev">▾</span>
+</button>
+<script>
+  (function(){
+    var btn=document.getElementById('stagesToggle');
+    if(!btn) return;
+    var label=btn.querySelector('.st-label');
+    function sync(){
+      var hidden=document.body.classList.contains('stages-hidden');
+      label.textContent = hidden ? 'Show Learning Stages' : 'Hide Learning Stages';
+      btn.setAttribute('aria-expanded', hidden ? 'false' : 'true');
+    }
+    btn.addEventListener('click', function(){
+      document.body.classList.toggle('stages-hidden');
+      sync();
+    });
+    sync();
+  })();
+</script>
 
 <!-- Interactive fretboard — top of page -->
 <div class="fretboard-section">
