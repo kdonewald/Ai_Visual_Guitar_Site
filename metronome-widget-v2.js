@@ -97,6 +97,12 @@ nav .nav-links, .site-nav .nav-links {
 #vm-metro-toggle:hover { border-color: rgba(45,212,191,0.55); color: var(--teal, #2dd4bf); }
 #vm-metro-toggle.open { border-color: var(--teal, #2dd4bf); color: var(--teal, #2dd4bf); background: rgba(45,212,191,0.16); font-weight: 700; }
 
+/* Stages toggle — same gray-hidden / teal-shown pattern as Metro. Only injected
+   on pages that actually have the stage strip (the home screen). */
+#vm-stages-toggle { border-color: rgba(255,255,255,0.14); color: rgba(255,255,255,0.4); }
+#vm-stages-toggle:hover { border-color: rgba(45,212,191,0.55); color: var(--teal, #2dd4bf); }
+#vm-stages-toggle.open { border-color: var(--teal, #2dd4bf); color: var(--teal, #2dd4bf); background: rgba(45,212,191,0.16); font-weight: 700; }
+
 /* Reset */
 #vm-reset { border-color: rgba(79,142,247,0.35); color: rgba(79,142,247,0.85); }
 #vm-reset:hover { border-color: var(--blue, #4f8ef7); color: #4f8ef7; background: rgba(79,142,247,0.08); }
@@ -179,7 +185,7 @@ nav .nav-links, .site-nav .nav-links {
     homeBtn.id = 'vm-home';
     homeBtn.className = 'nav-ctrl-btn';
     homeBtn.href = 'index.html';
-    homeBtn.textContent = 'Home';
+    homeBtn.textContent = '🏠 Vizi';
 
     // Single toggle button — label reads out state ("Hold On" lit / "Hold Off" gray)
     // and color shows active/inactive, so the word can't be misread as an action.
@@ -211,6 +217,15 @@ nav .nav-links, .site-nav .nav-links {
     resetBtn.title = 'Reset fretboard';
     resetBtn.textContent = 'Reset';
 
+    // Stages toggle — shows/hides the numbered stage strip. Only appended on
+    // pages that have the strip (see init). Lets Vizi be the one who reveals
+    // stages, while the student can still open them manually here.
+    const stagesBtn = document.createElement('button');
+    stagesBtn.id = 'vm-stages-toggle';
+    stagesBtn.className = 'nav-ctrl-btn';
+    stagesBtn.title = 'Show or hide the learning stages';
+    stagesBtn.textContent = 'Stages';
+
     // ── Row 2: metronome bar — collapsed by default, opened via metroToggleBtn ──
     const metroRow = document.createElement('div');
     metroRow.id = 'vm-metro-row';
@@ -226,7 +241,7 @@ nav .nav-links, .site-nav .nav-links {
       <button id="vm-play">▶</button>
     `;
 
-    return { homeBtn, holdToggleBtn, theoryToggleBtn, metroToggleBtn, resetBtn, metroRow };
+    return { homeBtn, holdToggleBtn, theoryToggleBtn, metroToggleBtn, resetBtn, stagesBtn, metroRow };
   }
 
   function init() {
@@ -235,7 +250,7 @@ nav .nav-links, .site-nav .nav-links {
     const navLinks = nav && nav.querySelector('.nav-links');
     if (!nav || !navLinks) { setTimeout(init, 100); return; }
 
-    const { homeBtn, holdToggleBtn, theoryToggleBtn, metroToggleBtn, resetBtn, metroRow } = buildElements();
+    const { homeBtn, holdToggleBtn, theoryToggleBtn, metroToggleBtn, resetBtn, stagesBtn, metroRow } = buildElements();
 
     // Clear existing nav-links children, replace with our row 1
     navLinks.innerHTML = '';
@@ -243,6 +258,21 @@ nav .nav-links, .site-nav .nav-links {
     navLinks.appendChild(holdToggleBtn);
     navLinks.appendChild(theoryToggleBtn);
     navLinks.appendChild(metroToggleBtn);
+
+    // Stages toggle — only on pages that have the stage strip (the home screen).
+    // The strip starts hidden (body.stages-hidden set in the page markup) so Vizi
+    // is the one who surfaces stages; this button reveals/hides it manually.
+    // Lit teal = strip showing, gray = hidden.
+    if (document.querySelector('.fretboard-section')) {
+      const renderStages = () => stagesBtn.classList.toggle('open', !document.body.classList.contains('stages-hidden'));
+      stagesBtn.addEventListener('click', () => {
+        document.body.classList.toggle('stages-hidden');
+        renderStages();
+      });
+      renderStages();
+      navLinks.appendChild(stagesBtn);
+    }
+
     navLinks.appendChild(resetBtn);
 
     // Row 2 appended directly to nav
