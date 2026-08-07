@@ -417,6 +417,24 @@
   }
   // ── Progress code (P5) + stage routing (P2) ──
   const PROGRESS_CATS = ['warmup','strumming','chords','song','soloing','theory'];
+  // ── DEV/TEST ONLY: wipe stored progress → code back to 000000 (levels AND the
+  // per-stage video "watched" flags). Trigger with ?resetprogress=1 on the talk
+  // screen (works on mobile, bookmarkable) or window.viziResetProgress() in the
+  // console. Not surfaced in the UI. For the future session-end code flow, entering
+  // 000000 also zeroes the levels; this is the fuller clean slate. ──
+  function viziResetProgress(){ try{ localStorage.removeItem('viziProgress'); }catch(e){} }
+  window.viziResetProgress = viziResetProgress;
+  (function devResetProgress(){
+    try{
+      const p = new URLSearchParams(location.search);
+      if(p.has('resetprogress')){
+        viziResetProgress();
+        p.delete('resetprogress');
+        const qs = p.toString();
+        history.replaceState(null, '', location.pathname + (qs?('?'+qs):'') + location.hash);
+      }
+    }catch(e){}
+  })();
   (function initProgressOverride(){
     try {
       const q = new URLSearchParams(location.search).get('progress');

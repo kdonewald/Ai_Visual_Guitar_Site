@@ -548,6 +548,22 @@
   // Order = code position: 1 warmup, 2 strumming, 3 chords, 4 song, 5 soloing, 6 theory.
   // Digit = the student's level (0-9); 0 = intro video watched, not started.
   const PROGRESS_CATS = ['warmup','strumming','chords','song','soloing','theory'];
+  // ── DEV/TEST ONLY: wipe stored progress → code back to 000000 (levels AND the
+  // per-stage video "watched" flags). Trigger with ?resetprogress=1 (mobile-friendly,
+  // bookmarkable) or window.viziResetProgress() in the console. Not surfaced in the UI. ──
+  function viziResetProgress(){ try{ localStorage.removeItem('viziProgress'); }catch(e){} }
+  window.viziResetProgress = viziResetProgress;
+  (function devResetProgress(){
+    try{
+      const p = new URLSearchParams(location.search);
+      if(p.has('resetprogress')){
+        viziResetProgress();
+        p.delete('resetprogress');
+        const qs = p.toString();
+        history.replaceState(null, '', location.pathname + (qs?('?'+qs):'') + location.hash);
+      }
+    }catch(e){}
+  })();
   // Test override: visiting with ?progress=313040 seeds the levels (no code-entry UI yet).
   (function initProgressOverride(){
     try {
