@@ -57,15 +57,16 @@
   }
   .page-eyebrow::before{content:'';width:1.5rem;height:2px;background:var(--red)}
   .page-title{font-family:'Playfair Display',serif;font-weight:900;font-size:clamp(2rem,5vw,2.8rem);letter-spacing:-.02em;line-height:1.05;margin-bottom:.5rem}
-  /* Return to Vizi — top of the Song stage, matching the nav "🏠 Return to Vizi"
-     button (Vizi green, home logo). Back to the home talk screen. */
-  .page-return-row{display:flex;justify-content:flex-end;margin-bottom:.6rem;}
-  .cat-return{display:inline-flex;align-items:center;gap:.4rem;background:var(--surface2);
-    border:1.5px solid var(--green);border-radius:8px;padding:.5rem .8rem;cursor:pointer;
-    font-family:'DM Mono',monospace;font-size:.82rem;letter-spacing:.04em;color:var(--green);
-    white-space:nowrap;transition:all .2s;}
-  .cat-return:hover{background:rgba(61,186,114,0.12);color:var(--text);}
-  @media(max-width:560px){ .cat-return{font-size:.76rem;padding:.45rem .6rem;} }
+  /* Return to Vizi — big, bold CTA at the BOTTOM of the Song stage (the nav bar's
+     "🏠 Return to Vizi" covers the top). Same design as the nav button, scaled up
+     + brighter. Back to the home talk screen. */
+  .cat-return-wrap{display:flex;justify-content:center;padding:1.6rem 0 .4rem;border-top:1.5px solid var(--border);margin-top:1.5rem;}
+  .cat-return-big{display:inline-flex;align-items:center;gap:.55rem;background:var(--surface2);
+    border:2px solid var(--green);border-radius:11px;padding:.9rem 1.7rem;cursor:pointer;
+    font-family:'DM Mono',monospace;font-size:1.08rem;font-weight:700;letter-spacing:.04em;color:var(--green);
+    white-space:nowrap;transition:all .2s;box-shadow:0 2px 16px rgba(61,186,114,0.28);}
+  .cat-return-big:hover{background:rgba(61,186,114,0.16);color:var(--text);box-shadow:0 4px 22px rgba(61,186,114,0.45);}
+  @media(max-width:560px){ .cat-return-big{font-size:.98rem;padding:.8rem 1.3rem;} }
   .page-desc{color:var(--text);font-size:.95rem;line-height:1.65;max-width:520px;margin-bottom:2.5rem}
 
   /* ── section headers ── */
@@ -228,9 +229,6 @@
 </nav>
 
 <div class="page">
-  <div class="page-return-row">
-    <button class="cat-return" id="songReturnVizi" title="Return to Vizi"><span aria-hidden="true">🏠</span> Return to Vizi</button>
-  </div>
   <div class="page-eyebrow">Music Library</div>
   <h1 class="page-title">Find &amp; Load a Song</h1>
   <p class="page-desc">Browse free beginner chord sheets on Ultimate Guitar, or upload one you already have. Once it's loaded, Vizi will walk you through every chord on your fretboard.</p>
@@ -317,6 +315,9 @@
 
     </div>
   </div>
+  <div class="cat-return-wrap">
+    <button class="cat-return-big" id="songReturnVizi" title="Return to Vizi"><span aria-hidden="true">🏠</span> Return to Vizi</button>
+  </div>
 </div>
 
 
@@ -356,8 +357,19 @@
       songsIntroBtn.title='Video coming soon';
       songsIntroBtn.disabled=true;
     } else {
-      songsIntroBtn.addEventListener('click', ()=>openSongsVideo(SONGS_VIDEO_URL));
+      songsIntroBtn.addEventListener('click', ()=>{ openSongsVideo(SONGS_VIDEO_URL); markSongIntroWatched(); });
     }
+  }
+  // Watching the Song stage intro video checks off the Song category (0→1),
+  // raise-only, matching lessons.html's markIntroWatched bridge for the other stages.
+  function markSongIntroWatched(){
+    try{
+      const pr = JSON.parse(localStorage.getItem('viziProgress')||'{}');
+      pr.levels = pr.levels || {};
+      const cur = parseInt(pr.levels.song,10);
+      if(!(Number.isFinite(cur) && cur>=1)) pr.levels.song = 1;
+      localStorage.setItem('viziProgress', JSON.stringify(pr));
+    }catch(e){}
   }
   if(ytClose){ ytClose.addEventListener('click', closeSongsVideo); }
 
@@ -570,6 +582,6 @@
     }
   });
 </script>
-<script src="metronome-widget-v2.js?v=1782833134"></script>
+<script src="metronome-widget-v2.js?v=20260807"></script>
 </body>
 </html>

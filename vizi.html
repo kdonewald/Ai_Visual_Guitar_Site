@@ -422,6 +422,25 @@
   }
 
   // Route METRONOME:BPM commands to the shared floating widget
+  // ── P6: PROGRESS <cat> <n> — advance the student's stored levels (raise only) ──
+  // Server keeps PROGRESS off the fretboard queue but passes it through X-Vizi-Commands.
+  // Fold into viziProgress.levels with max() so it never lowers a level and never
+  // clobbers the UI-driven video check-off that writes the same object.
+  function applyProgressCommands(commandsStr){
+    if (!commandsStr) return;
+    const re = /\bPROGRESS\s+(WARMUP|STRUMMING|CHORDS|SONG|SOLOING|THEORY)\s+([0-9])\b/ig;
+    let m, pr, changed=false;
+    try{ pr = JSON.parse(localStorage.getItem('viziProgress')||'{}'); }catch(e){ pr={}; }
+    pr.levels = pr.levels || {};
+    while((m = re.exec(commandsStr))){
+      const cat = m[1].toLowerCase();
+      const n = parseInt(m[2],10);
+      const cur = parseInt(pr.levels[cat],10);
+      const curN = Number.isFinite(cur) ? cur : 0;
+      if(n > curN){ pr.levels[cat] = n; changed = true; }
+    }
+    if(changed){ try{ localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){} }
+  }
   function applyMetronomeCommand(commandsStr){
     if (!commandsStr) return;
     const m = commandsStr.match(/METRONOME:(\d+)/i);
@@ -590,7 +609,7 @@
       const commands   = dec(res.headers.get('X-Vizi-Commands'));
       if (transcript) showPanel('pYou','bYou', transcript);
       if (text)       showPanel('pVizi','bVizi', text);
-      if (commands)   { showPanel('pCmd','bCmd', commands); applyMetronomeCommand(commands); }
+      if (commands)   { showPanel('pCmd','bCmd', commands); applyMetronomeCommand(commands); applyProgressCommands(commands); }
       const blob = await res.blob();
       setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('');
       await playBlob(blob);
@@ -608,7 +627,7 @@
     pendingIntroBlob = null; pendingIntroText = null; pendingIntroCmd = null;
     setBtn('');
     if (text) showPanel('pVizi','bVizi', text);
-    if (cmd)  { showPanel('pCmd','bCmd', cmd); applyMetronomeCommand(cmd); }
+    if (cmd)  { showPanel('pCmd','bCmd', cmd); applyMetronomeCommand(cmd); applyProgressCommands(cmd); }
     setStatus('');
     await playBlob(blob);
     // If this tab was opened from the Soloing panel (window.open, not a same-tab
@@ -1307,7 +1326,7 @@
           setBtn('intro');
           btn.innerHTML = 'Tap to<br>start';
           setStatus('Ready \u2014 tap to hear Vizi');
-          applyMetronomeCommand(pendingIntroCmd || '');
+          applyMetronomeCommand(pendingIntroCmd || ''); applyProgressCommands(pendingIntroCmd || '');
         }
       } else {
         setBtn('');
@@ -1334,6 +1353,6 @@
     loadSongSheet();
   }
 </script>
-<script src="metronome-widget-v2.js?v=1782833134"></script>
+<script src="metronome-widget-v2.js?v=20260807"></script>
 </body>
 </html>

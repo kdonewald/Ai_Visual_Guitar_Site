@@ -433,6 +433,26 @@
       return PROGRESS_CATS.map(c => { const n=parseInt(lv[c],10); return (Number.isFinite(n)&&n>=0&&n<=9)?String(n):'0'; }).join('');
     } catch(e){ return '000000'; }
   }
+  // ── P6: PROGRESS <cat> <n> — advance the student's stored levels (raise only) ──
+  // Vizi emits e.g. "PROGRESS CHORDS 2" in the command stream; the server keeps it out
+  // of the fretboard queue but passes it through X-Vizi-Commands. We fold it into
+  // viziProgress.levels with max() so it never lowers a level and never clobbers the
+  // UI-driven video check-off that writes the same object.
+  function applyProgressCommands(commandsStr){
+    if(!commandsStr) return;
+    const re = /\bPROGRESS\s+(WARMUP|STRUMMING|CHORDS|SONG|SOLOING|THEORY)\s+([0-9])\b/ig;
+    let m, pr, changed=false;
+    try{ pr = JSON.parse(localStorage.getItem('viziProgress')||'{}'); }catch(e){ pr={}; }
+    pr.levels = pr.levels || {};
+    while((m = re.exec(commandsStr))){
+      const cat = m[1].toLowerCase();
+      const n = parseInt(m[2],10);
+      const cur = parseInt(pr.levels[cat],10);
+      const curN = Number.isFinite(cur) ? cur : 0;
+      if(n > curN){ pr.levels[cat] = n; changed = true; }
+    }
+    if(changed){ try{ localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){} }
+  }
   // Route to a stage the same way the stage cards do: song -> songs.html, others -> lessons.html#id
   const OPEN_STAGE_MAP = {
     warmup:'warmup', strumming:'strumming', chords:'chords', song:'song',
@@ -472,6 +492,7 @@
       if(commands){
         const m = commands.match(/METRONOME:(\d+)/i);
         if(m && window.viziMetro) window.viziMetro.setBpm(parseInt(m[1],10));
+        applyProgressCommands(commands);
       }
       const blob=await res.blob();
       setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus('');
@@ -552,6 +573,6 @@
   });
   welcomeClose.addEventListener('click', closeWelcome);
 </script>
-<script src="metronome-widget-v2.js?v=20260806b"></script>
+<script src="metronome-widget-v2.js?v=20260807"></script>
 </body>
 </html>

@@ -179,7 +179,7 @@ nav .nav-links, .site-nav .nav-links {
     homeBtn.id = 'vm-home';
     homeBtn.className = 'nav-ctrl-btn';
     homeBtn.href = 'index.html';
-    homeBtn.textContent = '🏠 Vizi';
+    homeBtn.textContent = '🏠 Return to Vizi';
 
     // Single toggle button — label reads out state ("Hold On" lit / "Hold Off" gray)
     // and color shows active/inactive, so the word can't be misread as an action.
