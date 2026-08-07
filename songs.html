@@ -57,6 +57,15 @@
   }
   .page-eyebrow::before{content:'';width:1.5rem;height:2px;background:var(--red)}
   .page-title{font-family:'Playfair Display',serif;font-weight:900;font-size:clamp(2rem,5vw,2.8rem);letter-spacing:-.02em;line-height:1.05;margin-bottom:.5rem}
+  /* Return to Vizi — top of the Song stage, matching the nav "🏠 Return to Vizi"
+     button (Vizi green, home logo). Back to the home talk screen. */
+  .page-return-row{display:flex;justify-content:flex-end;margin-bottom:.6rem;}
+  .cat-return{display:inline-flex;align-items:center;gap:.4rem;background:var(--surface2);
+    border:1.5px solid var(--green);border-radius:8px;padding:.5rem .8rem;cursor:pointer;
+    font-family:'DM Mono',monospace;font-size:.82rem;letter-spacing:.04em;color:var(--green);
+    white-space:nowrap;transition:all .2s;}
+  .cat-return:hover{background:rgba(61,186,114,0.12);color:var(--text);}
+  @media(max-width:560px){ .cat-return{font-size:.76rem;padding:.45rem .6rem;} }
   .page-desc{color:var(--text);font-size:.95rem;line-height:1.65;max-width:520px;margin-bottom:2.5rem}
 
   /* ── section headers ── */
@@ -219,6 +228,9 @@
 </nav>
 
 <div class="page">
+  <div class="page-return-row">
+    <button class="cat-return" id="songReturnVizi" title="Return to Vizi"><span aria-hidden="true">🏠</span> Return to Vizi</button>
+  </div>
   <div class="page-eyebrow">Music Library</div>
   <h1 class="page-title">Find &amp; Load a Song</h1>
   <p class="page-desc">Browse free beginner chord sheets on Ultimate Guitar, or upload one you already have. Once it's loaded, Vizi will walk you through every chord on your fretboard.</p>
@@ -348,6 +360,12 @@
     }
   }
   if(ytClose){ ytClose.addEventListener('click', closeSongsVideo); }
+
+  // Return to Vizi — back to the home talk screen (conversation is preserved
+  // server-side). For a student who opened the Song stage but isn't loading a
+  // song right now; loading a song has its own redirect into song mode.
+  var songReturnVizi = document.getElementById('songReturnVizi');
+  if(songReturnVizi){ songReturnVizi.addEventListener('click', () => { window.location.href = 'index.html'; }); }
 
   // Auto-close the video player when the YouTube clip finishes playing
   if(ytIframe){
