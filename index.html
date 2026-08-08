@@ -83,6 +83,31 @@
   .code-btn-alt:hover{background:rgba(61,186,114,0.12);color:var(--text);}
   .code-msg{margin-top:.55rem;font-size:.86rem;color:var(--text-mid);min-height:1.1em;}
   .code-msg .code-strong{color:var(--vizi);font-family:'DM Mono',monospace;font-weight:700;font-size:1.05rem;letter-spacing:.15em;}
+  /* "See your plan" — the six categories as 9-rung ladders; reads the code to mark
+     where the student is, so the number means something. */
+  .plan-toggle{display:inline-flex;align-items:center;gap:.4rem;margin:0 auto .6rem;padding:.5rem .9rem;
+    background:transparent;border:1px solid var(--border);border-radius:9px;color:var(--text-mid);
+    font-family:'DM Sans',sans-serif;font-size:.86rem;font-weight:600;cursor:pointer;transition:all .18s;}
+  .plan-toggle:hover{border-color:var(--vizi);color:var(--vizi);}
+  .plan-toggle .pt-chev{transition:transform .2s;}
+  .plan-toggle[aria-expanded="true"] .pt-chev{transform:rotate(180deg);}
+  .plan-panel{display:none;max-width:440px;margin:0 auto 1.25rem;text-align:left;}
+  .plan-panel.open{display:block;}
+  .plan-cat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.7rem .85rem;margin-bottom:.6rem;}
+  .plan-cat.locked{opacity:.6;}
+  .plan-cat-head{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;margin-bottom:.45rem;}
+  .plan-cat-name{font-family:'DM Sans',sans-serif;font-weight:700;font-size:.98rem;color:var(--text);}
+  .plan-cat-now{font-family:'DM Mono',monospace;font-size:.74rem;color:var(--vizi);text-align:right;}
+  .plan-cat.locked .plan-cat-now{color:var(--text-dim);}
+  .plan-lock{font-family:'DM Sans',sans-serif;font-size:.8rem;color:var(--gold);margin-bottom:.4rem;}
+  .plan-rungs{list-style:none;margin:0;padding:0;counter-reset:rung;}
+  .plan-rungs li{position:relative;padding:.16rem 0 .16rem 1.7rem;font-family:'DM Sans',sans-serif;font-size:.84rem;color:var(--text-mid);line-height:1.35;counter-increment:rung;}
+  .plan-rungs li::before{content:counter(rung);position:absolute;left:0;top:.18rem;width:1.2rem;height:1.2rem;border-radius:50%;background:var(--surface2);color:var(--text-dim);font-family:'DM Mono',monospace;font-size:.66rem;display:flex;align-items:center;justify-content:center;}
+  .plan-rungs li.done{color:var(--text-dim);}
+  .plan-rungs li.done::before{content:'\2713';background:rgba(61,186,114,0.18);color:var(--vizi);}
+  .plan-rungs li.here{color:var(--text);font-weight:700;}
+  .plan-rungs li.here::before{background:var(--vizi);color:#0f1117;}
+  .plan-rungs li.here .here-tag{color:var(--vizi);font-weight:700;font-size:.72rem;margin-left:.4rem;font-family:'DM Mono',monospace;white-space:nowrap;}
   .name-invite.show{display:block;}
   .stage-wrap{position:relative;margin-top:1.75rem;margin-bottom:1rem}
   .stage{
@@ -314,6 +339,12 @@
   <div class="code-msg" id="codeMsg" role="status" aria-live="polite"></div>
 </div>
 
+<!-- See your plan — six categories laddered out; marks where the code says you are -->
+<button class="plan-toggle" id="planToggle" type="button" aria-expanded="false" aria-controls="planPanel">
+  <span>See your plan</span><span class="pt-chev">▾</span>
+</button>
+<div class="plan-panel" id="planPanel"></div>
+
 <!-- Response panels -->
 <div class="panels">
   <div class="panel you"    id="pYou"><div class="label">You said</div><div class="body" id="bYou"></div></div>
@@ -503,12 +534,88 @@
       const code = (input.value||'').trim();
       if(!/^[0-9]{6}$/.test(code)){ msg.textContent = 'Enter your 6-digit code.'; return; }
       msg.textContent = applyCode(code) ? "Resumed — Vizi will pick up where you left off." : "Couldn't save that — try again.";
+      if(window.viziRenderPlan) window.viziRenderPlan();
     });
     get.addEventListener('click', ()=>{
       const code = getProgressCode();
       input.value = code;
       msg.innerHTML = 'Your code: <span class="code-strong">'+code+'</span> — save it to pick up here next time.';
     });
+  })();
+  // ── "See your plan": the six categories as 9-rung ladders (curriculum order).
+  // Reads the code and marks the current rung per category so the digits mean
+  // something; locked categories show their unlock condition. ──
+  (function initPlanPanel(){
+    const toggle = document.getElementById('planToggle');
+    const panel  = document.getElementById('planPanel');
+    if(!toggle || !panel) return;
+    function num(x){ const n=parseInt(x,10); return Number.isFinite(n)?n:0; }
+    const PLAN_ORDER = ['warmup','strumming','chords','song','soloing','theory'];
+    const PLAN = {
+      warmup:{ name:'Warm-up', rungs:[
+        'Shape 1 — E minor pentatonic (green box)','Shape 1 solid + roots named','Shape 2 (teal)',
+        'Shapes 1\u20132 connected; scale-building','Shape 3 (purple)','Shape 4 (orange)','Shape 5 (blue)',
+        'All 5 shapes connected up the neck','Major-scale position \u2014 full-neck fluency'] },
+      strumming:{ name:'Strumming', rungs:[
+        'Steady downstrokes on the beat','Down-up (eighth notes)','Down-up-down-up, accents on 2 & 4',
+        'Common patterns (D \u00b7 D-U \u00b7 U-D-U)','Dynamics \u2014 soft/loud, muting for feel',
+        'Fingerpicking intro (p-i-m-a: thumb + fingers)','Alternating-bass (Travis) picking',
+        'Syncopation / 16th-note patterns','Song-specific patterns, fluent'] },
+      chords:{ name:'Chords', rungs:[
+        'E minor, A minor','+ E, A (majors from the minor shapes)','+ D (diamond shape)',
+        '+ G, C \u2014 all common open chords','All opens clean, fluent transitions',
+        'Power chords (moveable root-5 + palm mute)','B7 \u2014 partial barre (gateway shape)',
+        'Bm (A-shape) & F (E-shape) barres','Moveable barre system, any key + triads'] },
+      song:{ name:'Song', rungs:[
+        'First 3-chord song from the starter list','Play it start to finish, no stopping',
+        'Play it in time with the strum pattern','A couple more starter songs',
+        'Songs using your full open-chord set','Capo songs \u2014 same shapes, new key',
+        'Upload any song (Simplify) \u2014 mixed chords','A song with a barre chord',
+        'A fingerpicked song / song with a solo'] },
+      soloing:{ name:'Soloing', rungs:[
+        'Simple licks in the pentatonic box','Hammer-ons','Pull-offs','Bends \u2014 half & whole step',
+        'Vibrato','Improvise a phrase over a backing track','Blues scale (add the \u266d5 blue note)',
+        'Solo across connected positions','Longer solos / genre licks'],
+        unlocked:(lv)=> (num(lv.warmup)>=3 && num(lv.song)>=1),
+        lockNote:'\ud83d\udd12 Unlocks after Warm-up step 3 and your first song' },
+      theory:{ name:'Theory', rungs:[
+        'I\u2013IV\u2013V, the chord-family idea','Why a key\u2019s chords fit (diatonic families)',
+        'The number system (I\u2013VII)','Nashville number charts','Relative minor (Am = rel. minor of C)',
+        '12-bar blues form','Write a progression in a key','Transpose a song (capo / barre)',
+        '7th chords + figuring songs out by ear'],
+        unlocked:(lv)=> (num(lv.chords)>=5),
+        lockNote:'\ud83d\udd12 Unlocks once your open chords are solid (Chords step 5)' },
+    };
+    function levels(){ try{ return (JSON.parse(localStorage.getItem('viziProgress')||'{}').levels)||{}; }catch(e){ return {}; } }
+    function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function render(){
+      const lv = levels(); let html='';
+      PLAN_ORDER.forEach(key=>{
+        const cat = PLAN[key]; const level = num(lv[key]);
+        const unlocked = cat.unlocked ? cat.unlocked(lv) : true;
+        const now = !unlocked ? 'locked' : (level<=0 ? 'not started yet'
+          : 'on: ' + cat.rungs[Math.min(level, cat.rungs.length)-1]);
+        html += '<div class="plan-cat'+(unlocked?'':' locked')+'">'
+          + '<div class="plan-cat-head"><span class="plan-cat-name">'+esc(cat.name)+'</span>'
+          + '<span class="plan-cat-now">'+esc(now)+'</span></div>';
+        if(!unlocked && cat.lockNote) html += '<div class="plan-lock">'+esc(cat.lockNote)+'</div>';
+        html += '<ol class="plan-rungs">';
+        cat.rungs.forEach((r,i)=>{
+          const n=i+1; let cls='';
+          if(unlocked){ if(n<level) cls='done'; else if(n===level) cls='here'; }
+          html += '<li'+(cls?(' class="'+cls+'"'):'')+'>'+esc(r)
+                + (cls==='here'?'<span class="here-tag">\u25c0 you are here</span>':'')+'</li>';
+        });
+        html += '</ol></div>';
+      });
+      panel.innerHTML = html;
+    }
+    toggle.addEventListener('click', ()=>{
+      const open = panel.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', open?'true':'false');
+      if(open) render();
+    });
+    window.viziRenderPlan = ()=>{ if(panel.classList.contains('open')) render(); };
   })();
   function getProgressCode(){
     try {
