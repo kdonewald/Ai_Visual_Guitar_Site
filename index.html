@@ -57,6 +57,32 @@
     border-radius:14px;padding:.8rem 1.15rem;margin:1rem auto 1.25rem;
     max-width:360px;display:none;
   }
+  /* Progress code — returning students enter their code to resume; "Get my code"
+     hands back the current code to save when they stop. */
+  .code-box{
+    max-width:400px;margin:0 auto 1.25rem;padding:.85rem 1rem;
+    background:rgba(61,186,114,0.07);border:1px solid rgba(61,186,114,0.28);
+    border-radius:14px;text-align:center;font-family:'DM Sans',sans-serif;
+  }
+  .code-box-title{font-size:.9rem;font-weight:700;color:var(--vizi);margin-bottom:.55rem;}
+  .code-row{display:flex;gap:.5rem;justify-content:center;align-items:center;flex-wrap:wrap;}
+  .code-input{
+    width:8.5em;padding:.55rem .7rem;border-radius:9px;border:1.5px solid var(--border);
+    background:var(--surface2);color:var(--text);font-family:'DM Mono',monospace;
+    font-size:1.05rem;letter-spacing:.35em;text-align:center;
+  }
+  .code-input::placeholder{letter-spacing:normal;color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.88rem;}
+  .code-input:focus{outline:none;border-color:var(--vizi);}
+  .code-btn{
+    padding:.55rem .95rem;border-radius:9px;border:1.5px solid var(--vizi);
+    background:var(--vizi);color:#0f1117;font-family:'DM Sans',sans-serif;font-weight:700;
+    font-size:.9rem;cursor:pointer;transition:all .18s;white-space:nowrap;
+  }
+  .code-btn:hover{background:var(--vizi-dark);border-color:var(--vizi-dark);}
+  .code-btn-alt{background:transparent;color:var(--vizi);}
+  .code-btn-alt:hover{background:rgba(61,186,114,0.12);color:var(--text);}
+  .code-msg{margin-top:.55rem;font-size:.86rem;color:var(--text-mid);min-height:1.1em;}
+  .code-msg .code-strong{color:var(--vizi);font-family:'DM Mono',monospace;font-weight:700;font-size:1.05rem;letter-spacing:.15em;}
   .name-invite.show{display:block;}
   .stage-wrap{position:relative;margin-top:1.75rem;margin-bottom:1rem}
   .stage{
@@ -277,6 +303,17 @@
 <div class="status" id="status">Ready</div>
 <div class="name-invite" id="nameInvite"><b>Hold the button</b> while you talk. Start by saying your name and telling Vizi what you want to work on — or ask her to plan a lesson.</div>
 
+<!-- Progress code: resume from a saved code, or grab the current code to save -->
+<div class="code-box" id="codeBox">
+  <div class="code-box-title">Have a progress code? Enter it to pick up where you left off.</div>
+  <div class="code-row">
+    <input id="codeInput" class="code-input" inputmode="numeric" maxlength="6" placeholder="6-digit code" autocomplete="off" aria-label="Progress code" />
+    <button id="codeResume" class="code-btn" type="button">Resume</button>
+    <button id="codeGet" class="code-btn code-btn-alt" type="button">Get my code</button>
+  </div>
+  <div class="code-msg" id="codeMsg" role="status" aria-live="polite"></div>
+</div>
+
 <!-- Response panels -->
 <div class="panels">
   <div class="panel you"    id="pYou"><div class="label">You said</div><div class="body" id="bYou"></div></div>
@@ -444,6 +481,34 @@
         localStorage.setItem('viziProgress', JSON.stringify(pr));
       }
     } catch(e){}
+  })();
+  // ── Progress code box (home screen): Resume seeds levels from a saved code;
+  // "Get my code" returns the current 6-digit code to save for next time. ──
+  (function initCodeBox(){
+    const input  = document.getElementById('codeInput');
+    const resume = document.getElementById('codeResume');
+    const get    = document.getElementById('codeGet');
+    const msg    = document.getElementById('codeMsg');
+    if(!input || !resume || !get || !msg) return;
+    function applyCode(code){
+      try{
+        const pr = JSON.parse(localStorage.getItem('viziProgress')||'{}');
+        pr.levels = {}; PROGRESS_CATS.forEach((c,i)=> pr.levels[c] = parseInt(code[i],10));
+        localStorage.setItem('viziProgress', JSON.stringify(pr));
+        return true;
+      }catch(e){ return false; }
+    }
+    input.addEventListener('input', ()=>{ input.value = input.value.replace(/[^0-9]/g,'').slice(0,6); });
+    resume.addEventListener('click', ()=>{
+      const code = (input.value||'').trim();
+      if(!/^[0-9]{6}$/.test(code)){ msg.textContent = 'Enter your 6-digit code.'; return; }
+      msg.textContent = applyCode(code) ? "Resumed — Vizi will pick up where you left off." : "Couldn't save that — try again.";
+    });
+    get.addEventListener('click', ()=>{
+      const code = getProgressCode();
+      input.value = code;
+      msg.innerHTML = 'Your code: <span class="code-strong">'+code+'</span> — save it to pick up here next time.';
+    });
   })();
   function getProgressCode(){
     try {
