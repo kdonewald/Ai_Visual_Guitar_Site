@@ -553,38 +553,38 @@
     const PLAN_ORDER = ['warmup','strumming','chords','song','soloing','theory'];
     const PLAN = {
       warmup:{ name:'Warm-up', rungs:[
-        'Shape 1 — E minor pentatonic (green box)','Shape 1 solid + roots named','Shape 2 (teal)',
-        'Shapes 1\u20132 connected; scale-building','Shape 3 (purple)','Shape 4 (orange)','Shape 5 (blue)',
-        'All 5 shapes connected up the neck','Major-scale position \u2014 full-neck fluency'] },
+        'Minor pentatonic \u2014 shapes 1\u20133','Minor pentatonic \u2014 shapes 3\u20135','Minor pentatonic \u2014 all 5 connected',
+        'E major scale \u2014 shapes 1\u20133','E major scale \u2014 shapes 3\u20135','E major scale \u2014 all 5 connected',
+        'E natural minor \u2014 shapes 1\u20133','E natural minor \u2014 shapes 3\u20135','E natural minor \u2014 all 5 connected'] },
       strumming:{ name:'Strumming', rungs:[
         'Steady downstrokes on the beat','Down-up (eighth notes)','Down-up-down-up, accents on 2 & 4',
-        'Common patterns (D \u00b7 D-U \u00b7 U-D-U)','Dynamics \u2014 soft/loud, muting for feel',
-        'Fingerpicking intro (p-i-m-a: thumb + fingers)','Alternating-bass (Travis) picking',
-        'Syncopation / 16th-note patterns','Song-specific patterns, fluent'] },
+        'Common patterns (D \u00b7 D-U \u00b7 U-D-U)','Strum position \u2014 over the soundhole vs. bridge/neck for tone',
+        'Dynamics \u2014 soft/loud, muting for feel','Fingerpicking intro (p-i-m-a: thumb + fingers)',
+        'Alternating-bass (Travis) picking','Song-specific patterns, fluent'] },
       chords:{ name:'Chords', rungs:[
-        'E minor, A minor','+ E, A (majors from the minor shapes)','+ D (diamond shape)',
-        '+ G, C \u2014 all common open chords','All opens clean, fluent transitions',
-        'Power chords (moveable root-5 + palm mute)','B7 \u2014 partial barre (gateway shape)',
-        'Bm (A-shape) & F (E-shape) barres','Moveable barre system, any key + triads'] },
+        'C, D, G (songs playable with just these)','A, E (rest of the open majors \u2014 not F)',
+        'E minor, A minor, D minor (major \u2192 minor: drop the 3rd)','F (its own step \u2014 the hard one)',
+        'Power chords (moveable root-5 \u2014 gateway to barres)','E-shape barre','A-shape barre',
+        'C / G / D shape barres (just a mention)','Triads'] },
       song:{ name:'Song', rungs:[
-        'First 3-chord song from the starter list','Play it start to finish, no stopping',
-        'Play it in time with the strum pattern','A couple more starter songs',
-        'Songs using your full open-chord set','Capo songs \u2014 same shapes, new key',
-        'Upload any song (Simplify) \u2014 mixed chords','A song with a barre chord',
-        'A fingerpicked song / song with a solo'] },
+        'First 3-chord song from the starter list','Play it in time with the strum pattern',
+        'A couple more starter songs','Songs using your full open-chord set (incl. F)',
+        'Capo songs \u2014 same shapes, new key','Upload any song (Simplify) \u2014 mixed chords',
+        'Play a 3-chord song using only barre shapes','A fingerpicked song','A song with a solo'] },
       soloing:{ name:'Soloing', rungs:[
-        'Simple licks in the pentatonic box','Hammer-ons','Pull-offs','Bends \u2014 half & whole step',
-        'Vibrato','Improvise a phrase over a backing track','Blues scale (add the \u266d5 blue note)',
-        'Solo across connected positions','Longer solos / genre licks'],
+        'Play a pentatonic shape over a backing track (follow the lights)','Play the whole pentatonic over the same track',
+        'Read a simple tab \u2014 play-along melodies (Mary Had a Little Lamb, etc.)','Play licks from tab, in time over a track',
+        'Improvise a phrase over a backing track','Hammer-ons & pull-offs','Bends (\u00bd & whole) + vibrato',
+        'Blues scale \u2014 add the \u266d5 blue note','Solo across connected positions / longer solos'],
         unlocked:(lv)=> (num(lv.warmup)>=3 && num(lv.song)>=1),
         lockNote:'\ud83d\udd12 Unlocks after Warm-up step 3 and your first song' },
       theory:{ name:'Theory', rungs:[
-        'I\u2013IV\u2013V, the chord-family idea','Why a key\u2019s chords fit (diatonic families)',
-        'The number system (I\u2013VII)','Nashville number charts','Relative minor (Am = rel. minor of C)',
-        '12-bar blues form','Write a progression in a key','Transpose a song (capo / barre)',
-        '7th chords + figuring songs out by ear'],
-        unlocked:(lv)=> (num(lv.chords)>=5),
-        lockNote:'\ud83d\udd12 Unlocks once your open chords are solid (Chords step 5)' },
+        'The root note \u2014 the anchor of every scale & chord','Build a scale: the 12 notes + the pattern (major, minor, pentatonic)',
+        'Number the scale 1\u20137 (the root is 1)','Build a chord: stack the 1, 3, 5','The 3rd makes it major or minor',
+        'Add the 7th: 1-3-5-7','I, IV, V and the family (why a key\u2019s chords fit; incl. 12-bar blues)',
+        'Relative minor (Am = rel. minor of C)','Transpose a song (capo / barre)'],
+        unlocked:(lv)=> (num(lv.warmup)>=3),
+        lockNote:'\ud83d\udd12 Unlocks at Warm-up step 3' },
     };
     function levels(){ try{ return (JSON.parse(localStorage.getItem('viziProgress')||'{}').levels)||{}; }catch(e){ return {}; } }
     function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
