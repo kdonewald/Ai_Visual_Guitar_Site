@@ -1740,6 +1740,8 @@
   // (barre at Chords 7, tab at Chords 9) and tuning are NOT 0→1 gates, so they're
   // intentionally absent — watching them doesn't bump a category.
   const INTRO_VIDEO_CAT = { warmup:'warmup', chords:'chords', 'chord-theory':'theory', strumming:'strumming', song:'song', soloing:'soloing' };
+  // Per-stage label for the "Watch … Video" button, so it isn't a generic "Intro" everywhere.
+  const STAGE_VIDEO_LABELS = { tuning:'Watch the Tuning Video', warmup:'Watch the Warm-up Video', 'chord-theory':'Watch the Scales & Chords Video', chords:'Watch the Open Chords Video', strumming:'Watch the Strumming Video', song:'Watch the Song Video', soloing:'Watch the Soloing Video', tab:'Watch the Tab-Reading Video' };
   function markIntroWatched(id){
     const p=getProgress(); p[id]=p[id]||{}; p[id].introWatched=(p[id].introWatched||0)+1; p[id].lastSeen=Date.now();
     // Bridge to the six-category levels Vizi reads: watching a stage's intro video
@@ -1800,7 +1802,7 @@
     catDesc.textContent  = stage.desc;
 
     if(document.getElementById('introWatchedNote')){
-      document.getElementById('introWatchedNote').textContent = 'Watch Intro Video';
+      document.getElementById('introWatchedNote').textContent = STAGE_VIDEO_LABELS[stage.id] || 'Watch Intro Video';
     }
 
     vidWrap.classList.remove('show');
