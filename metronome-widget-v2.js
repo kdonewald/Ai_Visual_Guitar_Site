@@ -248,16 +248,16 @@ nav .nav-links .vm-nav-break, .site-nav .nav-links .vm-nav-break {
     const { homeBtn, holdToggleBtn, theoryToggleBtn, metroToggleBtn, resetBtn, metroRow } = buildElements();
 
     // Clear existing nav-links children, replace with our rows.
-    // Row 1: Hold / Theory / Metro. Row 2 (after the forced break): Return to Vizi + Reset.
+    // Row 1: Hold / Theory / Metro / Reset. Row 2 (after the forced break): Return to Vizi (alone).
     navLinks.innerHTML = '';
     navLinks.appendChild(holdToggleBtn);
     navLinks.appendChild(theoryToggleBtn);
     navLinks.appendChild(metroToggleBtn);
+    navLinks.appendChild(resetBtn);
     const navBreak = document.createElement('div');
     navBreak.className = 'vm-nav-break';
     navLinks.appendChild(navBreak);
     navLinks.appendChild(homeBtn);
-    navLinks.appendChild(resetBtn);
 
     // Row 2 appended directly to nav
     nav.appendChild(metroRow);

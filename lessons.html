@@ -3240,6 +3240,9 @@
 
   function cxRenderBarre(area){
     const minor = cpQuality==='minor';
+    const vrow=document.createElement('div'); vrow.className='cp-bonus-video-row cp-bonus-video-row-sm';
+    vrow.appendChild(makeVideoIntroBtn('Watch the Barre Chords Video', activeStage&&activeStage.barreVideoUrl||''));
+    area.appendChild(vrow);
     const cap=document.createElement('div'); cap.className='cx-democap'; cap.textContent='Tap a column \u25B6 to watch that shape climb the neck.'; area.appendChild(cap);
     const heads=CX_BARRE_COLS.map(function(s){
       const canMinor=(s==='E'||s==='A'||s==='D');
@@ -3264,6 +3267,9 @@
 
   function cxRenderTriad(area){
     const minor = cpQuality==='minor';
+    const vrow=document.createElement('div'); vrow.className='cp-bonus-video-row cp-bonus-video-row-sm';
+    vrow.appendChild(makeVideoIntroBtn('Watch the Triads Video', activeStage&&activeStage.triadVideoUrl||''));
+    area.appendChild(vrow);
     const cap=document.createElement('div'); cap.className='cx-democap'; cap.textContent='Tap a column \u25B6 to watch that shape climb the string.'; area.appendChild(cap);
     const heads=CX_TRIAD_COLS.map(function(str){
       return {label:str, demoCmd:'TRIAD '+str+' PLAY'+(minor?' MINOR':''), demoName:str+' triad'+(minor?' (minor)':'')};
@@ -5304,6 +5310,6 @@ renderAll();
 
 })(); // end IIFE
 </script>
-<script src="metronome-widget-v2.js?v=20260809"></script>
+<script src="metronome-widget-v2.js?v=20260811"></script>
 </body>
 </html>
