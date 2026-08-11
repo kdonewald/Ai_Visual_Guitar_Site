@@ -1321,8 +1321,12 @@
       if (res.ok && !(res.headers.get('content-type')||'').includes('application/json')){
         const vText = dec(res.headers.get('X-Vizi-Text'));
         const vCmd  = dec(res.headers.get('X-Vizi-Commands'));
-        if (stageId === 'warmup'){
-          // Warmup: no spoken reply. The student was already told to pick a
+        if (stageId === 'warmup' || stageId === 'soloing'){
+          // Warmup & Soloing: no spoken reply — Vizi lands silent so the
+          // student can just ask. She still has the pick in context (the
+          // exercise message was sent), the scale is lit, and the backing
+          // track (soloing) stays paused until the student restarts it.
+          // The student was already told to pick a
           // scale, so we just light it — the SCALE command Vizi returned is
           // already queued to the fretboard server-side. Drain (don't play)
           // the audio, show her text for reference, and leave the button ready

@@ -4063,7 +4063,7 @@
       const ready = !!selectedScale;
       askBtn.disabled = !ready;
       askBtn.classList.remove('sending');
-      askBtn.textContent = ready ? 'Send Solo to Vizi →' : 'Pick a scale to send your solo to Vizi →';
+      askBtn.textContent = ready ? 'Questions? Ask Vizi' : 'Pick a scale first';
     }
 
     function buildSoloExercise(){
@@ -4187,7 +4187,9 @@
       exList.appendChild(body);
     });
 
-    // Send Solo to Vizi button — large, prominent
+    // "Questions? Ask Vizi" button — optional side door: pauses the track and
+    // opens the talk screen (Vizi silent, holds the pick in context). Most
+    // students never use it; they just solo over the track.
     // Opens in a NEW TAB (not window.location.href) so the backing track keeps
     // playing in this tab while the student talks to Vizi in the other one —
     // but we pause it for the duration of Vizi's spoken intro so the two don't
@@ -4197,9 +4199,10 @@
       if (askBtn.disabled) return;
       const exercise = buildSoloExercise();
 
-      askBtn.classList.add('sending');
-      askBtn.textContent = 'Sending to Vizi…';
-
+      // Pause the backing track so the question isn't asked over music. It
+      // stays paused — the student restarts it themselves when they flip back
+      // to this tab, where the track + scale selection are still intact (so
+      // resuming is just tapping play again, nothing to re-pick).
       if (soloAudioEl && !soloAudioEl.paused) {
         soloAudioEl.pause();
         document.querySelectorAll('.solo-track-btn').forEach(b => {
@@ -4209,21 +4212,11 @@
         });
       }
 
-      // window.open() steals focus to the new tab the instant it's called —
-      // so BOTH the green "sending" state and the "sent" confirmation have to
-      // fully play out and actually be seen BEFORE that call happens, not
-      // after. Once the tab switch happens, nothing further on this page is
-      // visible until the student manually comes back to this tab.
-      setTimeout(() => {
-        askBtn.classList.remove('sending');
-        askBtn.textContent = '✓ Sent to Vizi!';
-
-        setTimeout(() => {
-          const p = new URLSearchParams({stage:'soloing', exercise});
-          window.open('vizi.html?' + p.toString(), '_blank');
-          setTimeout(refreshAskBtnState, 1200);
-        }, 1200);
-      }, 1400);
+      // Open the talk screen in a new tab (this one stays put, track paused).
+      // Vizi lands silent — no auto-greeting — holding the pick in context;
+      // the student just taps talk and asks their question.
+      const p = new URLSearchParams({stage:'soloing', exercise});
+      window.open('vizi.html?' + p.toString(), '_blank');
     });
     exList.appendChild(askBtn);
     refreshAskBtnState();
