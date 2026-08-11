@@ -1772,6 +1772,11 @@
   function openStage(id){
     const stage = STAGES.find(s => s.id === id);
     if (!stage) return;
+    // Set the video button label for THIS stage BEFORE the early-return paths
+    // (tab / tuning) so those stages don't fall back to the generic "Watch Intro Video".
+    if(document.getElementById('introWatchedNote')){
+      document.getElementById('introWatchedNote').textContent = STAGE_VIDEO_LABELS[stage.id] || 'Watch Intro Video';
+    }
     if (stage.isSong){ window.location.href = 'songs.html'; return; }
     if (stage.isTab){ renderTabPanel(); activeStage=stage; catStageTag.textContent='Stage 8'; catTitle.textContent='Read & Play Tab'; catDesc.textContent=stage.desc; catPanel.classList.add('show'); window.scrollTo({top:0, behavior:'smooth'}); return; }
     activeStage = stage;
@@ -1800,10 +1805,6 @@
       + (stage.theoryMode ? '  —  Fretboard shows root / third / fifth' : '');
     catTitle.textContent = stage.label;
     catDesc.textContent  = stage.desc;
-
-    if(document.getElementById('introWatchedNote')){
-      document.getElementById('introWatchedNote').textContent = STAGE_VIDEO_LABELS[stage.id] || 'Watch Intro Video';
-    }
 
     vidWrap.classList.remove('show');
     tipCard.classList.remove('show');
@@ -2751,6 +2752,9 @@
   }
 
   function renderBarreTab(list, root, quality, shapes){
+    const vidRow=document.createElement('div'); vidRow.className='cp-bonus-video-row-sm';
+    vidRow.appendChild(makeVideoIntroBtn('Watch the Barre Chords Video', BARRE_VIDEO_URL));
+    list.appendChild(vidRow);
     const shapeLabel=document.createElement('span'); shapeLabel.className='choice-panel-label cp-label-bright';
     shapeLabel.textContent='Choose a shape';
     list.appendChild(shapeLabel);
@@ -2785,6 +2789,9 @@
   }
 
   function renderTriadTab(list, root, quality, stringGroups){
+    const vidRow=document.createElement('div'); vidRow.className='cp-bonus-video-row-sm';
+    vidRow.appendChild(makeVideoIntroBtn('Watch the Triads Video', TRIAD_VIDEO_URL));
+    list.appendChild(vidRow);
     const stringLabel=document.createElement('span'); stringLabel.className='choice-panel-label cp-label-bright';
     stringLabel.textContent='Choose a string';
     list.appendChild(stringLabel);
@@ -2963,6 +2970,12 @@
     goToVizi('chords', exercise);
   }
 
+
+  // Placeholder URLs for the Barre-chords and Triads videos (subcategories of Chords).
+  // Paste the real links here when ready — the buttons show "coming soon" until then,
+  // and they never bump the Chords level (watching a mid-ladder video is not mastery).
+  const BARRE_VIDEO_URL = '';   // TODO: barre-chords video URL
+  const TRIAD_VIDEO_URL = '';   // TODO: triads video URL
 
   function makeVideoIntroBtn(label, videoUrl){
     const btn = document.createElement('button');
@@ -5291,6 +5304,6 @@ renderAll();
 
 })(); // end IIFE
 </script>
-<script src="metronome-widget-v2.js?v=20260807"></script>
+<script src="metronome-widget-v2.js?v=20260809"></script>
 </body>
 </html>

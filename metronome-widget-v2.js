@@ -23,11 +23,21 @@ nav, .site-nav {
 /* Row 1 — nav-links holds Home + hold buttons */
 nav .nav-links, .site-nav .nav-links {
   display: flex !important;
-  flex-wrap: nowrap !important;
+  flex-wrap: wrap !important;
   align-items: center;
   gap: .4rem !important;
+  row-gap: .4rem !important;
   width: 100%;
   justify-content: flex-start !important;
+}
+/* Forced line break: pushes Return-to-Vizi + Reset onto their own second row */
+nav .nav-links .vm-nav-break, .site-nav .nav-links .vm-nav-break {
+  flex-basis: 100% !important;
+  width: 100% !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
 }
 
 /* Row 2 — metronome bar (collapsed by default; toggled via #vm-metro-toggle) */
@@ -237,13 +247,16 @@ nav .nav-links, .site-nav .nav-links {
 
     const { homeBtn, holdToggleBtn, theoryToggleBtn, metroToggleBtn, resetBtn, metroRow } = buildElements();
 
-    // Clear existing nav-links children, replace with our row 1
+    // Clear existing nav-links children, replace with our rows.
+    // Row 1: Hold / Theory / Metro. Row 2 (after the forced break): Return to Vizi + Reset.
     navLinks.innerHTML = '';
-    navLinks.appendChild(homeBtn);
     navLinks.appendChild(holdToggleBtn);
     navLinks.appendChild(theoryToggleBtn);
     navLinks.appendChild(metroToggleBtn);
-    navLinks.appendChild(resetBtn);
+    const navBreak = document.createElement('div');
+    navBreak.className = 'vm-nav-break';
+    navLinks.appendChild(navBreak);
+    navLinks.appendChild(homeBtn);
     navLinks.appendChild(resetBtn);
 
     // Row 2 appended directly to nav
