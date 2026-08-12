@@ -576,15 +576,15 @@
         'Read a simple tab \u2014 play-along melodies (Mary Had a Little Lamb, etc.)','Play licks from tab, in time over a track',
         'Improvise a phrase over a backing track','Hammer-ons & pull-offs','Bends (\u00bd & whole) + vibrato',
         'Blues scale \u2014 add the \u266d5 blue note','Solo across connected positions / longer solos'],
-        unlocked:(lv)=> (num(lv.warmup)>=3 && num(lv.song)>=1),
-        lockNote:'\ud83d\udd12 Unlocks after Warm-up step 3 and your first song' },
+        unlocked:(lv)=> (num(lv.soloing)>0 || (num(lv.warmup)>=3 && num(lv.song)>=1)),
+        lockNote:'Recommended after Warm-up step 3 and your first song — but you can start it anytime' },
       theory:{ name:'Theory', rungs:[
         'The root note \u2014 the anchor of every scale & chord','Build a scale: the 12 notes + the pattern (major, minor, pentatonic)',
         'Number the scale 1\u20137 (the root is 1)','Build a chord: stack the 1, 3, 5','The 3rd makes it major or minor',
         'Add the 7th: 1-3-5-7','I, IV, V and the family (why a key\u2019s chords fit; incl. 12-bar blues)',
         'Relative minor (Am = rel. minor of C)','Transpose a song (capo / barre)'],
-        unlocked:(lv)=> (num(lv.warmup)>=3),
-        lockNote:'\ud83d\udd12 Unlocks at Warm-up step 3' },
+        unlocked:(lv)=> (num(lv.theory)>0 || num(lv.warmup)>=3),
+        lockNote:'Recommended after Warm-up step 3 — but you can start it anytime' },
     };
     function levels(){ try{ return (JSON.parse(localStorage.getItem('viziProgress')||'{}').levels)||{}; }catch(e){ return {}; } }
     function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -593,7 +593,7 @@
       PLAN_ORDER.forEach(key=>{
         const cat = PLAN[key]; const level = num(lv[key]);
         const unlocked = cat.unlocked ? cat.unlocked(lv) : true;
-        const now = !unlocked ? 'locked' : (level<=0 ? 'not started yet'
+        const now = !unlocked ? 'recommended later' : (level<=0 ? 'not started yet'
           : 'on: ' + cat.rungs[Math.min(level, cat.rungs.length)-1]);
         html += '<div class="plan-cat'+(unlocked?'':' locked')+'">'
           + '<div class="plan-cat-head"><span class="plan-cat-name">'+esc(cat.name)+'</span>'
