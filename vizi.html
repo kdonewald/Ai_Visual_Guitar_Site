@@ -360,13 +360,13 @@
   (function initStopTrackBtn(){
     if (initialStageParam !== 'soloing' || !window.opener || window.opener.closed) return;
 
-    // Assume playing when this button first appears — the backing track only
-    // pauses automatically while Vizi's intro is speaking, then auto-resumes,
-    // so by the time a student would notice this button, it's normally playing.
-    let trackIsPlaying = true;
+    // The track is stopped on the way in (the soloing panel pauses it before
+    // opening this tab, and nothing auto-resumes it), so this button starts in
+    // the stopped state — tapping it restarts the track over in the soloing tab.
+    let trackIsPlaying = false;
 
     function render(){
-      stopTrackBtn.textContent = trackIsPlaying ? '⏹ Stop Backing Track' : '▶ Resume Backing Track';
+      stopTrackBtn.textContent = trackIsPlaying ? '⏹ Stop Backing Track' : '▶ Restart Backing Track';
       stopTrackBtn.classList.toggle('resume-state', !trackIsPlaying);
     }
 

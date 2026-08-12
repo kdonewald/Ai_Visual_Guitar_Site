@@ -4230,6 +4230,7 @@
 
       function resumeBackingTrack(){
         if (!soloAudioEl || !soloAudioEl.paused) return;
+        soloAudioEl.currentTime = 0;   // "Restart" — clean downbeat, not mid-loop resume
         soloAudioEl.play().catch(() => {});
         const activeTitle = selectedTrack ? selectedTrack.title : null;
         document.querySelectorAll('.solo-track-btn').forEach(b => {
