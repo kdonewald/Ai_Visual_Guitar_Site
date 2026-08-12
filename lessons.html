@@ -4197,12 +4197,10 @@
     askBtn = document.createElement('button'); askBtn.className = 'solo-ask-vizi';
     askBtn.addEventListener('click', () => {
       if (askBtn.disabled) return;
-      const exercise = buildSoloExercise();
 
       // Pause the backing track so the question isn't asked over music. It
-      // stays paused — the student restarts it themselves when they flip back
-      // to this tab, where the track + scale selection are still intact (so
-      // resuming is just tapping play again, nothing to re-pick).
+      // stays paused; the "▶ Restart Backing Track" button on the Vizi screen
+      // starts it again here (from the top) when they're ready.
       if (soloAudioEl && !soloAudioEl.paused) {
         soloAudioEl.pause();
         document.querySelectorAll('.solo-track-btn').forEach(b => {
@@ -4213,9 +4211,12 @@
       }
 
       // Open the talk screen in a new tab (this one stays put, track paused).
-      // Vizi lands silent — no auto-greeting — holding the pick in context;
-      // the student just taps talk and asks their question.
-      const p = new URLSearchParams({stage:'soloing', exercise});
+      // We send NO exercise data — vizi.html does no fetch, so it loads
+      // instantly with no delay. Vizi relies on knowing the scale from the
+      // conversation (she assigned it); if unsure she just asks. The bare
+      // stage=soloing flag only tells the Vizi screen to show its "Restart
+      // Backing Track" button and wire it back to this tab.
+      const p = new URLSearchParams({stage:'soloing'});
       window.open('vizi.html?' + p.toString(), '_blank');
     });
     exList.appendChild(askBtn);
