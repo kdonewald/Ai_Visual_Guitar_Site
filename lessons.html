@@ -1356,6 +1356,9 @@
   .cx-demohdr{cursor:pointer;background:rgba(61,220,132,.09);border:1px solid rgba(61,220,132,.45);border-radius:7px;color:#3ddc84;font-family:inherit;font-weight:800;padding:7px 2px;font-size:14px;letter-spacing:.2px;line-height:1;white-space:nowrap;align-self:stretch;}
   .cx-demohdr:active{opacity:.55;}
   .cx-democap{font-size:12px;color:#9aa4b5;font-style:italic;margin:2px 2px 9px;}
+  .cx-axislbl{font-size:10.5px;color:#7f8ba0;text-align:center;margin:0 2px 8px;letter-spacing:.2px;}
+  .cx-axislbl b{color:#c3cede;font-weight:800;letter-spacing:.5px;}
+  .cx-hdr-sub{display:block;font-size:8px;font-weight:600;letter-spacing:.3px;opacity:.85;text-transform:lowercase;line-height:1;margin-top:2px;}
   .cx-slash-wrap{display:flex;flex-wrap:wrap;}
 </style>
 </head>
@@ -3004,7 +3007,7 @@
   const CX_OPEN_MAJ   = ['C','D','E','G','A'];
   const CX_OPEN_MIN   = ['A','D','E'];
   const CX_BARRE_COLS = ['E','A','D','C','G'];
-  const CX_TRIAD_COLS = ['HE','B','G','D','A','LE'];
+  const CX_TRIAD_COLS = ['LE','A','D','G','B','HE'];  // low E (left) -> high E (right), fretboard-style
 
   let cpProgMode   = false;     // progression toggle
   let cpVoicing    = 'open';    // 'open' | 'barre' | 'triad'
@@ -3191,7 +3194,7 @@
     colLabels.forEach(function(c){
       if(c && c.demoCmd){
         const h=document.createElement('button'); h.className='cx-colhdr cx-demohdr';
-        h.textContent=c.label+' \u25B6'; h.title='Play the '+c.label+' shape up the neck';
+        h.innerHTML=c.label+' \u25B6'+(c.subLabel?'<span class="cx-hdr-sub">'+c.subLabel+'</span>':''); h.title='Play the '+c.label+' shape up the neck';
         h.addEventListener('click', ()=>cxFireDemo(c.demoCmd, c.demoName||c.label));
         g.appendChild(h);
       } else {
@@ -3244,9 +3247,10 @@
     vrow.appendChild(makeVideoIntroBtn('Watch the Barre Chords Video', activeStage&&activeStage.barreVideoUrl||''));
     area.appendChild(vrow);
     const cap=document.createElement('div'); cap.className='cx-democap'; cap.textContent='Tap a column \u25B6 to watch that shape climb the neck.'; area.appendChild(cap);
+    const bax=document.createElement('div'); bax.className='cx-axislbl'; bax.innerHTML='Rows = root notes \u00b7 columns = the 5 barre <b>SHAPES</b>'; area.appendChild(bax);
     const heads=CX_BARRE_COLS.map(function(s){
       const canMinor=(s==='E'||s==='A'||s==='D');
-      return {label:s, demoCmd:s+' SHAPE PLAY'+((minor&&canMinor)?' MINOR':''), demoName:s+' shape'+((minor&&canMinor)?' (minor)':'')};
+      return {label:s, subLabel:'shape', demoCmd:s+' SHAPE PLAY'+((minor&&canMinor)?' MINOR':''), demoName:s+' shape'+((minor&&canMinor)?' (minor)':'')};
     });
     const g=cxGrid(area, heads, 'minmax(34px,0.55fr) repeat(5,1fr)');
     CX_ALL_ROOTS.forEach(function(root){
@@ -3271,6 +3275,7 @@
     vrow.appendChild(makeVideoIntroBtn('Watch the Triads Video', activeStage&&activeStage.triadVideoUrl||''));
     area.appendChild(vrow);
     const cap=document.createElement('div'); cap.className='cx-democap'; cap.textContent='Tap a column \u25B6 to watch that shape climb the string.'; area.appendChild(cap);
+    const tax=document.createElement('div'); tax.className='cx-axislbl'; tax.innerHTML='Rows = root notes \u00b7 columns = <b>STRINGS</b>, low E \u2192 high E'; area.appendChild(tax);
     const heads=CX_TRIAD_COLS.map(function(str){
       return {label:str, demoCmd:'TRIAD '+str+' PLAY'+(minor?' MINOR':''), demoName:str+' triad'+(minor?' (minor)':'')};
     });
