@@ -2112,6 +2112,14 @@
     syncNavToggleOn('vm-hold-toggle','Hold Off');
   }
 
+  // Set theory coloring on/off directly (Chords stage uses this per voicing tab)
+  // and keep the nav toggle's label/state in sync so the student sees the truth.
+  async function setTheoryColoring(on){
+    await sendFretboardCommandDirect(on ? 'COLOR THEORY' : 'COLOR FINGER');
+    const btn = document.getElementById('vm-theory-toggle');
+    if(btn){ btn.dataset.state = on ? 'on' : 'off'; btn.textContent = on ? 'Theory On' : 'Theory Off'; }
+  }
+
   async function activateHoldAndTheory(){
     await sendFretboardCommandDirect('HOLD ON');
     await sendFretboardCommandDirect('COLOR THEORY');
@@ -3011,6 +3019,20 @@
 
   let cpProgMode   = false;     // progression toggle
   let cpVoicing    = 'open';    // 'open' | 'barre' | 'triad'
+  // Triads are three notes — one each of root/3rd/5th — so theory coloring IS
+  // the lesson there (it shows why the shape inverts and where the 3rd sits).
+  // Entering the Triad tab turns it on; leaving returns to finger coloring.
+  // Guarded so it only fires on an ACTUAL tab change, not every re-render
+  // (Major/Minor, progression toggles, etc. all re-render this panel).
+  let cxTheoryTab = null;       // last voicing we synced coloring for
+  function cxSyncTheoryForTab(){
+    if(cpExtraPanel) return;                       // 7ths/6ths/slash panels: leave as-is
+    if(cxTheoryTab === cpVoicing) return;          // no change
+    const wantTheory = (cpVoicing === 'triad');
+    const hadTheory  = (cxTheoryTab === 'triad');
+    cxTheoryTab = cpVoicing;
+    if(wantTheory !== hadTheory) setTheoryColoring(wantTheory);
+  }
   let cpQuality    = 'major';   // 'major' | 'minor'
   let cpLastChord  = null;      // last committed chord (for Light Chord re-fire)
   let cpExtraPanel = null;      // '7ths' | '6ths' | 'slash' | null
@@ -3027,6 +3049,7 @@
 
   function renderChordsPanel(){
     exList.innerHTML='';
+    cxSyncTheoryForTab();
 
     // ── Sticky bar: Row 1 = voicing + Prog · Row 2 = actions ──
     // Quality (Major/Minor) is NOT in the bar — it only applies to Barre/Triad,
@@ -3276,6 +3299,9 @@
     area.appendChild(vrow);
     const cap=document.createElement('div'); cap.className='cx-democap'; cap.textContent='Tap a column \u25B6 to watch that shape climb the string.'; area.appendChild(cap);
     const tax=document.createElement('div'); tax.className='cx-axislbl'; tax.innerHTML='Rows = root notes \u00b7 columns = <b>STRINGS</b>, low E \u2192 high E'; area.appendChild(tax);
+    const tnote=document.createElement('div'); tnote.className='cx-democap';
+    tnote.innerHTML='Theory coloring is on here \u2014 <span style="color:#ff5f5f">root red</span>, <span style="color:#3ddc84">3rd green</span>, <span style="color:#5b9cff">5th blue</span>, so you can see the 1-3-5 in every shape. Tap <b>Theory Off</b> in the nav bar for finger colors.';
+    area.appendChild(tnote);
     const heads=CX_TRIAD_COLS.map(function(str){
       return {label:str, demoCmd:'TRIAD '+str+' PLAY'+(minor?' MINOR':''), demoName:str+' triad'+(minor?' (minor)':'')};
     });
