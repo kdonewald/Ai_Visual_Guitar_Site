@@ -289,7 +289,6 @@
     </div>
   </nav>
   <div class="tag">Hold to talk · Release to send</div>
-  <div class="name-invite" id="nameInvite"><b>Hold the button</b> while you talk. Vizi can start by showing you a scale, a chord, or a chord progression — or take you into a structured lesson. Start with your name and how she can help today.</div>
 
   <div class="stage-wrap" id="stageWrap">
     <div class="stage" id="stage">
@@ -369,14 +368,6 @@
   // history.replaceState once it's done, so anything needing this value later
   // must read it now rather than re-parsing location.search.
   const initialStageParam = new URLSearchParams(window.location.search).get('stage');
-
-  // Only invite the student to introduce themselves on a genuine bare visit —
-  // not when arriving from a specific stage exercise or a song upload, since
-  // those already have their own tuned, content-first opening message.
-  if (!initialStageParam && !sessionStorage.getItem('viziSongSession')){
-    const ni = document.getElementById('nameInvite');
-    if (ni) ni.classList.add('show');
-  }
 
   // Only relevant when this tab was opened from the Soloing panel (window.open,
   // not a same-tab navigation) — showing a "stop backing track" button anywhere
@@ -631,9 +622,38 @@
       return !Number.isFinite(last) || (Date.now() - last) > SESSION_GAP_MS;
     }
     function stamp(){ const pr = read(); pr.lastSessionAt = Date.now(); write(pr); }
+    // Canned KICKOFF → Vizi speaks the opener (mandates both doors; forbids starting
+    // a lesson/opening a stage this turn so it can't trip the lesson-plan trigger).
+    const OPENER_KICKOFF =
+      '[SESSION START] Greet the student warmly in one short line and give them the opening choice. ' +
+      'You MUST offer BOTH, in the same line: (a) that you can show them a scale, a chord, or a chord progression right here, ' +
+      'and (b) that you can take them into a structured lesson. End by inviting them to say which they\u2019d like. ' +
+      'Do NOT start a lesson, do NOT open any stage, and emit NO command on this turn.';
+    async function playViziOpener(){
+      setBtn('thinking'); btn.innerHTML = 'Vizi is<br>Thinking'; setStatus('Just a moment…');
+      try{
+        const res = await fetch(RAILWAY_URL + '/claude-tts', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ message: OPENER_KICKOFF, mode:'talk', progress:getProgressCode() })
+        });
+        const ct = (res.headers.get('content-type')||'');
+        if(res.ok && !ct.includes('application/json')){
+          const text = dec(res.headers.get('X-Vizi-Text'));
+          if(text) showPanel('pVizi','bVizi', text);
+          const blob = await res.blob();
+          setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('');
+          await playBlob(blob);        // immediate play — the tap is a user gesture
+          setStatus('Ready');
+        } else {
+          setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Ready — hold to talk');
+        }
+      }catch(e){
+        setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Ready — hold to talk');
+      }
+    }
     if(isDue()){
       strip.classList.add('show');
-      ready.addEventListener('click', ()=>{ stamp(); strip.classList.remove('show'); });
+      ready.addEventListener('click', ()=>{ stamp(); strip.classList.remove('show'); playViziOpener(); });
     } else {
       stamp();
     }

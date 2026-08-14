@@ -207,25 +207,8 @@
     width:100%;max-width:960px;padding:0 1.25rem 1rem;
     margin-top:1.2rem;
   }
-  /* Stage strip hidden by default (body.stages-hidden set on <body>); the nav-row
-     "Stages" toggle reveals it, so Vizi is the one who surfaces stages. */
-  body.stages-hidden .fretboard-section{ display:none; }
-
-  /* Prominent "Learning Stages" reveal button — sits between the nav and the
-     Welcome Video, its own line, wider + decorative. Toggles body.stages-hidden. */
-  .stages-toggle{
-    display:flex;align-items:center;justify-content:center;gap:.55rem;
-    width:calc(100% - 2.5rem);max-width:520px;margin:1.1rem auto .9rem;padding:.85rem 1.25rem;
-    border:1.5px solid rgba(45,212,191,0.45);border-radius:14px;
-    background:linear-gradient(180deg,rgba(45,212,191,0.10),rgba(45,212,191,0.03));
-    color:var(--teal,#2dd4bf);font-family:'DM Mono',monospace;font-weight:700;
-    font-size:.92rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;
-    transition:all .18s;box-shadow:0 6px 20px rgba(45,212,191,0.08);
-  }
-  .stages-toggle:hover{ background:linear-gradient(180deg,rgba(45,212,191,0.16),rgba(45,212,191,0.06));border-color:rgba(45,212,191,0.7); }
-  .stages-toggle .st-chev{ transition:transform .2s;font-size:.8rem;opacity:.85; }
-  body:not(.stages-hidden) .stages-toggle{ border-color:var(--teal,#2dd4bf);background:linear-gradient(180deg,rgba(45,212,191,0.20),rgba(45,212,191,0.08)); }
-  body:not(.stages-hidden) .stages-toggle .st-chev{ transform:rotate(180deg); }
+  /* Stage strip is ALWAYS visible now — Vizi points to stages, the student taps
+     to open them, so the target must be on screen (no hide/toggle). */
   .fretboard-label{
     font-family:'DM Mono',monospace;font-size:.86rem;letter-spacing:.14em;text-transform:uppercase;
     color:var(--text-mid);text-align:center;margin-bottom:.65rem;font-weight:600;font-size:.80rem;letter-spacing:.12em;
@@ -271,7 +254,7 @@
   @keyframes fade-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 </style>
 </head>
-<body class="stages-hidden">
+<body>
 
 <nav>
   <a href="index.html" class="nav-logo">
@@ -283,31 +266,7 @@
     </div>
 </nav>
 
-<!-- Learning-stages reveal — prominent toggle; the strip below starts hidden -->
-<button id="stagesToggle" class="stages-toggle" aria-expanded="false" aria-controls="fretsRow">
-  <span class="st-icon">🎸</span>
-  <span class="st-label">Show Learning Stages</span>
-  <span class="st-chev">▾</span>
-</button>
-<script>
-  (function(){
-    var btn=document.getElementById('stagesToggle');
-    if(!btn) return;
-    var label=btn.querySelector('.st-label');
-    function sync(){
-      var hidden=document.body.classList.contains('stages-hidden');
-      label.textContent = hidden ? 'Show Learning Stages' : 'Hide Learning Stages';
-      btn.setAttribute('aria-expanded', hidden ? 'false' : 'true');
-    }
-    btn.addEventListener('click', function(){
-      document.body.classList.toggle('stages-hidden');
-      sync();
-    });
-    sync();
-  })();
-</script>
-
-<!-- Interactive fretboard — top of page -->
+<!-- Interactive fretboard — top of page (stage strip is always visible) -->
 <div class="fretboard-section">
   <div class="fretboard-label">Tap a stage to begin</div>
   <div class="fretboard">
@@ -349,7 +308,6 @@
 <!-- Talk button -->
 <button class="talk" id="talkBtn">Hold<br>to Talk</button>
 <div class="status" id="status">Ready</div>
-<div class="name-invite" id="nameInvite"><b>Hold the button</b> while you talk. Vizi can start by showing you a scale, a chord, or a chord progression — or take you into a structured lesson. Start with your name and how she can help today.</div>
 
 <!-- Progress code: resume from a saved code, or grab the current code to save -->
 <div class="code-box" id="codeBox">
@@ -411,11 +369,6 @@
   const stageWrap = document.getElementById('stageWrap');
   const stage     = document.getElementById('stage');
   const viziVid   = document.getElementById('viziVid');
-
-  // index.html is always the bare/generic home entry point — no stage
-  // exercise data, no song session — so the invite always applies here.
-  const nameInviteEl = document.getElementById('nameInvite');
-  if (nameInviteEl) nameInviteEl.classList.add('show');
 
   let pendingIntroBlob = null;
   let audioCtx, stream, source, processor, sink;
@@ -586,9 +539,43 @@
       return !Number.isFinite(last) || (Date.now() - last) > SESSION_GAP_MS;
     }
     function stamp(){ const pr = read(); pr.lastSessionAt = Date.now(); write(pr); }
+    // Canned KICKOFF that makes Vizi speak the opener. Sent through /claude-tts
+    // (mode:'talk') so she phrases it fresh each time, but the instruction is fixed
+    // and MANDATES both doors — show something here, OR a structured lesson — and
+    // explicitly forbids starting a lesson or opening anything on this turn (so it
+    // can't trip the lesson-plan trigger). §18 backs the same shape.
+    const OPENER_KICKOFF =
+      '[SESSION START] Greet the student warmly in one short line and give them the opening choice. ' +
+      'You MUST offer BOTH, in the same line: (a) that you can show them a scale, a chord, or a chord progression right here, ' +
+      'and (b) that you can take them into a structured lesson. End by inviting them to say which they\u2019d like. ' +
+      'Do NOT start a lesson, do NOT open any stage, and emit NO command on this turn.';
+    async function playViziOpener(){
+      // The tap is a user gesture, so audio can play immediately (no second tap).
+      setBtn('thinking'); btn.innerHTML='Vizi is<br>Thinking'; setStatus('Just a moment…');
+      try{
+        const res = await fetch(RAILWAY_URL + '/claude-tts', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ message: OPENER_KICKOFF, mode:'talk', progress:getProgressCode() })
+        });
+        const ct = (res.headers.get('content-type')||'');
+        if(res.ok && !ct.includes('application/json')){
+          const text = dec(res.headers.get('X-Vizi-Text'));
+          if(text) showPanel('pVizi','bVizi',text);
+          const blob = await res.blob();
+          setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus('');
+          await playBlob(blob);          // immediate play — same Web-Audio path as stage intros
+          setStatus('Ready');
+        } else {
+          // Couldn't reach Vizi — fall back to a ready state; student can hold-to-talk.
+          setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus('Ready — hold to talk');
+        }
+      }catch(e){
+        setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus('Ready — hold to talk');
+      }
+    }
     if(isDue()){
       strip.classList.add('show');
-      ready.addEventListener('click', ()=>{ stamp(); strip.classList.remove('show'); });
+      ready.addEventListener('click', ()=>{ stamp(); strip.classList.remove('show'); playViziOpener(); });
     } else {
       // Fresh continuation — refresh the stamp so the session keeps rolling.
       stamp();
