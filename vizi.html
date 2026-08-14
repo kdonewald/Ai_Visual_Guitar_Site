@@ -63,6 +63,24 @@
   }
   .name-invite.show{display:block;}
 
+  /* Setup reminder — due-session nudge (guitar tuned + board lit) above the talk
+     button. Shows only on a new/stale session; "Ready to play" clears it and
+     stamps the session. LED test lives on the setup stage; this is reminder +
+     confirm only. (--vizi isn't in :root on this page, so use explicit fallbacks.) */
+  .setup-strip{
+    max-width:400px;margin:.75rem auto 1.1rem;padding:.8rem 1rem;
+    background:rgba(232,160,32,0.08);border:1px solid rgba(232,160,32,0.30);
+    border-radius:14px;text-align:center;font-family:'DM Sans',sans-serif;display:none;
+  }
+  .setup-strip.show{display:block;}
+  .setup-strip-title{font-size:.96rem;font-weight:700;color:var(--gold);margin-bottom:.6rem;line-height:1.4;}
+  .setup-btn{
+    padding:.55rem 1.1rem;border-radius:9px;border:1.5px solid var(--vizi,#3dba72);
+    background:var(--vizi,#3dba72);color:#0f1117;font-family:'DM Sans',sans-serif;font-weight:700;
+    font-size:.92rem;cursor:pointer;transition:all .18s;white-space:nowrap;
+  }
+  .setup-btn:hover{background:var(--vizi-dark,#2e9658);border-color:var(--vizi-dark,#2e9658);}
+
   /* ── vizi avatar ── */
   .stage-wrap{position:relative;margin-bottom:1.25rem}
   .stage{
@@ -279,6 +297,12 @@
       <video id="viziVid" src="VIZI%20MUTETALK.mp4" muted loop playsinline preload="auto"></video>
     </div>
     <div class="ring"></div>
+  </div>
+
+  <!-- Setup reminder (due-session only; shown/cleared by initSetupStrip below) -->
+  <div class="setup-strip" id="setupStrip">
+    <div class="setup-strip-title">🎸 Guitar in tune? · 💡 Lights working?</div>
+    <button id="setupReady" class="setup-btn" type="button">✓ Ready to play</button>
   </div>
 
   <button class="talk" id="talkBtn">Hold<br>to Talk</button>
@@ -585,6 +609,35 @@
       }).join('');
     } catch(e){ return '000000'; }
   }
+
+  // ── Setup reminder strip (due-session gate) ──
+  // A drifted guitar or a dark board makes the whole lesson silently fail, so on a
+  // NEW or STALE session we show a reminder above the talk button (LED test itself
+  // lives on the setup stage). Only on a genuine bare visit — not when arriving from
+  // a stage exercise or a song upload (same gate as the name-invite), since those
+  // are mid-lesson, not a session start. "Ready to play" clears it + stamps the
+  // session so a fresh continuation skips it.
+  (function initSetupStrip(){
+    const SESSION_GAP_MS = 30*60*1000;
+    const strip = document.getElementById('setupStrip');
+    const ready = document.getElementById('setupReady');
+    if(!strip || !ready) return;
+    if(initialStageParam || sessionStorage.getItem('viziSongSession')) return; // mid-lesson arrival — no reminder
+    function read(){ try{ return JSON.parse(localStorage.getItem('viziProgress')||'{}'); }catch(e){ return {}; } }
+    function write(pr){ try{ localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){} }
+    function isDue(){
+      const pr = read();
+      const last = parseInt(pr.lastSessionAt, 10);
+      return !Number.isFinite(last) || (Date.now() - last) > SESSION_GAP_MS;
+    }
+    function stamp(){ const pr = read(); pr.lastSessionAt = Date.now(); write(pr); }
+    if(isDue()){
+      strip.classList.add('show');
+      ready.addEventListener('click', ()=>{ stamp(); strip.classList.remove('show'); });
+    } else {
+      stamp();
+    }
+  })();
 
   // ── P2: OPEN <stage> routing ──
   // Vizi emits e.g. "| OPEN strumming". Map the category name to the real

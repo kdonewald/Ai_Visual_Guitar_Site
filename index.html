@@ -57,6 +57,23 @@
     border-radius:14px;padding:.8rem 1.15rem;margin:1rem auto 1.25rem;
     max-width:360px;display:none;
   }
+  /* Setup reminder — a due-session nudge (guitar in tune + board lit) that sits
+     above the talk button. Shows only on a new/stale session; "Ready to play"
+     clears it and stamps the session so a fresh continuation skips it. The LED
+     test itself lives on the setup stage — this is reminder + confirm only. */
+  .setup-strip{
+    max-width:400px;margin:0 auto 1.1rem;padding:.8rem 1rem;
+    background:rgba(232,160,32,0.08);border:1px solid rgba(232,160,32,0.30);
+    border-radius:14px;text-align:center;font-family:'DM Sans',sans-serif;display:none;
+  }
+  .setup-strip.show{display:block;}
+  .setup-strip-title{font-size:.96rem;font-weight:700;color:var(--gold);margin-bottom:.6rem;line-height:1.4;}
+  .setup-btn{
+    padding:.55rem 1.1rem;border-radius:9px;border:1.5px solid var(--vizi);
+    background:var(--vizi);color:#0f1117;font-family:'DM Sans',sans-serif;font-weight:700;
+    font-size:.92rem;cursor:pointer;transition:all .18s;white-space:nowrap;
+  }
+  .setup-btn:hover{background:var(--vizi-dark);border-color:var(--vizi-dark);}
   /* Progress code — returning students enter their code to resume; "Get my code"
      hands back the current code to save when they stop. */
   .code-box{
@@ -323,6 +340,12 @@
   <div class="ring"></div>
 </div>
 
+<!-- Setup reminder (due-session only; shown/cleared by initSetupStrip below) -->
+<div class="setup-strip" id="setupStrip">
+  <div class="setup-strip-title">🎸 Guitar in tune? · 💡 Lights working?</div>
+  <button id="setupReady" class="setup-btn" type="button">✓ Ready to play</button>
+</div>
+
 <!-- Talk button -->
 <button class="talk" id="talkBtn">Hold<br>to Talk</button>
 <div class="status" id="status">Ready</div>
@@ -541,6 +564,35 @@
       input.value = code;
       msg.innerHTML = 'Your code: <span class="code-strong">'+code+'</span> — save it to pick up here next time.';
     });
+  })();
+  // ── Setup reminder strip (due-session gate) ──
+  // A physical product: a drifted guitar or a dark board makes the whole lesson
+  // silently fail. So on a NEW or STALE session we show a reminder above the talk
+  // button; the LED test itself lives on the setup stage. The reminder is the
+  // guarantee (the welcome video carries the how-to); Vizi may also voice it, but
+  // isn't relied on for it. "Ready to play" clears the strip and stamps the
+  // session so a fresh continuation (returning within the window) skips it.
+  (function initSetupStrip(){
+    const SESSION_GAP_MS = 30*60*1000; // >30 min since last activity = a new session
+    const strip = document.getElementById('setupStrip');
+    const ready = document.getElementById('setupReady');
+    if(!strip || !ready) return;
+    function read(){ try{ return JSON.parse(localStorage.getItem('viziProgress')||'{}'); }catch(e){ return {}; } }
+    function write(pr){ try{ localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){} }
+    function isDue(){
+      const pr = read();
+      const last = parseInt(pr.lastSessionAt, 10);
+      // Due if we've never stamped a session, or the last one is older than the gap.
+      return !Number.isFinite(last) || (Date.now() - last) > SESSION_GAP_MS;
+    }
+    function stamp(){ const pr = read(); pr.lastSessionAt = Date.now(); write(pr); }
+    if(isDue()){
+      strip.classList.add('show');
+      ready.addEventListener('click', ()=>{ stamp(); strip.classList.remove('show'); });
+    } else {
+      // Fresh continuation — refresh the stamp so the session keeps rolling.
+      stamp();
+    }
   })();
   // ── "See your plan": the six categories as 9-rung ladders (curriculum order).
   // Reads the code and marks the current rung per category so the digits mean
