@@ -98,6 +98,27 @@
 
   /* exercise list */
   .ex-list{display:flex;flex-direction:column;gap:.6rem;}
+  /* Video-first gate: on first visit the exercises are hidden behind a notice
+     until the intro video is watched (auto on finish, or the manual button). */
+  .vg-gate-note{display:none;background:rgba(232,160,32,0.08);border:1px solid rgba(232,160,32,0.30);
+    border-radius:12px;padding:.9rem 1.1rem;margin-bottom:1rem;font-family:'DM Sans',sans-serif;
+    font-size:.95rem;line-height:1.45;color:var(--gold,#e8a020);text-align:center;}
+  .vg-gate-note.show{display:block;}
+  .vg-gate-note b{color:var(--gold,#e8a020);}
+  body.vg-locked #exList{display:none;}
+  /* Tuning keeps its tuner controls out of reach while locked too (every stage
+     gates). Chords + Tab render into #exList, so that lock already covers them.
+     The intro/video button stays visible so they can watch. */
+  body.vg-locked #tunerChoice,
+  body.vg-locked #tunerWrap{display:none !important;}
+  /* When watched, the intro button reads as a satisfied rewatch link. */
+  #introChoice.vg-watched{opacity:.8;}
+  #introChoice.vg-watched .cp-vid-icon{opacity:.9;}
+  .vg-gate-actions{margin-top:.75rem;}
+  .vg-watched-btn{padding:.5rem 1.05rem;border-radius:9px;border:1.5px solid var(--gold,#e8a020);
+    background:transparent;color:var(--gold,#e8a020);font-family:'DM Sans',sans-serif;font-weight:700;
+    font-size:.88rem;cursor:pointer;transition:all .16s;}
+  .vg-watched-btn:hover{background:rgba(232,160,32,0.12);}
   .ex-item{display:flex;align-items:center;gap:.85rem;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:.85rem 1.1rem;cursor:pointer;transition:all .18s;}
   .ex-item:hover{border-color:var(--blue);background:rgba(27,79,138,0.04)}
   .ex-num{width:26px;height:26px;border-radius:50%;flex-shrink:0;background:var(--surface2);border:1px solid var(--border);color:var(--text-mid);font-family:'DM Mono',monospace;font-size:.82rem;font-weight:500;display:flex;align-items:center;justify-content:center;}
@@ -1451,6 +1472,7 @@
         </div>
       </div>
 
+      <div class="vg-gate-note" id="vgGateNote">🎥 <b>Watch this video the first time</b> to unlock the exercises. It stays here if you want to watch it again.<div class="vg-gate-actions"><button class="vg-watched-btn" id="vgWatchedBtn" type="button">✓ I've watched it</button></div></div>
       <div class="ex-list" id="exList"></div>
     </div>
     <div class="cat-return-wrap">
@@ -1754,7 +1776,46 @@
     setProgress(p);
   }
 
-  // ── Panel state ────────────────────────────────────────────
+  // ── Video-first gate ───────────────────────────────────────
+  // Single source of truth: viziProgress[id].introWatched (>0 = watched). Both the
+  // manual "I've watched it" button AND the video-finish signal call the SAME
+  // markIntroWatched(id) — two triggers, one outcome, so they can't disagree.
+  // Vizi is NOT told; the 0→1 bridge above puts it in the code she reads next turn.
+  function vgIsWatched(id){
+    try{ return (getProgress()[id]||{}).introWatched > 0; }catch(e){ return false; }
+  }
+  // Apply/refresh the STAGE gate: locks #exList behind the notice until watched,
+  // and turns the intro button into a satisfied "rewatch" link once watched.
+  function vgApplyStageGate(id){
+    const watched = vgIsWatched(id);
+    document.body.classList.toggle('vg-locked', !watched);
+    const note = document.getElementById('vgGateNote');
+    if(note) note.classList.toggle('show', !watched);
+    const note2 = document.getElementById('introWatchedNote');
+    const btn = document.getElementById('introChoice');
+    if(btn){
+      btn.classList.toggle('vg-watched', watched);
+      if(watched && note2){ note2.textContent = '✓ ' + (STAGE_VIDEO_LABELS[id]||'Intro Video').replace(/^Watch the /,'Watched: ').replace(/^Watch /,'Watched: '); }
+    }
+  }
+  // Called by BOTH the button and the auto-finish handler. Marks watched, then
+  // reveals the exercises in place (no forced return — the code already knows).
+  function vgMarkStageWatched(id){
+    if(!id) return;
+    if(!vgIsWatched(id)) markIntroWatched(id);
+    vgApplyStageGate(id);
+  }
+  // Route a finished/confirmed video to the right place: a stage id refreshes the
+  // stage gate; 'barre'/'triad' are sub-feature flags that re-render the chords panel.
+  function vgMarkWatchedKey(key){
+    if(!key) return;
+    if(key === 'barre' || key === 'triad'){
+      if(!vgIsWatched(key)) markIntroWatched(key);
+      if(typeof renderChordsPanel === 'function') renderChordsPanel();
+    } else {
+      vgMarkStageWatched(key);
+    }
+  }
   let activeStage = null;
   const catPanel       = document.getElementById('catPanel');
   const catStageTag    = document.getElementById('catStageTag');
@@ -1781,7 +1842,7 @@
       document.getElementById('introWatchedNote').textContent = STAGE_VIDEO_LABELS[stage.id] || 'Watch Intro Video';
     }
     if (stage.isSong){ window.location.href = 'songs.html'; return; }
-    if (stage.isTab){ renderTabPanel(); activeStage=stage; catStageTag.textContent='Stage 8'; catTitle.textContent='Read & Play Tab'; catDesc.textContent=stage.desc; catPanel.classList.add('show'); window.scrollTo({top:0, behavior:'smooth'}); return; }
+    if (stage.isTab){ renderTabPanel(); activeStage=stage; catStageTag.textContent='Stage 8'; catTitle.textContent='Read & Play Tab'; catDesc.textContent=stage.desc; vgApplyStageGate(stage.id); catPanel.classList.add('show'); window.scrollTo({top:0, behavior:'smooth'}); return; }
     activeStage = stage;
 
     // Tuning stage: auto-open tuner, show tip
@@ -1798,6 +1859,7 @@
       if(tf) tf.style.display = '';
       const pr = document.getElementById('powerReminder');
       if(pr) pr.style.display = '';
+      vgApplyStageGate(stage.id);
       catPanel.classList.add('show');
       window.scrollTo({top:0, behavior:'smooth'});
         showRandomTip();
@@ -1819,6 +1881,7 @@
 
     renderExercises(stage);
     showStageTipOrNote();
+    vgApplyStageGate(stage.id);
     catPanel.classList.add('show');
     window.scrollTo({top:0, behavior:'smooth'});
   }
@@ -1828,8 +1891,12 @@
   const ytIframe = document.getElementById('ytIframe');
   const ytClose  = document.getElementById('ytClose');
 
-  function openStageVideo(url){
+  // Which watched-flag the currently-open video belongs to. Stage videos set this
+  // to the stage id (via the intro button below); barre/triad set it to 'barre'/'triad'.
+  let vgCurrentVideoKey = null;
+  function openStageVideo(url, watchKey){
     if(!ytIframe||!ytWrap||!url) return;
+    vgCurrentVideoKey = watchKey || (activeStage && activeStage.id) || null;
     // Convert watch/shorts URL to embed
     const embedUrl = url
       .replace('youtu.be/','youtube.com/embed/')
@@ -1857,6 +1924,8 @@
     let data;
     try{ data = JSON.parse(event.data); }catch(e){ return; }
     if(data.event === 'infoDelivery' && data.info && data.info.playerState === 0){
+      // Video reached the end → mark the RIGHT thing watched, then close.
+      vgMarkWatchedKey(vgCurrentVideoKey);
       closeStageVideo();
     }
   });
@@ -1868,8 +1937,18 @@
     }
     tipCard.classList.remove('show');
     tunerWrap.classList.remove('show'); stopTuner();
-    markIntroWatched(activeStage.id);
+    // NOTE: opening the video no longer counts as "watched" — watching it to the
+    // end (playerState 0 above) marks it, or the "I've watched it" fallback does.
+    // This makes the first-visit gate mean "watch it", not just "tap it".
   });
+  // Manual fallback: if the student closes the video before it ends (or the
+  // finish signal doesn't fire on their device), this flips the SAME watched flag.
+  const vgWatchedBtn = document.getElementById('vgWatchedBtn');
+  if(vgWatchedBtn){
+    vgWatchedBtn.addEventListener('click', () => {
+      if(activeStage) vgMarkStageWatched(activeStage.id);
+    });
+  }
 
   tunerChoice.addEventListener('click', () => {
     if (tunerWrap.classList.contains('show')) {
@@ -2865,6 +2944,27 @@
   const BARRE_SHAPES_DEMO = ['E','A','C','G','D'];
   const TRIAD_STRINGS_DEMO = [['LE','Low E'],['A','A'],['D','D'],['G','G'],['B','B'],['HE','High E']];
 
+  // Sub-feature video gate (barre / triad). Same model as the stage gate: the
+  // video must be watched (auto on finish, or the fallback button) before the
+  // shape/string choosers render. Own flag, so it doesn't move a category digit.
+  function vgRenderSubGate(container, key, videoUrl, label){
+    const wrap = document.createElement('div'); wrap.className='vg-gate-note show';
+    wrap.innerHTML = '🎥 <b>Watch the '+label+' video first</b> to unlock the demo. It stays here to rewatch.';
+    const actions = document.createElement('div'); actions.className='vg-gate-actions';
+    const watchBtn = makeVideoIntroBtn('▶ Watch the '+label+' Video', videoUrl);
+    // makeVideoIntroBtn wires openStageVideo(url) with no key — override so finishing
+    // marks THIS sub-flag, not the stage.
+    const nb = watchBtn.cloneNode(true);
+    if(videoUrl){ nb.addEventListener('click', ()=>{ openStageVideo(videoUrl, key); }); }
+    else { nb.disabled = true; nb.style.opacity='.45'; }
+    const doneBtn = document.createElement('button');
+    doneBtn.className='vg-watched-btn'; doneBtn.type='button'; doneBtn.textContent='✓ I\u2019ve watched it';
+    doneBtn.addEventListener('click', ()=>{ vgMarkWatchedKey(key); });
+    actions.appendChild(nb); actions.appendChild(doneBtn);
+    wrap.appendChild(actions);
+    container.appendChild(wrap);
+  }
+
   function renderDemoSection(container){
     const demoToggleBtn = document.createElement('button');
     demoToggleBtn.className = 'cp-demo-mode-btn cp-demo-section-toggle'+(cpShowDemo?' active':'');
@@ -2901,6 +3001,10 @@
     container.appendChild(modeRow);
 
     if(demoMode === 'barre'){
+      if(!vgIsWatched('barre')){
+        vgRenderSubGate(container, 'barre', activeStage&&activeStage.barreVideoUrl||'', 'Barre Chords');
+        return;
+      }
       const shapeLabel = document.createElement('span'); shapeLabel.className='choice-panel-label cp-label-bright';
       shapeLabel.textContent = 'Choose a shape';
       container.appendChild(shapeLabel);
@@ -2938,6 +3042,10 @@
     }
 
     if(demoMode === 'triad'){
+      if(!vgIsWatched('triad')){
+        vgRenderSubGate(container, 'triad', activeStage&&activeStage.triadVideoUrl||'', 'Triads');
+        return;
+      }
       const stringLabel = document.createElement('span'); stringLabel.className='choice-panel-label cp-label-bright';
       stringLabel.textContent = 'Choose a string';
       container.appendChild(stringLabel);
