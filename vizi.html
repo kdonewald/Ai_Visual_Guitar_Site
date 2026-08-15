@@ -73,7 +73,12 @@
     border-radius:14px;text-align:center;font-family:'DM Sans',sans-serif;display:none;
   }
   .setup-strip.show{display:block;}
-  .setup-strip-title{font-size:.96rem;font-weight:700;color:var(--gold);margin-bottom:.6rem;line-height:1.4;}
+  .setup-strip-title{font-size:.96rem;font-weight:700;color:var(--gold);margin-bottom:.4rem;line-height:1.4;}
+  .setup-strip-sub{font-size:.9rem;font-weight:500;color:var(--text-mid);margin-bottom:.7rem;line-height:1.4;}
+  /* Hide the talk button + status while the setup reminder is pending; the Ready
+     tap removes .setup-pending so they reappear as Vizi starts thinking. */
+  body.setup-pending #talkBtn,
+  body.setup-pending #status{ display:none; }
   .setup-btn{
     padding:.55rem 1.1rem;border-radius:9px;border:1.5px solid var(--vizi,#3dba72);
     background:var(--vizi,#3dba72);color:#0f1117;font-family:'DM Sans',sans-serif;font-weight:700;
@@ -301,6 +306,7 @@
   <!-- Setup reminder (due-session only; shown/cleared by initSetupStrip below) -->
   <div class="setup-strip" id="setupStrip">
     <div class="setup-strip-title">🎸 Guitar in tune? · 💡 Lights working?</div>
+    <div class="setup-strip-sub">If so, tap Ready to play.</div>
     <button id="setupReady" class="setup-btn" type="button">✓ Ready to play</button>
   </div>
 
@@ -630,6 +636,7 @@
       'and (b) that you can take them into a structured lesson. End by inviting them to say which they\u2019d like. ' +
       'Do NOT start a lesson, do NOT open any stage, and emit NO command on this turn.';
     async function playViziOpener(){
+      document.body.classList.remove('setup-pending');   // talk button reappears as Vizi begins thinking
       setBtn('thinking'); btn.innerHTML = 'Vizi is<br>Thinking'; setStatus('Just a moment…');
       try{
         const res = await fetch(RAILWAY_URL + '/claude-tts', {
@@ -653,6 +660,7 @@
     }
     if(isDue()){
       strip.classList.add('show');
+      document.body.classList.add('setup-pending');   // hide talk button until Ready is tapped
       ready.addEventListener('click', ()=>{ stamp(); strip.classList.remove('show'); playViziOpener(); });
     } else {
       stamp();
