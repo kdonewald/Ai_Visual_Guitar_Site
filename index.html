@@ -132,6 +132,19 @@
   .plan-rungs li.here{color:var(--text);font-weight:700;}
   .plan-rungs li.here::before{background:var(--vizi);color:#0f1117;}
   .plan-rungs li.here .here-tag{color:var(--vizi);font-weight:700;font-size:.72rem;margin-left:.4rem;font-family:'DM Mono',monospace;white-space:nowrap;}
+  /* Confidence box — the STUDENT owns mastery. On each unlocked category the current
+     rung gets an "I've got this" control; tapping it advances that category one rung
+     (raise-only, capped at 9). Two-tap to avoid an accidental, hard-to-undo bump. */
+  .plan-confidence{margin:.5rem 0 .1rem 1.7rem;}
+  .conf-btn{
+    display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .8rem;border-radius:9px;
+    border:1.5px solid var(--vizi);background:rgba(61,186,114,0.10);color:var(--vizi);
+    font-family:'DM Sans',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;transition:all .16s;
+  }
+  .conf-btn:hover{background:rgba(61,186,114,0.18);}
+  .conf-btn.confirming{background:var(--vizi);color:#0f1117;border-color:var(--vizi);}
+  .plan-conf-hint{font-family:'DM Sans',sans-serif;font-size:.74rem;color:var(--text-dim);margin:.3rem 0 0 1.7rem;line-height:1.35;}
+  .plan-complete{font-family:'DM Mono',monospace;font-size:.76rem;color:var(--vizi);margin:.4rem 0 .1rem 1.7rem;}
   .name-invite.show{display:block;}
   .stage-wrap{position:relative;margin-top:1.75rem;margin-bottom:1rem}
   .stage{
@@ -656,10 +669,47 @@
           html += '<li'+(cls?(' class="'+cls+'"'):'')+'>'+esc(r)
                 + (cls==='here'?'<span class="here-tag">\u25c0 you are here</span>':'')+'</li>';
         });
-        html += '</ol></div>';
+        html += '</ol>';
+        // Confidence box: only once the intro is done (level>=1) and there's a next
+        // rung (level<=8). The STUDENT decides they're ready — the tap is the commit.
+        if(unlocked && level>=1 && level<9){
+          html += '<div class="plan-confidence">'
+                + '<button type="button" class="conf-btn" data-cat="'+key+'" data-level="'+level+'">'
+                + '\u2713 I\u2019ve got this \u2014 next step</button></div>'
+                + '<div class="plan-conf-hint">Move on when this feels comfortable \u2014 there\u2019s no rush, and you can keep practising it as long as you like.</div>';
+        } else if(unlocked && level>=9){
+          html += '<div class="plan-complete">\u2713 You\u2019ve worked all the way through this track.</div>';
+        }
+        html += '</div>';
       });
       panel.innerHTML = html;
     }
+    // Raise-only advance of one category by one rung (cap 9), written to the same
+    // viziProgress.levels the code + video bridge use, so getProgressCode() and the
+    // next Vizi turn immediately reflect it.
+    function advance(cat){
+      let pr; try{ pr = JSON.parse(localStorage.getItem('viziProgress')||'{}'); }catch(e){ pr={}; }
+      pr.levels = pr.levels || {};
+      const cur = num(pr.levels[cat]);
+      const next = Math.min(cur + 1, 9);
+      if(next > cur){ pr.levels[cat] = next; try{ localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){} }
+    }
+    // Two-tap confirm so an accidental tap doesn't make a hard-to-undo bump.
+    let confirmTimer = null;
+    panel.addEventListener('click', (e)=>{
+      const b = e.target.closest('.conf-btn'); if(!b) return;
+      if(b.classList.contains('confirming')){
+        if(confirmTimer){ clearTimeout(confirmTimer); confirmTimer=null; }
+        advance(b.getAttribute('data-cat'));
+        render();                       // re-render: "you are here" moves, control updates
+      } else {
+        // First tap → arm confirm; auto-revert after 3s if they don't commit.
+        panel.querySelectorAll('.conf-btn.confirming').forEach(x=>{ x.classList.remove('confirming'); x.textContent='\u2713 I\u2019ve got this \u2014 next step'; });
+        b.classList.add('confirming'); b.textContent='Tap again to confirm';
+        if(confirmTimer) clearTimeout(confirmTimer);
+        confirmTimer = setTimeout(()=>{ if(b.isConnected){ b.classList.remove('confirming'); b.textContent='\u2713 I\u2019ve got this \u2014 next step'; } }, 3000);
+      }
+    });
     toggle.addEventListener('click', ()=>{
       const open = panel.classList.toggle('open');
       toggle.setAttribute('aria-expanded', open?'true':'false');
