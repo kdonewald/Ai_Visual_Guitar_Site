@@ -591,7 +591,7 @@
       try{
         const res = await fetch(RAILWAY_URL + '/claude-tts', {
           method:'POST', headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({ message: (getProgressCode()==='000000' ? OPENER_KICKOFF : OPENER_KICKOFF_RETURNING), mode:'talk', progress:getProgressCode() })
+          body:JSON.stringify({ message: (getProgressCode()==='000000' ? OPENER_KICKOFF : OPENER_KICKOFF_RETURNING), mode:'talk', progress:(window.viziProgressPayload?window.viziProgressPayload():getProgressCode()) })
         });
         const ct = (res.headers.get('content-type')||'');
         if(res.ok && !ct.includes('application/json')){
@@ -661,6 +661,21 @@
         'Relative minor (Am = rel. minor of C)','Transpose a song (capo / barre)'],
         unlocked:(lv)=> (num(lv.theory)>0 || num(lv.warmup)>=3),
         lockNote:'Recommended after Warm-up step 3 — but you can start it anytime' },
+    };
+    // ── Resolve each category's CURRENT step to its exact panel label, so Vizi is handed
+    //    the WORDS ("Warm-up = Minor pentatonic — all 5 connected") instead of re-deriving them
+    //    from the digits. Rides in the `progress` field (server prepends it as the PROGRESS line).
+    window.viziProgressPayload = function(){
+      var lv; try{ lv = (JSON.parse(localStorage.getItem('viziProgress')||'{}').levels)||{}; }catch(e){ lv={}; }
+      var code = (typeof getProgressCode==='function') ? getProgressCode() : '';
+      var parts = PLAN_ORDER.map(function(cat){
+        var n = parseInt(lv[cat],10);
+        var rungs = (PLAN[cat]&&PLAN[cat].rungs)||[];
+        var nm = (PLAN[cat]&&PLAN[cat].name)||cat;
+        var label = (!Number.isFinite(n)||n<=0) ? 'not started' : (rungs[Math.min(n,rungs.length)-1]||('step '+n));
+        return nm+' = '+label;
+      });
+      return code + '  ||  CURRENT STEPS (already resolved from the code — teach THESE exact steps; do NOT re-derive them from the digits, and never say a number aloud): ' + parts.join('; ');
     };
     function levels(){ try{ return (JSON.parse(localStorage.getItem('viziProgress')||'{}').levels)||{}; }catch(e){ return {}; } }
     function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -778,7 +793,7 @@
     try{
       const res=await fetch(RAILWAY_URL+'/stt-claude-tts',{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({audio:b64,sampleRate:TARGET_RATE,mode:'talk',progress:getProgressCode()})
+        body:JSON.stringify({audio:b64,sampleRate:TARGET_RATE,mode:'talk',progress:(window.viziProgressPayload?window.viziProgressPayload():getProgressCode())})
       });
       const ct=(res.headers.get('content-type')||'');
       if(ct.includes('application/json')){
