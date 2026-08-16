@@ -635,13 +635,24 @@
       'You MUST offer BOTH, in the same line: (a) that you can show them a scale, a chord, or a chord progression right here, ' +
       'and (b) that you can take them into a structured lesson. End by inviting them to say which they\u2019d like. ' +
       'Do NOT start a lesson, do NOT open any stage, and emit NO command on this turn.';
+    // RETURNING student (any real code): resume-aware opener. Reads the code and picks up
+    // where they left off per the curriculum's C1/C6 entry rules; names the ACTUAL current
+    // material (not a level number) and never previews rungs they haven't reached (barre-drift fix).
+    const OPENER_KICKOFF_RETURNING =
+      '[SESSION START \u2014 RETURNING STUDENT] Greet them warmly in one short line, then read their ' +
+      'PROGRESS code and briefly say where you will pick up, following the curriculum\u2019s returning-student ' +
+      'entry rules (C1/C6): meet each category at its CURRENT rung, naming the actual current material ' +
+      '(their current chords by name, their current warm-up scale, their song) \u2014 never a level number, and ' +
+      'never a rung they have not reached yet (do NOT mention barre or other advanced chords unless their code ' +
+      'is already there). End by asking whether they want to pick up there or work on something else. ' +
+      'Do NOT open any stage, and emit NO command on this turn.';
     async function playViziOpener(){
       document.body.classList.remove('setup-pending');   // talk button reappears as Vizi begins thinking
       setBtn('thinking'); btn.innerHTML = 'Vizi is<br>Thinking'; setStatus('Just a moment…');
       try{
         const res = await fetch(RAILWAY_URL + '/claude-tts', {
           method:'POST', headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({ message: OPENER_KICKOFF, mode:'talk', progress:getProgressCode() })
+          body:JSON.stringify({ message: (getProgressCode()==='000000' ? OPENER_KICKOFF : OPENER_KICKOFF_RETURNING), mode:'talk', progress:getProgressCode() })
         });
         const ct = (res.headers.get('content-type')||'');
         if(res.ok && !ct.includes('application/json')){
