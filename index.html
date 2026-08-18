@@ -319,6 +319,19 @@
   <div class="ring"></div>
 </div>
 
+<!-- Progress code (above the setup strip): Resume loads this device's last lesson into the box; or type a code to jump to any step. Ready to play sends whatever is here (000000 / blank / partial -> your saved plan, never wiped). "Get my code" saves the current code. "Start a new session" re-shows Ready to play (clears only the session timer; plan untouched). -->
+<div class="code-box" id="codeBox">
+  <div class="code-box-title">Have a progress code? Enter it to pick up where you left off.</div>
+  <div class="code-row">
+    <input id="codeInput" class="code-input" inputmode="numeric" maxlength="6" value="000000" autocomplete="off" aria-label="Progress code" />
+    <button id="codeResume" class="code-btn" type="button">Resume last session</button>
+    <button id="codeGet" class="code-btn code-btn-alt" type="button">Get my code</button>
+  </div>
+  <div class="code-note" style="font-size:.82rem;color:var(--text-mid);line-height:1.4;margin-top:.5rem;">Tap <b>Resume last session</b> to load your last lesson from this device — or type a code to go to any step. Then tap <b>Ready to play</b>.</div>
+  <div class="code-msg" id="codeMsg" role="status" aria-live="polite"></div>
+  <button id="newSession" type="button" style="display:none;background:none;border:none;color:var(--vizi);font-size:.82rem;text-decoration:underline;cursor:pointer;padding:.35rem 0 0;margin-top:.2rem;">Start a new session to enter a new code</button>
+</div>
+
 <!-- Setup reminder (due-session only; shown/cleared by initSetupStrip below) -->
 <div class="setup-strip" id="setupStrip">
   <div class="setup-strip-title">🎸 Guitar in tune? · 💡 Lights working?</div>
@@ -330,16 +343,7 @@
 <button class="talk" id="talkBtn">Hold<br>to Talk</button>
 <div class="status" id="status">Ready</div>
 
-<!-- Progress code: resume from a saved code, or grab the current code to save -->
-<div class="code-box" id="codeBox">
-  <div class="code-box-title">Have a progress code? Enter it to pick up where you left off.</div>
-  <div class="code-row">
-    <input id="codeInput" class="code-input" inputmode="numeric" maxlength="6" placeholder="6-digit code" autocomplete="off" aria-label="Progress code" />
-    <button id="codeResume" class="code-btn" type="button">Resume</button>
-    <button id="codeGet" class="code-btn code-btn-alt" type="button">Get my code</button>
-  </div>
-  <div class="code-msg" id="codeMsg" role="status" aria-live="polite"></div>
-</div>
+<!-- (progress code box moved above the setup strip) -->
 
 <!-- See your plan — six categories laddered out; marks where the code says you are -->
 <button class="plan-toggle" id="planToggle" type="button" aria-expanded="false" aria-controls="planPanel">
@@ -527,11 +531,15 @@
       }catch(e){ return false; }
     }
     input.addEventListener('input', ()=>{ input.value = input.value.replace(/[^0-9]/g,'').slice(0,6); });
+    input.addEventListener('focus', ()=>{ try{ input.select(); }catch(e){} });
     resume.addEventListener('click', ()=>{
-      const code = (input.value||'').trim();
-      if(!/^[0-9]{6}$/.test(code)){ msg.textContent = 'Enter your 6-digit code.'; return; }
-      msg.textContent = applyCode(code) ? "Resumed — Vizi will pick up where you left off." : "Couldn't save that — try again.";
-      if(window.viziRenderPlan) window.viziRenderPlan();
+      // "Resume last session" LOADS this device's saved code into the box (it does NOT send).
+      // Ready to play is what applies + greets; typing a code overrides.
+      const code = getProgressCode();
+      input.value = code;
+      msg.textContent = (code === '000000')
+        ? "No saved lesson on this device yet — type a code, or just tap Ready to play."
+        : "Loaded your last lesson from this device — tap Ready to play.";
     });
     get.addEventListener('click', ()=>{
       const code = getProgressCode();
@@ -609,13 +617,36 @@
         setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus('Ready — hold to talk');
       }
     }
+    // "Start a new session": clears ONLY the session timer (plan/levels untouched) and reloads,
+    // so the setup strip + Ready to play come back — a send path for a new/override code anytime.
+    const newSes = document.getElementById('newSession');
+    if(newSes){
+      newSes.addEventListener('click', ()=>{
+        try{ const pr = read(); delete pr.lastSessionAt; write(pr); }catch(e){}
+        location.reload();
+      });
+    }
     if(isDue()){
       strip.classList.add('show');
       document.body.classList.add('setup-pending');   // hide talk button until Ready is tapped
-      ready.addEventListener('click', ()=>{ stamp(); strip.classList.remove('show'); playViziOpener(); });
+      ready.addEventListener('click', ()=>{
+        // Apply the code box before sending — but ONLY a full non-zero 6-digit code. Blank /
+        // partial / 000000 leaves the saved plan untouched (never wipes it), so a stray tap or
+        // forgotten Resume just sends the plan already on this device.
+        try{
+          const ci = document.getElementById('codeInput');
+          const code = ci ? (ci.value||'').trim() : '';
+          if(/^[0-9]{6}$/.test(code) && code !== '000000'){
+            const pr = read(); pr.levels = {}; PROGRESS_CATS.forEach((c,i)=> pr.levels[c] = parseInt(code[i],10)); write(pr);
+            if(window.viziRenderPlan) window.viziRenderPlan();
+          }
+        }catch(e){}
+        stamp(); strip.classList.remove('show'); playViziOpener();
+      });
     } else {
       // Fresh continuation — refresh the stamp so the session keeps rolling.
       stamp();
+      if(newSes) newSes.style.display = '';   // Ready-to-play is hidden now; offer a way to re-arm it for a new code
     }
   })();
   // ── "See your plan": the six categories as 9-rung ladders (curriculum order).
