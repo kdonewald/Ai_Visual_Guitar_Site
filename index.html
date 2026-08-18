@@ -581,7 +581,7 @@
       'your E minor pentatonic \u2014 NEVER a shape number like "shape three" and never "all five", the warm-up ' +
       'stage sequences the shapes; and their song if one is loaded) \u2014 never a level number, and ' +
       'never a rung they have not reached yet (do NOT mention barre or other advanced chords unless their code ' +
-      'is already there). End by asking whether they want to pick up there or work on something else. ' +
+      'is already there). A non-zero Song step means they have REACHED that step, NOT that a song is loaded right now (songs load fresh each session) \u2014 do NOT claim a song is loaded. End by asking whether they want to pick up there or work on something else. ' +
       'Do NOT open any stage, and emit NO command on this turn.';
     async function playViziOpener(){
       // Talk button reappears now, as Vizi begins thinking.
@@ -591,7 +591,7 @@
       try{
         const res = await fetch(RAILWAY_URL + '/claude-tts', {
           method:'POST', headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({ message: (getProgressCode()==='000000' ? OPENER_KICKOFF : OPENER_KICKOFF_RETURNING), mode:'talk', progress:getProgressCode() })
+          body:JSON.stringify({ message: (getProgressCode()==='000000' ? OPENER_KICKOFF : (OPENER_KICKOFF_RETURNING + '  \u2014  CURRENT STEPS (already resolved from the code \u2014 teach THESE exact steps, do not re-derive from the digits): ' + (window.viziStepLabels?window.viziStepLabels():''))), mode:'talk', progress:getProgressCode() })
         });
         const ct = (res.headers.get('content-type')||'');
         if(res.ok && !ct.includes('application/json')){
@@ -661,6 +661,18 @@
         'Relative minor (Am = rel. minor of C)','Transpose a song (capo / barre)'],
         unlocked:(lv)=> (num(lv.theory)>0 || num(lv.warmup)>=3),
         lockNote:'Recommended after Warm-up step 3 — but you can start it anytime' },
+    };
+    // Resolve each category's CURRENT step to its exact panel label — used ONLY to enrich the
+    // returning-opener MESSAGE (a text field), never the 6-digit `progress` field.
+    window.viziStepLabels = function(){
+      var lv; try{ lv=(JSON.parse(localStorage.getItem('viziProgress')||'{}').levels)||{}; }catch(e){ lv={}; }
+      return PLAN_ORDER.map(function(cat){
+        var n=parseInt(lv[cat],10);
+        var rungs=(PLAN[cat]&&PLAN[cat].rungs)||[];
+        var nm=(PLAN[cat]&&PLAN[cat].name)||cat;
+        var label=(!Number.isFinite(n)||n<=0)?'not started':(rungs[Math.min(n,rungs.length)-1]||('step '+n));
+        return nm+' = '+label;
+      }).join('; ');
     };
     function levels(){ try{ return (JSON.parse(localStorage.getItem('viziProgress')||'{}').levels)||{}; }catch(e){ return {}; } }
     function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
