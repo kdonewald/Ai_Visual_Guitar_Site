@@ -325,7 +325,6 @@
   <div class="code-row">
     <input id="codeInput" class="code-input" inputmode="numeric" maxlength="6" value="000000" autocomplete="off" aria-label="Progress code" />
     <button id="codeResume" class="code-btn" type="button">Resume last session</button>
-    <button id="codeGet" class="code-btn code-btn-alt" type="button">Get my code</button>
   </div>
   <div class="code-note" style="font-size:.82rem;color:var(--text-mid);line-height:1.4;margin-top:.5rem;">Tap <b>Resume last session</b> to load your last lesson from this device — or type a code to go to any step. Then tap <b>Ready to play</b>.</div>
   <div class="code-msg" id="codeMsg" role="status" aria-live="polite"></div>
@@ -350,6 +349,12 @@
   <span>See your plan</span><span class="pt-chev">▾</span>
 </button>
 <div class="plan-panel" id="planPanel"></div>
+
+<!-- Transfer code (for a NEW device only) — tucked below the plan; the plan already saves on this device, so most students never need this. -->
+<div style="text-align:center;margin-top:1.1rem;">
+  <button id="codeGet" class="code-btn code-btn-alt" type="button">Get a transfer code</button>
+  <div id="codeGetMsg" style="font-size:.82rem;color:var(--text-mid);line-height:1.4;margin:.45rem auto 0;max-width:22rem;">Only needed to move your progress to another phone or browser — your plan already saves on this device.</div>
+</div>
 
 <!-- Response panels -->
 <div class="panels">
@@ -541,10 +546,12 @@
         ? "No saved lesson on this device yet — type a code, or just tap Ready to play."
         : "Loaded your last lesson from this device — tap Ready to play.";
     });
+    // "Get a transfer code" (below the plan) — for moving progress to another device.
+    // Shows the code in its OWN note; leaves the resume box + its message untouched.
+    const getMsg = document.getElementById('codeGetMsg');
     get.addEventListener('click', ()=>{
       const code = getProgressCode();
-      input.value = code;
-      msg.innerHTML = 'Your code: <span class="code-strong">'+code+'</span> — save it to pick up here next time.';
+      if(getMsg) getMsg.innerHTML = 'Your transfer code: <span class="code-strong">'+code+'</span> — enter it on another phone or browser to continue there.';
     });
   })();
   // ── Setup reminder strip (due-session gate) ──
