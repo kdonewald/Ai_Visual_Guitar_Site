@@ -3608,7 +3608,7 @@
   // A "Pentatonic" toggle near the Shape row flips the picked scale to its
   // 5-note version (firmware handles all four combos). Tapping a cell lights
   // that scale in place (Hold on via the relay's auto HOLD-ON, no page jump).
-  // Defaults tee up E minor pentatonic (all shapes) for a beginner on arrival.
+  // Defaults tee up E minor (all shapes); Pentatonic starts OFF (flip it on for the pentatonic rungs).
   function renderWarmupScaleGrid(def){
     const roots=['G','A','C','D','E'];
     const cols=['Major','Minor'];   // base scale type; Pentatonic is a separate toggle
@@ -3616,7 +3616,7 @@
     const SHAPE_COLORS={ '1':'#3dba72','2':'#2dd4bf','3':'#a855f7','4':'#e8a020','5':'#4a9eff' };
     let wuShape='all';               // 'all' or '1'..'5'
     let wuRoot='E', wuType='Minor';  // default beginner pick
-    let wuPenta=true;                // pentatonic ON by default (warm-up ladder starts on minor pentatonic)
+    let wuPenta=false;               // pentatonic OFF by default (student/Vizi flips it on for the pentatonic rungs 1-3)
     let selCell=null;
 
     const area=document.createElement('div'); area.className='cx-chord-area';
