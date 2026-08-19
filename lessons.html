@@ -14,11 +14,11 @@
 <style>
   :root{
     --bg:#0f1117; --surface:#1a1d2e; --surface2:#22263a;
-    --border:rgba(255,255,255,0.10); --border2:rgba(255,255,255,0.06);
+    --border:rgba(255,255,255,0.17); --border2:rgba(255,255,255,0.10);
     --red:#e05540; --red-dark:#c44432; --blue:#4f8ef7;
     --gold:#e8a020; --teal:#2dd4bf; --green:#3dba72;
     --vizi:#3dba72; --vizi-light:#2e9658;
-    --text:#f0ede8; --text-mid:#cbc4ba; --text-light:#b0a89e;
+    --text:#f5f2ed; --text-mid:#d4cec6; --text-light:#bbb4ab; --text-dim:#928b83;
     --white:#1a1d2e; --shadow:rgba(0,0,0,0.35); --shadow-lg:rgba(0,0,0,0.55);
     --cream:#0f1117; --cream-dark:rgba(255,255,255,0.10); --cream-mid:rgba(255,255,255,0.06);
     /* strum player */
@@ -48,6 +48,15 @@
   .logo-name{font-family:'Playfair Display',serif;font-size:.92rem;font-weight:700;color:var(--text)}
   .nav-link{font-size:.82rem;font-weight:600;color:var(--text);text-decoration:none;padding:7px 16px;border-radius:6px;border:2px solid var(--cream-dark);transition:all .2s;}
   .nav-link:hover{border-color:var(--blue);color:var(--blue)}
+
+
+  /* Accessibility/contrast pass: secondary controls stay readable on the dark UI.
+     Dim is reserved for truly disabled choices, not merely inactive ones. */
+  #vm-hold-toggle,#vm-theory-toggle,#vm-metro-toggle{
+    color:#d2cbc3 !important;border-color:rgba(255,255,255,.24) !important;opacity:1 !important;
+  }
+  #vm-reset{color:#91b7ff !important;border-color:rgba(91,134,207,.62) !important;opacity:1 !important;}
+  #vm-home{color:#55cf89 !important;border-color:#3dba72 !important;opacity:1 !important;}
 
   /* panel */
   .panel-wrap{ max-width:920px; margin:1rem auto 0; padding:0 1.5rem; }
@@ -1041,7 +1050,7 @@
   .cp-chord-btn:hover{ border-color:var(--gold);background:rgba(232,160,32,0.06); }
   .cp-chord-btn.in-scale{ border-color:var(--teal);background:rgba(42,172,184,0.18);color:var(--teal);font-weight:700; }
   .cp-chord-btn.in-scale-barre{ border-color:var(--red);background:rgba(224,85,64,0.12);color:var(--red);font-weight:700; }
-  .cp-chord-btn.filter-dim{ color:var(--text-light);background:rgba(255,255,255,0.04);opacity:.55; }
+  .cp-chord-btn.filter-dim{ color:#b9b2aa;background:rgba(255,255,255,0.05);opacity:.72; }
   .cp-chord-btn.in-progression{
     border-color:var(--gold);background:rgba(232,160,32,0.1);
   }
@@ -1268,7 +1277,7 @@
   .cp-grid-cell.blue{ border-color:rgba(79,142,247,0.4);color:var(--blue); }
   .cp-grid-cell.blue:hover:not(:disabled){ border-color:var(--red);color:var(--red); }
   .cp-grid-cell.blue.active{ border-color:var(--red);color:var(--red); }
-  .cp-grid-cell.grey{ opacity:.35;cursor:not-allowed;color:var(--text-light); }
+  .cp-grid-cell.grey{ opacity:.62;cursor:not-allowed;color:#b6afa7; }
 
   /* ── Open/Barre/Triad/All tab row ── */
   .cp-tab-row{ display:flex;gap:.35rem;margin-bottom:.5rem; }
@@ -1356,7 +1365,7 @@
   .cx-cell.open{border-color:#7e93b3;background:#223047;color:#ffffff;}
   .cx-cell.fchord{border-color:#f0b64e;background:#33280f;color:#ffdd8e;}
   .cx-cell.barrecolor{border-color:#5f88d0;background:#1a2740;color:#bcd6ff;}
-  .cx-cell.greyed{opacity:.5;cursor:default;border-style:dashed;border-color:#3d4a63;color:#93a0b4;background:#151a24;}
+  .cx-cell.greyed{opacity:.72;cursor:default;border-style:dashed;border-color:#53617a;color:#b5c0d0;background:#171c26;}
   .cx-cell:not(.greyed):active{transform:scale(.96);}
   .cx-rootlabel{background:transparent;border:none;color:#ffffff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;cursor:default;padding:0;}
   .cx-note{font-size:12.5px;color:#b3bfd1;font-style:italic;margin:10px 2px 4px;line-height:1.45;}
@@ -1504,7 +1513,7 @@
     },
     {
       id:'warmup', num:2, label:'Warmup with Scales',
-      desc:'Learn where notes live on the neck before grouping them into chords. A great way to start every session.',
+      desc:'Learn movable scale shapes. The pattern stays the same within each scale family; changing the root moves it to a new key.',
       videoUrl:'https://youtube.com/shorts/V2QMnEPTwBQ', // stage warmup
       tips:[
         "Scales are just notes arranged in a pattern — every chord you know is built from scale notes.",
@@ -3662,7 +3671,7 @@
     let selCell=null;
 
     const area=document.createElement('div'); area.className='cx-chord-area';
-    const cap=document.createElement('div'); cap.className='cx-democap'; cap.textContent='Set your scale, shape, and pentatonic, then tap Light Scale. Pentatonic is the simpler 5-note version — flip it on whenever you want it.'; area.appendChild(cap);
+    const cap=document.createElement('div'); cap.className='cx-democap'; cap.innerHTML='<b>Learn the shape, not just the key.</b> Major, natural minor, and pentatonic shapes are movable — the same pattern works in every key. Your guided plan uses E as the practice key; choose another root here anytime to see the same shape move.'; area.appendChild(cap);
 
     // ── Shape selector row: All / 1-5, tinted in each shape's color ──
     const shapeRow=document.createElement('div'); shapeRow.style.cssText='display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin:.3rem 0 .55rem;';

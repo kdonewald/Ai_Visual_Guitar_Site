@@ -18,7 +18,7 @@
     --red:#e05540; --red-dark:#c44432; --blue:#4f8ef7;
     --gold:#e8a020; --teal:#2dd4bf; --green:#3dba72;
     --vizi:#3dba72; --vizi-dark:#2e9658;
-    --text:#f0ede8; --text-mid:#a89f94; --text-dim:#6b6560;
+    --text:#f5f2ed; --text-mid:#c9c2b8; --text-dim:#918a82;
     --white:#ffffff; --shadow:rgba(0,0,0,0.35); --shadow-lg:rgba(0,0,0,0.55);
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -68,7 +68,7 @@
   }
   .setup-strip.show{display:block;}
   .setup-strip-title{font-size:.96rem;font-weight:700;color:var(--gold);margin-bottom:.4rem;line-height:1.4;}
-  .setup-strip-sub{font-size:.9rem;font-weight:500;color:var(--text-mid);margin-bottom:.7rem;line-height:1.4;}
+  .setup-strip-sub{font-size:.9rem;font-weight:650;color:#ded8d0;margin-bottom:.7rem;line-height:1.4;}
   /* While the setup reminder is pending (due session, before "Ready to play"),
      hide the talk button + its status so the student isn't tempted to talk before
      confirming setup. The Ready tap removes .setup-pending, so they reappear as
@@ -137,9 +137,9 @@
   .plan-cat.locked .plan-cat-now{color:var(--text-dim);}
   .plan-lock{font-family:'DM Sans',sans-serif;font-size:.8rem;color:var(--gold);margin-bottom:.4rem;}
   .plan-rungs{list-style:none;margin:0;padding:0;counter-reset:rung;}
-  .plan-rungs li{position:relative;padding:.16rem 0 .16rem 1.7rem;font-family:'DM Sans',sans-serif;font-size:.84rem;color:var(--text-mid);line-height:1.35;counter-increment:rung;}
+  .plan-rungs li{position:relative;padding:.16rem 0 .16rem 1.7rem;font-family:'DM Sans',sans-serif;font-size:.84rem;color:#beb7ae;line-height:1.35;counter-increment:rung;}
   .plan-rungs li::before{content:counter(rung);position:absolute;left:0;top:.18rem;width:1.2rem;height:1.2rem;border-radius:50%;background:var(--surface2);color:var(--text-dim);font-family:'DM Mono',monospace;font-size:.66rem;display:flex;align-items:center;justify-content:center;}
-  .plan-rungs li.done{color:var(--text-dim);}
+  .plan-rungs li.done{color:#9f9890;}
   .plan-rungs li.done::before{content:'\2713';background:rgba(61,186,114,0.18);color:var(--vizi);}
   .plan-rungs li.here{color:var(--text);font-weight:700;}
   .plan-rungs li.here::before{background:var(--vizi);color:#0f1117;}
@@ -155,7 +155,7 @@
   }
   .conf-btn:hover{background:rgba(61,186,114,0.18);}
   .conf-btn.confirming{background:var(--vizi);color:#0f1117;border-color:var(--vizi);}
-  .plan-conf-hint{font-family:'DM Sans',sans-serif;font-size:.74rem;color:var(--text-dim);margin:.3rem 0 0 1.7rem;line-height:1.35;}
+  .plan-conf-hint{font-family:'DM Sans',sans-serif;font-size:.76rem;color:#aaa39a;margin:.3rem 0 0 1.7rem;line-height:1.35;}
   .plan-complete{font-family:'DM Mono',monospace;font-size:.76rem;color:var(--vizi);margin:.4rem 0 .1rem 1.7rem;}
   .name-invite.show{display:block;}
   .stage-wrap{position:relative;margin-top:1.75rem;margin-bottom:1rem}
@@ -308,8 +308,8 @@
   #studentName{margin-bottom:.45rem !important;padding:.45rem .7rem !important;font-size:.9rem !important;}
 
   .setup-code-row{display:flex;align-items:center;justify-content:center;gap:.55rem;flex-wrap:wrap;margin:.05rem auto .48rem;}
-  .setup-code-label{font-size:.78rem;font-weight:700;color:var(--text-mid);}
-  .setup-code-input{width:7.2rem;box-sizing:border-box;font-family:'DM Mono',monospace;font-size:.95rem;font-weight:700;letter-spacing:.22em;text-align:center;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.38rem .38rem .38rem .58rem;}
+  .setup-code-label{font-size:.86rem;font-weight:800;color:#ded8d0;}
+  .setup-code-input{width:7.2rem;box-sizing:border-box;font-family:'DM Mono',monospace;font-size:1.08rem;font-weight:800;letter-spacing:.22em;text-align:center;color:#fff;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.38rem .38rem .38rem .58rem;}
   .setup-code-input:focus{outline:none;border-color:var(--vizi);box-shadow:0 0 0 2px rgba(61,186,114,.12);}
   .setup-code-change{background:none;border:none;color:var(--vizi);font-family:'DM Sans',sans-serif;font-size:.76rem;font-weight:700;text-decoration:underline;cursor:pointer;padding:.25rem .1rem;}
   .setup-code-confirm,.setup-code-cancel{display:none;font-family:'DM Sans',sans-serif;font-size:.76rem;font-weight:800;border-radius:8px;padding:.4rem .62rem;cursor:pointer;}
@@ -839,10 +839,10 @@
     function num(x){ const n=parseInt(x,10); return Number.isFinite(n)?n:0; }
     const PLAN_ORDER = ['warmup','chords','strumming','song','soloing','theory'];
     const PLAN = {
-      warmup:{ name:'Warm-up', rungs:[
+      warmup:{ name:'Warm-up', practiceKey:'E', rungs:[
         'Minor pentatonic \u2014 shapes 1\u20133','Minor pentatonic \u2014 shapes 3\u20135','Minor pentatonic \u2014 all 5 connected',
-        'E major scale \u2014 shapes 1\u20133','E major scale \u2014 shapes 3\u20135','E major scale \u2014 all 5 connected',
-        'E natural minor \u2014 shapes 1\u20133','E natural minor \u2014 shapes 3\u20135','E natural minor \u2014 all 5 connected'] },
+        'Major scale \u2014 shapes 1\u20133','Major scale \u2014 shapes 3\u20135','Major scale \u2014 all 5 connected',
+        'Natural minor scale \u2014 shapes 1\u20133','Natural minor scale \u2014 shapes 3\u20135','Natural minor scale \u2014 all 5 connected'] },
       strumming:{ name:'Strumming', rungs:[
         'Steady downstrokes on the beat','Down-up (eighth notes)','Down-up-down-up, accents on 2 & 4',
         'Common patterns (D \u00b7 D-U \u00b7 U-D-U)','Strum position \u2014 over the soundhole vs. bridge/neck for tone',
@@ -882,6 +882,7 @@
         var rungs=(PLAN[cat]&&PLAN[cat].rungs)||[];
         var nm=(PLAN[cat]&&PLAN[cat].name)||cat;
         var label=(!Number.isFinite(n)||n<=0)?'not started':(rungs[Math.min(n,rungs.length)-1]||('step '+n));
+        if(cat==='warmup' && label!=='not started') label += ' (practice key E; shape is movable to other keys)';
         return nm+' = '+label;
       }).join('; ');
     };
@@ -892,8 +893,9 @@
       PLAN_ORDER.forEach(key=>{
         const cat = PLAN[key]; const level = num(lv[key]);
         const unlocked = cat.unlocked ? cat.unlocked(lv) : true;
-        const now = !unlocked ? 'recommended later' : (level<=0 ? 'not started yet'
+        let now = !unlocked ? 'recommended later' : (level<=0 ? 'not started yet'
           : 'on: ' + cat.rungs[Math.min(level, cat.rungs.length)-1]);
+        if(key==='warmup' && unlocked && level>0) now += ' \u00b7 practice key: ' + cat.practiceKey;
         html += '<div class="plan-cat'+(unlocked?'':' locked')+'">'
           + '<div class="plan-cat-head"><span class="plan-cat-name">'+esc(cat.name)+'</span>'
           + '<span class="plan-cat-now">'+esc(now)+'</span></div>';
@@ -912,7 +914,7 @@
           html += '<div class="plan-confidence">'
                 + '<button type="button" class="conf-btn" data-cat="'+key+'" data-level="'+level+'">'
                 + '\u2713 I\u2019ve got this \u2014 next step</button></div>'
-                + '<div class="plan-conf-hint">Move on when this feels comfortable \u2014 there\u2019s no rush, and you can keep practising it as long as you like.</div>';
+                + '<div class="plan-conf-hint">Move on when you know it from memory without relying on the lights. If not, keep this step and practise it again next time.</div>';
         } else if(unlocked && level>=9){
           html += '<div class="plan-complete">\u2713 You\u2019ve worked all the way through this track.</div>';
         }
