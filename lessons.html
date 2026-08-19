@@ -1524,6 +1524,7 @@
       id:'chords', num:4, label:'Chords',
       desc:'',
       videoUrl:'https://youtu.be/sn4pwA-6Dbs',       // main stage intro — open chords + chord builder
+      powerVideoUrl:'',                              // TODO: power-chords section intro
       barreVideoUrl:'https://youtu.be/gKSYK5btjSw',  // barre chords section intro
       triadVideoUrl:'https://youtu.be/6V_zuBa4nDE',  // triads section intro
       tips:[
@@ -3113,7 +3114,7 @@
   // ═══════════════════════════════════════════════════════════════
   // CHORDS STAGE — rebuilt (simplified for beginners), July 28 2026
   // Sticky two-row bar: Row 1 = Progression toggle · Major/Minor ·
-  // Open/Barre/Triad; Row 2 = Light · Clear · Reset. Progression OFF = tapping
+  // Open/Power/Barre/Triad; Row 2 = Light · Clear · Reset. Progression OFF = tapping
   // a chord lights it immediately (direct fire, stays on page). Progression ON
   // = tapping adds to the strip silently (no board flash); it lights only on
   // Light Progression. Voicing + quality persist. Reuses cpProgression,
@@ -3122,11 +3123,12 @@
   const CX_ALL_ROOTS  = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
   const CX_OPEN_MAJ   = ['C','D','E','G','A'];
   const CX_OPEN_MIN   = ['A','D','E'];
+  const CX_POWER_COLS = ['LE','A','D','G','B'];      // usable power-chord root strings
   const CX_BARRE_COLS = ['E','A','D','C','G'];
   const CX_TRIAD_COLS = ['LE','A','D','G','B','HE'];  // low E (left) -> high E (right), fretboard-style
 
   let cpProgMode   = false;     // progression toggle
-  let cpVoicing    = 'open';    // 'open' | 'barre' | 'triad'
+  let cpVoicing    = 'open';    // 'open' | 'power' | 'barre' | 'triad'
   // Triads are three notes — one each of root/3rd/5th — so theory coloring IS
   // the lesson there (it shows why the shape inverts and where the 3rd sits).
   // Entering the Triad tab turns it on; leaving returns to finger coloring.
@@ -3168,7 +3170,7 @@
     // Row 1 — voicing selector (pick one) + progression toggle
     const row1=document.createElement('div'); row1.className='cx-row';
     const vSeg=document.createElement('div'); vSeg.className='cx-seg';
-    [['open','Open'],['barre','Barre'],['triad','Triad']].forEach(function(pair){
+    [['open','Open'],['power','Power'],['barre','Barre'],['triad','Triad']].forEach(function(pair){
       vSeg.appendChild(cxPill(pair[1], cpVoicing===pair[0] && !cpExtraPanel, ()=>{
         cpVoicing=pair[0]; cpExtraPanel=null; renderChordsPanel();
       }));
@@ -3199,7 +3201,8 @@
     row2.appendChild(cxLightBtn); row2.appendChild(cxClearBtn); row2.appendChild(resetBtn);
     bar.appendChild(row2);
 
-    // Quality strip — Barre / Triad only, pinned inside the sticky bar
+    // Quality strip — Barre / Triad only, pinned inside the sticky bar.
+    // Power chords have no major/minor quality because they contain no 3rd.
     if(!cpExtraPanel && (cpVoicing==='barre' || cpVoicing==='triad')){
       const qRow=document.createElement('div'); qRow.className='cx-row cx-qrow';
       const qLbl=document.createElement('span'); qLbl.className='cx-qlabel'; qLbl.textContent='Quality';
@@ -3229,6 +3232,7 @@
     else if(cpExtraPanel==='6ths')  cxRender6ths(area);
     else if(cpExtraPanel==='slash') cxRenderSlash(area);
     else if(cpVoicing==='open')     cxRenderOpen(area);
+    else if(cpVoicing==='power')    cxRenderPower(area);
     else if(cpVoicing==='barre')    cxRenderBarre(area);
     else                            cxRenderTriad(area);
     exList.appendChild(area);
@@ -3369,6 +3373,44 @@
     });
     const n=document.createElement('div'); n.className='cx-note';
     n.textContent="F isn't a true open chord, but it's a must-know basic — shown in gold. Roots without an open shape are greyed; switch to Barre to play those.";
+    area.appendChild(n);
+  }
+
+  function cxRenderPower(area){
+    // Power chords are hard-coded in the ESP32: the page sends only root + root string.
+    // Two-note shape = root + perfect fifth. Vizi/browser never calculate frets or LEDs.
+    const vrow=document.createElement('div'); vrow.className='cp-bonus-video-row cp-bonus-video-row-sm';
+    vrow.appendChild(makeVideoIntroBtn('Watch the Power Chords Video', activeStage&&activeStage.powerVideoUrl||''));
+    area.appendChild(vrow);
+
+    const cap=document.createElement('div'); cap.className='cx-democap';
+    cap.textContent='Tap a column ▶ to watch that 2-note power-chord shape climb the neck.';
+    area.appendChild(cap);
+
+    const pax=document.createElement('div'); pax.className='cx-axislbl';
+    pax.innerHTML='Rows = root notes · columns = <b>ROOT STRINGS</b>, low E → B';
+    area.appendChild(pax);
+
+    const intro=document.createElement('div'); intro.className='cx-note';
+    intro.innerHTML='Start with <b>Low E</b> and <b>A</b>. Play only the two lit strings. The G-string-root shape looks slightly different because the G→B tuning changes; the board handles that automatically.';
+    area.appendChild(intro);
+
+    const heads=CX_POWER_COLS.map(function(str){
+      return {label:str, demoCmd:'CHORD P '+str+' PLAY', demoName:str+'-string power-chord shape'};
+    });
+    const g=cxGrid(area, heads, 'minmax(34px,0.55fr) repeat(5,1fr)');
+
+    CX_ALL_ROOTS.forEach(function(root){
+      cxRootLabel(g, root);
+      CX_POWER_COLS.forEach(function(str){
+        const cmd='CHORD P '+root+str;
+        const label=root+'5 power chord — root on '+str;
+        g.appendChild(cxCellBtn(root+'5','barrecolor',cmd,label));
+      });
+    });
+
+    const n=document.createElement('div'); n.className='cx-note';
+    n.textContent='A power chord is just the root and perfect fifth. Use the ▶ at the top of a column to see the movable shape; tap any root below it to light that specific power chord.';
     area.appendChild(n);
   }
 
