@@ -299,8 +299,11 @@
   .setup-code-label{font-size:.78rem;font-weight:700;color:var(--text-mid);}
   .setup-code-input{width:7.2rem;box-sizing:border-box;font-family:'DM Mono',monospace;font-size:.95rem;font-weight:700;letter-spacing:.22em;text-align:center;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.38rem .38rem .38rem .58rem;}
   .setup-code-input:focus{outline:none;border-color:var(--vizi);box-shadow:0 0 0 2px rgba(61,186,114,.12);}
-  .setup-code-confirm{display:none;background:var(--vizi);border:1px solid var(--vizi);color:#07150d;font-family:'DM Sans',sans-serif;font-size:.76rem;font-weight:800;border-radius:8px;padding:.4rem .62rem;cursor:pointer;}
-  .setup-code-confirm.show{display:inline-block;}
+  .setup-code-change{background:none;border:none;color:var(--vizi);font-family:'DM Sans',sans-serif;font-size:.76rem;font-weight:700;text-decoration:underline;cursor:pointer;padding:.25rem .1rem;}
+  .setup-code-confirm,.setup-code-cancel{display:none;font-family:'DM Sans',sans-serif;font-size:.76rem;font-weight:800;border-radius:8px;padding:.4rem .62rem;cursor:pointer;}
+  .setup-code-confirm{background:var(--vizi);border:1px solid var(--vizi);color:#07150d;}
+  .setup-code-cancel{background:transparent;border:1px solid var(--border);color:var(--text-mid);}
+  .setup-code-confirm.show,.setup-code-cancel.show{display:inline-block;}
   .setup-code-status{min-height:1.05rem;margin:-.12rem 0 .38rem;font-size:.72rem;color:var(--vizi);font-weight:700;}
   .setup-btn:disabled{opacity:.42;cursor:not-allowed;}
 
@@ -392,7 +395,9 @@
   <div class="setup-code-row" aria-label="Current lesson code">
     <span class="setup-code-label">Lesson code</span>
     <input id="codeInput" class="setup-code-input" inputmode="numeric" maxlength="6" value="000000" autocomplete="off" aria-label="Lesson code" />
+    <button class="setup-code-change" id="codeChange" type="button">Change</button>
     <button class="setup-code-confirm" id="codeConfirm" type="button">Use code</button>
+    <button class="setup-code-cancel" id="codeCancel" type="button">Cancel</button>
   </div>
   <div class="setup-code-status" id="codeStatus" role="status" aria-live="polite"></div>
   <div class="setup-strip-sub">If so, tap Ready to play.</div>
@@ -582,42 +587,75 @@
       try{ var pr = JSON.parse(localStorage.getItem('viziProgress')||'{}'); pr.name = (el.value||'').trim().slice(0,24); localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){}
     });
   })();
-  // Lesson code: the saved code auto-populates. Editing requires one explicit
-  // confirmation before Ready to play is enabled, so a mistyped code is never applied.
+  // Lesson code: the saved code auto-populates. Change makes editability obvious;
+  // a new 6-digit code must be confirmed, and Cancel restores the saved code.
   (function initLessonCode(){
     const input = document.getElementById('codeInput');
+    const change = document.getElementById('codeChange');
     const confirm = document.getElementById('codeConfirm');
+    const cancel = document.getElementById('codeCancel');
     const status = document.getElementById('codeStatus');
     const ready = document.getElementById('setupReady');
-    if(!input || !confirm || !status) return;
+    if(!input || !change || !confirm || !cancel || !status) return;
     let confirmedCode = getProgressCode();
+    let editing = false;
     input.value = confirmedCode;
 
-    function setPending(pending){
-      confirm.classList.toggle('show', pending);
-      if(ready) ready.disabled = pending;
-      if(!pending) confirm.textContent = 'Use code';
+    function showEditState(on){
+      editing = on;
+      change.style.display = on ? 'none' : '';
+      cancel.classList.toggle('show', on);
+      if(!on) confirm.classList.remove('show');
+      if(ready) ready.disabled = on;
     }
-    input.addEventListener('focus', ()=>{ try{ input.select(); }catch(e){} });
-    input.addEventListener('input', ()=>{
+    function updateEditState(){
       input.value = input.value.replace(/[^0-9]/g,'').slice(0,6);
       const complete = /^[0-9]{6}$/.test(input.value);
       const changed = complete && input.value !== confirmedCode;
-      setPending(input.value !== confirmedCode);
-      status.textContent = changed ? 'Check the code, then tap Use code.' :
-        (!complete && input.value !== confirmedCode ? 'Enter all 6 digits to continue.' : '');
+      if(!editing && input.value !== confirmedCode) showEditState(true);
+      confirm.classList.toggle('show', editing && changed);
       confirm.disabled = !changed;
+      if(!editing){
+        status.textContent = '';
+      } else if(!complete){
+        status.textContent = 'Enter all 6 digits, or tap Cancel.';
+      } else if(!changed){
+        status.textContent = 'That is your current code — tap Cancel to go back.';
+      } else {
+        status.textContent = 'Check the code, then tap Use code — or Cancel.';
+      }
+    }
+
+    change.addEventListener('click', ()=>{
+      showEditState(true);
+      status.textContent = 'Enter a 6-digit lesson code, or tap Cancel.';
+      try{ input.focus(); input.select(); }catch(e){}
     });
+    input.addEventListener('focus', ()=>{
+      if(!editing) showEditState(true);
+      try{ input.select(); }catch(e){}
+      updateEditState();
+    });
+    input.addEventListener('input', updateEditState);
+
+    cancel.addEventListener('click', ()=>{
+      input.value = confirmedCode;
+      showEditState(false);
+      status.textContent = '';
+      try{ input.blur(); }catch(e){}
+    });
+
     confirm.addEventListener('click', ()=>{
       const code = input.value.trim();
-      if(!/^[0-9]{6}$/.test(code)) return;
+      if(!/^[0-9]{6}$/.test(code) || code === confirmedCode) return;
       try{
         const pr = JSON.parse(localStorage.getItem('viziProgress')||'{}');
         pr.levels = {}; PROGRESS_CATS.forEach((c,i)=> pr.levels[c] = parseInt(code[i],10));
         localStorage.setItem('viziProgress', JSON.stringify(pr));
         confirmedCode = code;
-        setPending(false);
+        showEditState(false);
         status.textContent = '✓ Code '+code+' loaded — tap Ready to play.';
+        try{ input.blur(); }catch(e){}
         if(window.viziRenderPlan) window.viziRenderPlan();
       }catch(e){ status.textContent = 'Could not load that code. Please try again.'; }
     });
