@@ -297,9 +297,12 @@
 
   .setup-code-row{display:flex;align-items:center;justify-content:center;gap:.55rem;flex-wrap:wrap;margin:.05rem auto .48rem;}
   .setup-code-label{font-size:.78rem;font-weight:700;color:var(--text-mid);}
-  .setup-code-value{font-family:'DM Mono',monospace;font-size:.95rem;font-weight:700;letter-spacing:.22em;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.38rem .48rem .38rem .68rem;}
-  .setup-code-change{background:none;border:none;color:var(--vizi);font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:700;text-decoration:underline;cursor:pointer;padding:.25rem .1rem;}
-  .setup-code-change:hover{color:var(--text);}
+  .setup-code-input{width:7.2rem;box-sizing:border-box;font-family:'DM Mono',monospace;font-size:.95rem;font-weight:700;letter-spacing:.22em;text-align:center;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.38rem .38rem .38rem .58rem;}
+  .setup-code-input:focus{outline:none;border-color:var(--vizi);box-shadow:0 0 0 2px rgba(61,186,114,.12);}
+  .setup-code-confirm{display:none;background:var(--vizi);border:1px solid var(--vizi);color:#07150d;font-family:'DM Sans',sans-serif;font-size:.76rem;font-weight:800;border-radius:8px;padding:.4rem .62rem;cursor:pointer;}
+  .setup-code-confirm.show{display:inline-block;}
+  .setup-code-status{min-height:1.05rem;margin:-.12rem 0 .38rem;font-size:.72rem;color:var(--vizi);font-weight:700;}
+  .setup-btn:disabled{opacity:.42;cursor:not-allowed;}
 
   .talk{width:112px;height:112px;font-size:.93rem;margin-bottom:.45rem;}
   .status{font-size:.78rem;margin-bottom:.55rem;}
@@ -388,9 +391,10 @@
   <input id="studentName" type="text" maxlength="24" placeholder="Your name (optional)" autocomplete="off" aria-label="Your name" style="width:100%;max-width:16rem;box-sizing:border-box;margin:0 auto .7rem;display:block;padding:.55rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.95rem;text-align:center;" />
   <div class="setup-code-row" aria-label="Current lesson code">
     <span class="setup-code-label">Lesson code</span>
-    <span class="setup-code-value" id="setupLessonCode">000000</span>
-    <button class="setup-code-change" id="setupCodeChange" type="button">Change</button>
+    <input id="codeInput" class="setup-code-input" inputmode="numeric" maxlength="6" value="000000" autocomplete="off" aria-label="Lesson code" />
+    <button class="setup-code-confirm" id="codeConfirm" type="button">Use code</button>
   </div>
+  <div class="setup-code-status" id="codeStatus" role="status" aria-live="polite"></div>
   <div class="setup-strip-sub">If so, tap Ready to play.</div>
   <button id="setupReady" class="setup-btn" type="button">✓ Ready to play</button>
 </div>
@@ -399,33 +403,11 @@
 <button class="talk" id="talkBtn">Hold<br>to Talk</button>
 <div class="status" id="status">Ready</div>
 
-<!-- Resume / Progress — collapsed by default so routine sessions stay uncluttered. -->
-<div class="progress-drawer" id="progressDrawer">
-  <button class="progress-drawer-toggle" id="progressDrawerToggle" type="button" aria-expanded="false" aria-controls="progressDrawerBody">
-    <span>Resume / Progress</span><span class="drawer-chev">▾</span>
-  </button>
-  <div class="progress-drawer-body" id="progressDrawerBody">
-    <div class="code-box" id="codeBox">
-      <div class="code-row">
-        <input id="codeInput" class="code-input" inputmode="numeric" maxlength="6" value="000000" autocomplete="off" aria-label="Progress code" />
-        <button id="codeResume" class="code-btn" type="button">Resume last session</button>
-      </div>
-      <div class="code-note" style="font-size:.9rem;color:var(--text);line-height:1.45;margin-top:.5rem;">Load this device's last lesson, or enter a 6-digit transfer code. Then tap <b>Ready to play</b>.</div>
-      <div class="code-msg" id="codeMsg" role="status" aria-live="polite"></div>
-      <button id="newSession" type="button" style="display:none;background:none;border:none;color:var(--vizi);font-size:.82rem;text-decoration:underline;cursor:pointer;padding:.35rem 0 0;margin-top:.2rem;">Start a new session to enter a new code</button>
-    </div>
-
-    <button class="plan-toggle" id="planToggle" type="button" aria-expanded="false" aria-controls="planPanel">
-      <span>See your plan</span><span class="pt-chev">▾</span>
-    </button>
-    <div class="plan-panel" id="planPanel"></div>
-
-    <div class="transfer-wrap">
-      <button id="codeGet" class="code-btn code-btn-alt" type="button">Get a transfer code</button>
-      <div id="codeGetMsg" class="transfer-note">Only needed to move your progress to another phone or browser — your plan already saves on this device.</div>
-    </div>
-  </div>
-</div>
+<!-- Student plan — progress code editing now lives directly in the Ready card. -->
+<button class="plan-toggle" id="planToggle" type="button" aria-expanded="false" aria-controls="planPanel">
+  <span>See your plan</span><span class="pt-chev">▾</span>
+</button>
+<div class="plan-panel" id="planPanel"></div>
 
 <!-- Response panels -->
 <div class="panels">
@@ -600,79 +582,47 @@
       try{ var pr = JSON.parse(localStorage.getItem('viziProgress')||'{}'); pr.name = (el.value||'').trim().slice(0,24); localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){}
     });
   })();
-  (function initProgressDrawer(){
-    const toggle = document.getElementById('progressDrawerToggle');
-    const body = document.getElementById('progressDrawerBody');
-    if(!toggle || !body) return;
-    toggle.addEventListener('click', ()=>{
-      const open = !body.classList.contains('open');
-      body.classList.toggle('open', open);
-      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
-  })();
-  // Keep the compact lesson-code confirmation in sync with the saved/entered code.
-  function updateSetupLessonCode(code){
-    const el = document.getElementById('setupLessonCode');
-    if(!el) return;
-    const clean = String(code || '').replace(/[^0-9]/g,'').slice(0,6);
-    el.textContent = /^[0-9]{6}$/.test(clean) ? clean : getProgressCode();
-  }
-  window.viziUpdateSetupLessonCode = updateSetupLessonCode;
-
-  (function initSetupCodeChange(){
-    const change = document.getElementById('setupCodeChange');
-    const toggle = document.getElementById('progressDrawerToggle');
-    const body = document.getElementById('progressDrawerBody');
+  // Lesson code: the saved code auto-populates. Editing requires one explicit
+  // confirmation before Ready to play is enabled, so a mistyped code is never applied.
+  (function initLessonCode(){
     const input = document.getElementById('codeInput');
-    if(!change) return;
-    updateSetupLessonCode(getProgressCode());
-    change.addEventListener('click', ()=>{
-      if(body && !body.classList.contains('open')){
-        body.classList.add('open');
-        if(toggle) toggle.setAttribute('aria-expanded','true');
-      }
-      if(input){
-        input.value = getProgressCode();
-        updateSetupLessonCode(input.value);
-        setTimeout(()=>{ try{ input.focus(); input.select(); }catch(e){} }, 0);
-      }
-    });
-  })();
+    const confirm = document.getElementById('codeConfirm');
+    const status = document.getElementById('codeStatus');
+    const ready = document.getElementById('setupReady');
+    if(!input || !confirm || !status) return;
+    let confirmedCode = getProgressCode();
+    input.value = confirmedCode;
 
-  (function initCodeBox(){
-    const input  = document.getElementById('codeInput');
-    const resume = document.getElementById('codeResume');
-    const get    = document.getElementById('codeGet');
-    const msg    = document.getElementById('codeMsg');
-    if(!input || !resume || !get || !msg) return;
-    function applyCode(code){
+    function setPending(pending){
+      confirm.classList.toggle('show', pending);
+      if(ready) ready.disabled = pending;
+      if(!pending) confirm.textContent = 'Use code';
+    }
+    input.addEventListener('focus', ()=>{ try{ input.select(); }catch(e){} });
+    input.addEventListener('input', ()=>{
+      input.value = input.value.replace(/[^0-9]/g,'').slice(0,6);
+      const complete = /^[0-9]{6}$/.test(input.value);
+      const changed = complete && input.value !== confirmedCode;
+      setPending(input.value !== confirmedCode);
+      status.textContent = changed ? 'Check the code, then tap Use code.' :
+        (!complete && input.value !== confirmedCode ? 'Enter all 6 digits to continue.' : '');
+      confirm.disabled = !changed;
+    });
+    confirm.addEventListener('click', ()=>{
+      const code = input.value.trim();
+      if(!/^[0-9]{6}$/.test(code)) return;
       try{
         const pr = JSON.parse(localStorage.getItem('viziProgress')||'{}');
         pr.levels = {}; PROGRESS_CATS.forEach((c,i)=> pr.levels[c] = parseInt(code[i],10));
         localStorage.setItem('viziProgress', JSON.stringify(pr));
-        return true;
-      }catch(e){ return false; }
-    }
-    input.addEventListener('input', ()=>{ input.value = input.value.replace(/[^0-9]/g,'').slice(0,6); updateSetupLessonCode(input.value); });
-    input.addEventListener('focus', ()=>{ try{ input.select(); }catch(e){} });
-    resume.addEventListener('click', ()=>{
-      // "Resume last session" LOADS this device's saved code into the box (it does NOT send).
-      // Ready to play is what applies + greets; typing a code overrides.
-      const code = getProgressCode();
-      input.value = code;
-      updateSetupLessonCode(code);
-      msg.textContent = (code === '000000')
-        ? "No saved lesson on this device yet — type a code, or just tap Ready to play."
-        : "Loaded your last lesson from this device — tap Ready to play.";
-    });
-    // "Get a transfer code" (below the plan) — for moving progress to another device.
-    // Shows the code in its OWN note; leaves the resume box + its message untouched.
-    const getMsg = document.getElementById('codeGetMsg');
-    get.addEventListener('click', ()=>{
-      const code = getProgressCode();
-      if(getMsg) getMsg.innerHTML = 'Your transfer code: <span class="code-strong">'+code+'</span> — enter it on another phone or browser to continue there.';
+        confirmedCode = code;
+        setPending(false);
+        status.textContent = '✓ Code '+code+' loaded — tap Ready to play.';
+        if(window.viziRenderPlan) window.viziRenderPlan();
+      }catch(e){ status.textContent = 'Could not load that code. Please try again.'; }
     });
   })();
+
   // ── Setup reminder strip (due-session gate) ──
   // A physical product: a drifted guitar or a dark board makes the whole lesson
   // silently fail. So on a NEW or STALE session we show a reminder above the talk
@@ -756,18 +706,7 @@
       strip.classList.add('show');
       document.body.classList.add('setup-pending');   // hide talk button until Ready is tapped
       ready.addEventListener('click', ()=>{
-        // Apply the code box before sending — but ONLY a full non-zero 6-digit code. Blank /
-        // partial / 000000 leaves the saved plan untouched (never wipes it), so a stray tap or
-        // forgotten Resume just sends the plan already on this device.
-        try{
-          const ci = document.getElementById('codeInput');
-          const code = ci ? (ci.value||'').trim() : '';
-          if(/^[0-9]{6}$/.test(code) && code !== '000000'){
-            const pr = read(); pr.levels = {}; PROGRESS_CATS.forEach((c,i)=> pr.levels[c] = parseInt(code[i],10)); write(pr);
-            if(window.viziRenderPlan) window.viziRenderPlan();
-          }
-          updateSetupLessonCode(getProgressCode());
-        }catch(e){}
+        // Any edited lesson code was already explicitly confirmed above.
         stamp(); strip.classList.remove('show'); playViziOpener();
       });
     } else {
