@@ -272,6 +272,64 @@
   .panel .body{font-size:.95rem;line-height:1.55;color:var(--text);font-weight:400}
 
   @keyframes fade-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  /* ── Compact home-screen pass (Aug 19 2026) ────────────────────────────────
+     Keeps every existing control, but makes the default mobile view much less
+     vertical: shorter stage cards, smaller Vizi portrait, compact setup, and a
+     collapsed Resume / Progress drawer for the less-frequently-used controls. */
+  .fretboard-section{padding:0 .8rem .35rem;margin-top:.35rem;}
+  .fretboard{padding:.5rem .55rem .45rem;border-radius:12px;}
+  .frets-row{gap:.32rem;min-width:560px;}
+  .fret-stage{min-width:62px;border-radius:7px;padding:.32rem .25rem .36rem;}
+  .fret-num{font-size:.7rem;margin-bottom:.12rem;}
+  .fret-led{width:6px;height:6px;margin:0 auto .18rem;}
+  .fret-label{font-size:.78rem;line-height:1.12;}
+
+  .welcome-btn{margin:.45rem auto .1rem;padding:.42rem .9rem;font-size:.8rem;box-shadow:none;}
+  .stage-wrap{margin-top:.75rem;margin-bottom:.55rem;}
+  .stage{width:170px;height:170px;}
+
+  .setup-strip{max-width:400px;margin:.35rem auto .65rem;padding:.62rem .8rem;border-radius:12px;}
+  .setup-strip-title{font-size:.9rem;margin-bottom:.28rem;}
+  .setup-strip-sub{font-size:.82rem;margin-bottom:.45rem;}
+  .setup-btn{padding:.48rem .95rem;font-size:.86rem;}
+  #studentName{margin-bottom:.45rem !important;padding:.45rem .7rem !important;font-size:.9rem !important;}
+
+  .talk{width:112px;height:112px;font-size:.93rem;margin-bottom:.45rem;}
+  .status{font-size:.78rem;margin-bottom:.55rem;}
+
+  .progress-drawer{width:min(400px,calc(100% - 2rem));margin:.25rem auto .85rem;}
+  .progress-drawer-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:.75rem;
+    padding:.7rem .9rem;border:1.5px solid rgba(61,186,114,.42);border-radius:11px;
+    background:rgba(61,186,114,.07);color:var(--vizi);font-family:'DM Sans',sans-serif;
+    font-size:.92rem;font-weight:700;cursor:pointer;}
+  .progress-drawer-toggle:hover{background:rgba(61,186,114,.12);}
+  .progress-drawer-toggle .drawer-chev{transition:transform .2s;}
+  .progress-drawer-toggle[aria-expanded="true"] .drawer-chev{transform:rotate(180deg);}
+  .progress-drawer-body{display:none;padding:.7rem .15rem 0;}
+  .progress-drawer-body.open{display:block;}
+  .code-box{max-width:none;margin:0;padding:.72rem .75rem;background:rgba(61,186,114,.05);border-radius:11px;}
+  .code-row{gap:.42rem;flex-wrap:nowrap;}
+  .code-input{width:7.8em;padding:.48rem .55rem;font-size:.95rem;}
+  .code-btn{padding:.5rem .72rem;font-size:.82rem;}
+  .code-note{font-size:.8rem !important;line-height:1.35 !important;margin-top:.42rem !important;}
+  .code-msg{font-size:.78rem;margin-top:.4rem;}
+  .progress-drawer .plan-toggle{display:flex;width:100%;justify-content:center;margin:.62rem 0 0;padding:.55rem .9rem;font-size:.88rem;}
+  .progress-drawer .plan-panel{margin:.55rem auto 0;}
+  .transfer-wrap{text-align:center;margin-top:.6rem;}
+  .transfer-note{font-size:.76rem;color:var(--text-mid);line-height:1.35;margin:.35rem auto 0;max-width:22rem;}
+
+  @media(max-width:560px){
+    nav{padding:.6rem .8rem;}
+    .nav-link{font-size:.78rem;padding:4px 9px;}
+    .logo-name{font-size:.82rem;}
+    .stage{width:158px;height:158px;}
+    .frets-row{min-width:520px;}
+    .fret-stage{min-width:58px;}
+    .fret-label{font-size:.74rem;}
+    .progress-drawer{width:calc(100% - 1.2rem);}
+  }
+
 </style>
 </head>
 <body>
@@ -318,17 +376,6 @@
   <div class="ring"></div>
 </div>
 
-<!-- Progress code (above the setup strip): Resume loads this device's last lesson into the box; or type a code to jump to any step. Ready to play sends whatever is here (000000 / blank / partial -> your saved plan, never wiped). "Get my code" saves the current code. "Start a new session" re-shows Ready to play (clears only the session timer; plan untouched). -->
-<div class="code-box" id="codeBox">
-  <div class="code-row">
-    <input id="codeInput" class="code-input" inputmode="numeric" maxlength="6" value="000000" autocomplete="off" aria-label="Progress code" />
-    <button id="codeResume" class="code-btn" type="button">Resume last session</button>
-  </div>
-  <div class="code-note" style="font-size:.9rem;color:var(--text);line-height:1.45;margin-top:.5rem;">Tap <b>Resume last session</b> to load your last lesson — or enter a 6-digit code to go to any step. Then tap <b>Ready to play</b>.</div>
-  <div class="code-msg" id="codeMsg" role="status" aria-live="polite"></div>
-  <button id="newSession" type="button" style="display:none;background:none;border:none;color:var(--vizi);font-size:.82rem;text-decoration:underline;cursor:pointer;padding:.35rem 0 0;margin-top:.2rem;">Start a new session to enter a new code</button>
-</div>
-
 <!-- Setup reminder (due-session only; shown/cleared by initSetupStrip below) -->
 <div class="setup-strip" id="setupStrip">
   <div class="setup-strip-title">🎸 Guitar in tune? · 💡 Lights working?</div>
@@ -341,18 +388,32 @@
 <button class="talk" id="talkBtn">Hold<br>to Talk</button>
 <div class="status" id="status">Ready</div>
 
-<!-- (progress code box moved above the setup strip) -->
+<!-- Resume / Progress — collapsed by default so routine sessions stay uncluttered. -->
+<div class="progress-drawer" id="progressDrawer">
+  <button class="progress-drawer-toggle" id="progressDrawerToggle" type="button" aria-expanded="false" aria-controls="progressDrawerBody">
+    <span>Resume / Progress</span><span class="drawer-chev">▾</span>
+  </button>
+  <div class="progress-drawer-body" id="progressDrawerBody">
+    <div class="code-box" id="codeBox">
+      <div class="code-row">
+        <input id="codeInput" class="code-input" inputmode="numeric" maxlength="6" value="000000" autocomplete="off" aria-label="Progress code" />
+        <button id="codeResume" class="code-btn" type="button">Resume last session</button>
+      </div>
+      <div class="code-note" style="font-size:.9rem;color:var(--text);line-height:1.45;margin-top:.5rem;">Load this device's last lesson, or enter a 6-digit transfer code. Then tap <b>Ready to play</b>.</div>
+      <div class="code-msg" id="codeMsg" role="status" aria-live="polite"></div>
+      <button id="newSession" type="button" style="display:none;background:none;border:none;color:var(--vizi);font-size:.82rem;text-decoration:underline;cursor:pointer;padding:.35rem 0 0;margin-top:.2rem;">Start a new session to enter a new code</button>
+    </div>
 
-<!-- See your plan — six categories laddered out; marks where the code says you are -->
-<button class="plan-toggle" id="planToggle" type="button" aria-expanded="false" aria-controls="planPanel">
-  <span>See your plan</span><span class="pt-chev">▾</span>
-</button>
-<div class="plan-panel" id="planPanel"></div>
+    <button class="plan-toggle" id="planToggle" type="button" aria-expanded="false" aria-controls="planPanel">
+      <span>See your plan</span><span class="pt-chev">▾</span>
+    </button>
+    <div class="plan-panel" id="planPanel"></div>
 
-<!-- Transfer code (for a NEW device only) — tucked below the plan; the plan already saves on this device, so most students never need this. -->
-<div style="text-align:center;margin-top:1.1rem;">
-  <button id="codeGet" class="code-btn code-btn-alt" type="button">Get a transfer code</button>
-  <div id="codeGetMsg" style="font-size:.82rem;color:var(--text-mid);line-height:1.4;margin:.45rem auto 0;max-width:22rem;">Only needed to move your progress to another phone or browser — your plan already saves on this device.</div>
+    <div class="transfer-wrap">
+      <button id="codeGet" class="code-btn code-btn-alt" type="button">Get a transfer code</button>
+      <div id="codeGetMsg" class="transfer-note">Only needed to move your progress to another phone or browser — your plan already saves on this device.</div>
+    </div>
+  </div>
 </div>
 
 <!-- Response panels -->
@@ -526,6 +587,16 @@
     try{ var pr = JSON.parse(localStorage.getItem('viziProgress')||'{}'); if(pr.name) el.value = pr.name; }catch(e){}
     el.addEventListener('input', function(){
       try{ var pr = JSON.parse(localStorage.getItem('viziProgress')||'{}'); pr.name = (el.value||'').trim().slice(0,24); localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){}
+    });
+  })();
+  (function initProgressDrawer(){
+    const toggle = document.getElementById('progressDrawerToggle');
+    const body = document.getElementById('progressDrawerBody');
+    if(!toggle || !body) return;
+    toggle.addEventListener('click', ()=>{
+      const open = !body.classList.contains('open');
+      body.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
   })();
   (function initCodeBox(){
