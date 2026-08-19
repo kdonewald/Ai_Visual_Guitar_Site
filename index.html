@@ -109,9 +109,9 @@
   .code-msg .code-strong{color:var(--vizi);font-family:'DM Mono',monospace;font-weight:700;font-size:1.05rem;letter-spacing:.15em;}
   /* "See your plan" — the six categories as 9-rung ladders; reads the code to mark
      where the student is, so the number means something. */
-  .plan-toggle{display:inline-flex;align-items:center;gap:.4rem;margin:0 auto .6rem;padding:.5rem .9rem;
-    background:transparent;border:1px solid var(--border);border-radius:9px;color:var(--text-mid);
-    font-family:'DM Sans',sans-serif;font-size:.86rem;font-weight:600;cursor:pointer;transition:all .18s;}
+  .plan-toggle{display:inline-flex;align-items:center;gap:.5rem;margin:0 auto .8rem;padding:.7rem 1.35rem;
+    background:rgba(61,186,114,0.10);border:1.5px solid var(--vizi);border-radius:11px;color:var(--vizi);
+    font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all .18s;}
   .plan-toggle:hover{border-color:var(--vizi);color:var(--vizi);}
   .plan-toggle .pt-chev{transition:transform .2s;}
   .plan-toggle[aria-expanded="true"] .pt-chev{transform:rotate(180deg);}
@@ -187,17 +187,17 @@
   /* ── welcome button ── */
   .welcome-btn{
     background:var(--vizi);color:white;
-    border:none;border-radius:12px;
-    padding:.85rem 2rem;
-    font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:600;
+    border:none;border-radius:10px;
+    padding:.5rem 1.1rem;
+    font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;
     cursor:pointer;transition:all .18s;
-    margin-bottom:.75rem;
-    box-shadow:0 4px 16px rgba(61,186,114,0.30);
-    display:flex;align-items:center;gap:.6rem;
+    margin-bottom:.6rem;
+    box-shadow:0 3px 12px rgba(61,186,114,0.25);
+    display:flex;align-items:center;gap:.45rem;
   }
   .welcome-btn:hover{background:var(--vizi-dark);transform:translateY(-1px);box-shadow:0 6px 20px rgba(61,186,114,0.40);}
   .welcome-btn.active{background:var(--vizi-dark);}
-  .welcome-btn .wb-icon{font-size:1.1rem;}
+  .welcome-btn .wb-icon{font-size:.9rem;}
 
   /* ── welcome video ── */
   .welcome-wrap{
@@ -224,8 +224,8 @@
 
   /* ── interactive fretboard ── */
   .fretboard-section{
-    width:100%;max-width:960px;padding:0 1.25rem 1rem;
-    margin-top:1.2rem;
+    width:100%;max-width:960px;padding:0 1.25rem .6rem;
+    margin-top:.7rem;
   }
   /* Stage strip is ALWAYS visible now — Vizi points to stages, the student taps
      to open them, so the target must be on screen (no hide/toggle). */
@@ -235,7 +235,7 @@
   }
   .fretboard{
     background:linear-gradient(180deg,#2a1f14,#1a1208);
-    border-radius:14px;padding:1.4rem 1rem 1.2rem;
+    border-radius:14px;padding:.9rem .8rem .8rem;
     box-shadow:0 12px 36px var(--shadow-lg),inset 0 1px 0 rgba(255,255,255,0.06);
     overflow-x:auto;border:1px solid rgba(255,255,255,0.06);
   }
@@ -288,7 +288,6 @@
 
 <!-- Interactive fretboard — top of page (stage strip is always visible) -->
 <div class="fretboard-section">
-  <div class="fretboard-label">Tap a stage to begin</div>
   <div class="fretboard">
     <div class="frets-row" id="fretsRow"></div>
   </div>
@@ -321,12 +320,11 @@
 
 <!-- Progress code (above the setup strip): Resume loads this device's last lesson into the box; or type a code to jump to any step. Ready to play sends whatever is here (000000 / blank / partial -> your saved plan, never wiped). "Get my code" saves the current code. "Start a new session" re-shows Ready to play (clears only the session timer; plan untouched). -->
 <div class="code-box" id="codeBox">
-  <div class="code-box-title">Have a progress code? Enter it to pick up where you left off.</div>
   <div class="code-row">
     <input id="codeInput" class="code-input" inputmode="numeric" maxlength="6" value="000000" autocomplete="off" aria-label="Progress code" />
     <button id="codeResume" class="code-btn" type="button">Resume last session</button>
   </div>
-  <div class="code-note" style="font-size:.82rem;color:var(--text-mid);line-height:1.4;margin-top:.5rem;">Tap <b>Resume last session</b> to load your last lesson from this device — or type a code to go to any step. Then tap <b>Ready to play</b>.</div>
+  <div class="code-note" style="font-size:.9rem;color:var(--text);line-height:1.45;margin-top:.5rem;">Tap <b>Resume last session</b> to load your last lesson — or enter a 6-digit code to go to any step. Then tap <b>Ready to play</b>.</div>
   <div class="code-msg" id="codeMsg" role="status" aria-live="polite"></div>
   <button id="newSession" type="button" style="display:none;background:none;border:none;color:var(--vizi);font-size:.82rem;text-decoration:underline;cursor:pointer;padding:.35rem 0 0;margin-top:.2rem;">Start a new session to enter a new code</button>
 </div>
@@ -334,6 +332,7 @@
 <!-- Setup reminder (due-session only; shown/cleared by initSetupStrip below) -->
 <div class="setup-strip" id="setupStrip">
   <div class="setup-strip-title">🎸 Guitar in tune? · 💡 Lights working?</div>
+  <input id="studentName" type="text" maxlength="24" placeholder="Your name (optional)" autocomplete="off" aria-label="Your name" style="width:100%;max-width:16rem;box-sizing:border-box;margin:0 auto .7rem;display:block;padding:.55rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.95rem;text-align:center;" />
   <div class="setup-strip-sub">If so, tap Ready to play.</div>
   <button id="setupReady" class="setup-btn" type="button">✓ Ready to play</button>
 </div>
@@ -521,6 +520,14 @@
   })();
   // ── Progress code box (home screen): Resume seeds levels from a saved code;
   // "Get my code" returns the current 6-digit code to save for next time. ──
+  (function initNameBox(){
+    var el = document.getElementById('studentName');
+    if(!el) return;
+    try{ var pr = JSON.parse(localStorage.getItem('viziProgress')||'{}'); if(pr.name) el.value = pr.name; }catch(e){}
+    el.addEventListener('input', function(){
+      try{ var pr = JSON.parse(localStorage.getItem('viziProgress')||'{}'); pr.name = (el.value||'').trim().slice(0,24); localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){}
+    });
+  })();
   (function initCodeBox(){
     const input  = document.getElementById('codeInput');
     const resume = document.getElementById('codeResume');
@@ -606,7 +613,7 @@
       try{
         const res = await fetch(RAILWAY_URL + '/claude-tts', {
           method:'POST', headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({ message: (getProgressCode()==='000000' ? OPENER_KICKOFF : OPENER_KICKOFF_RETURNING), mode:'talk', progress:getProgressCode(), steps:(window.viziStepLabels?window.viziStepLabels():'') })
+          body:JSON.stringify({ message: ((function(){ try{ var pr=JSON.parse(localStorage.getItem('viziProgress')||'{}'); var nm=(pr.name||'').trim(); return nm ? ('STUDENT NAME: '+nm+'. ') : ''; }catch(e){ return ''; } })() + (getProgressCode()==='000000' ? OPENER_KICKOFF : OPENER_KICKOFF_RETURNING)), mode:'talk', progress:getProgressCode(), steps:(window.viziStepLabels?window.viziStepLabels():'') })
         });
         const ct = (res.headers.get('content-type')||'');
         if(res.ok && !ct.includes('application/json')){
