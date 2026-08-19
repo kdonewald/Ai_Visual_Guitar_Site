@@ -67,6 +67,21 @@
     border-radius:14px;text-align:center;font-family:'DM Sans',sans-serif;display:none;
   }
   .setup-strip.show{display:block;}
+  .entry-choice{
+    display:none;max-width:400px;margin:.45rem auto .75rem;padding:.7rem .8rem;
+    border:1px solid rgba(61,186,114,.30);border-radius:14px;background:rgba(18,29,27,.72);
+    text-align:center;
+  }
+  .entry-choice.show{display:block;}
+  .entry-choice-title{font-size:.92rem;font-weight:700;color:#e8e4df;margin-bottom:.65rem;}
+  .entry-choice-actions{display:flex;gap:.65rem;justify-content:center;flex-wrap:wrap;}
+  .entry-choice-btn{min-width:145px;padding:.72rem 1rem;border-radius:11px;border:1px solid var(--vizi);
+    font:700 .95rem 'DM Sans',sans-serif;cursor:pointer;}
+  .entry-guided{background:var(--vizi);color:#07120c;}
+  .entry-talk{background:transparent;color:var(--vizi);}
+  .entry-back{display:none;margin:.45rem auto 0;border:0;background:transparent;color:#c9c4bc;
+    text-decoration:underline;font:600 .82rem 'DM Sans',sans-serif;cursor:pointer;}
+  .setup-strip.guided-open .entry-back{display:block;}
   .setup-strip-title{font-size:.96rem;font-weight:700;color:var(--gold);margin-bottom:.4rem;line-height:1.4;}
   .setup-strip-sub{font-size:.9rem;font-weight:650;color:#ded8d0;margin-bottom:.7rem;line-height:1.4;}
   /* While the setup reminder is pending (due session, before "Ready to play"),
@@ -400,7 +415,16 @@
   <div class="ring"></div>
 </div>
 
-<!-- Setup reminder (due-session only; shown/cleared by initSetupStrip below) -->
+<!-- Simple session choice -->
+<div class="entry-choice" id="entryChoice">
+  <div class="entry-choice-title">How would you like to use Vizi today?</div>
+  <div class="entry-choice-actions">
+    <button id="entryGuided" class="entry-choice-btn entry-guided" type="button">Guided Lesson</button>
+    <button id="entryTalk" class="entry-choice-btn entry-talk" type="button">Just Talk with Vizi</button>
+  </div>
+</div>
+
+<!-- Guided lesson setup; revealed only after Guided Lesson is chosen. -->
 <div class="setup-strip" id="setupStrip">
   <div class="setup-strip-title">🎸 Guitar in tune? · 💡 Lights working?</div>
   <input id="studentName" type="text" maxlength="24" placeholder="Your name (optional)" autocomplete="off" aria-label="Your name" style="width:100%;max-width:16rem;box-sizing:border-box;margin:0 auto .7rem;display:block;padding:.55rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.95rem;text-align:center;" />
@@ -414,7 +438,7 @@
   <div class="setup-code-status" id="codeStatus" role="status" aria-live="polite"></div>
   <div class="setup-strip-sub">If so, tap Ready to play.</div>
   <button id="setupReady" class="setup-btn" type="button">✓ Ready to play</button>
-  <button id="setupJustTalk" class="setup-justtalk-btn" type="button">Just talk with Vizi</button>
+  <button id="entryBack" class="entry-back" type="button">Back to choices</button>
 </div>
 
 <!-- Talk button -->
@@ -707,24 +731,18 @@
   // isn't relied on for it. "Ready to play" clears the strip and stamps the
   // session so a fresh continuation (returning within the window) skips it.
   (function initSetupStrip(){
-    const SESSION_GAP_MS = 30*60*1000; // >30 min since last activity = a new session
-    const strip = document.getElementById('setupStrip');
-    const ready = document.getElementById('setupReady');
-    const justTalk = document.getElementById('setupJustTalk');
-    if(!strip || !ready) return;
-    function read(){ try{ return JSON.parse(localStorage.getItem('viziProgress')||'{}'); }catch(e){ return {}; } }
-    function write(pr){ try{ localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){} }
-    function isDue(){
-      const pr = read();
-      const last = parseInt(pr.lastSessionAt, 10);
-      // Due if we've never stamped a session, or the last one is older than the gap.
-      return !Number.isFinite(last) || (Date.now() - last) > SESSION_GAP_MS;
-    }
-    function stamp(){ const pr = read(); pr.lastSessionAt = Date.now(); write(pr); }
-    // Session entry: the progress code is always sent. "Ready to play" lets Vizi
-    // use it to guide the student normally. "Just talk with Vizi" keeps the SAME
-    // code only as background context and suppresses curriculum/stage routing until
-    // the student explicitly asks for structured guidance.
+    const SESSION_GAP_MS = 30*60*1000;
+    const strip=document.getElementById('setupStrip');
+    const choice=document.getElementById('entryChoice');
+    const guided=document.getElementById('entryGuided');
+    const talkChoice=document.getElementById('entryTalk');
+    const back=document.getElementById('entryBack');
+    const ready=document.getElementById('setupReady');
+    if(!strip || !choice || !guided || !talkChoice || !ready) return;
+    function read(){ try{return JSON.parse(localStorage.getItem('viziProgress')||'{}');}catch(e){return {};} }
+    function write(pr){ try{localStorage.setItem('viziProgress',JSON.stringify(pr));}catch(e){} }
+    function isDue(){ const pr=read(),last=parseInt(pr.lastSessionAt,10); return !Number.isFinite(last)||(Date.now()-last)>SESSION_GAP_MS; }
+    function stamp(){ const pr=read();pr.lastSessionAt=Date.now();write(pr); }
     const OPENER_KICKOFF =
       '[SESSION START] Greet the student warmly in one short line and give them the opening choice. ' +
       'You MUST offer BOTH, in the same line: (a) that you can show them a scale, a chord, or a chord progression right here, ' +
@@ -786,33 +804,31 @@
         setBtn(''); btn.innerHTML='Tap<br>to Talk'; setStatus('Ready \u2014 tap to talk');
       }
     }
-    // "Start a new session": clears ONLY the session timer (plan/levels untouched) and reloads,
-    // so the setup strip + Ready to play come back — a send path for a new/override code anytime.
-    const newSes = document.getElementById('newSession');
-    if(newSes){
-      newSes.addEventListener('click', ()=>{
-        try{ const pr = read(); delete pr.lastSessionAt; write(pr); }catch(e){}
-        location.reload();
-      });
+
+    function showChoices(){
+      strip.classList.remove('show','guided-open'); choice.classList.add('show');
+      document.body.classList.add('setup-pending');
     }
-    if(isDue()){
-      strip.classList.add('show');
-      document.body.classList.add('setup-pending');   // hide talk button until Ready is tapped
-      ready.addEventListener('click', ()=>{
-        // Any edited lesson code was already explicitly confirmed above.
-        stamp(); strip.classList.remove('show'); playViziOpener(false);
-      });
-      if(justTalk){
-        justTalk.addEventListener('click', ()=>{
-          stamp(); strip.classList.remove('show'); playViziOpener(true);
-        });
-      }
-    } else {
-      // Fresh continuation — refresh the stamp so the session keeps rolling.
-      stamp();
-      if(newSes) newSes.style.display = '';   // Ready-to-play is hidden now; offer a way to re-arm it for a new code
+    function showGuided(){
+      choice.classList.remove('show'); strip.classList.add('show','guided-open');
+      document.body.classList.add('setup-pending');
     }
+    guided.addEventListener('click',showGuided);
+    if(back) back.addEventListener('click',showChoices);
+    talkChoice.addEventListener('click',()=>{
+      stamp();choice.classList.remove('show');strip.classList.remove('show','guided-open');playViziOpener(true);
+    });
+    ready.addEventListener('click',()=>{
+      stamp();strip.classList.remove('show','guided-open');choice.classList.remove('show');playViziOpener(false);
+    });
+    const newSes=document.getElementById('newSession');
+    if(newSes) newSes.addEventListener('click',()=>{
+      try{const pr=read();delete pr.lastSessionAt;write(pr);}catch(e){} location.reload();
+    });
+    if(isDue()) showChoices();
+    else { stamp(); if(newSes)newSes.style.display=''; }
   })();
+
   // Mid-session code change: return to the compact setup/code card without
   // changing any progress. Clearing only lastSessionAt makes the normal session
   // gate reappear on reload; the current saved code is still auto-populated.
