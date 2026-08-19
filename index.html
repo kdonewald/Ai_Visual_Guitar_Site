@@ -295,6 +295,12 @@
   .setup-btn{padding:.48rem .95rem;font-size:.86rem;}
   #studentName{margin-bottom:.45rem !important;padding:.45rem .7rem !important;font-size:.9rem !important;}
 
+  .setup-code-row{display:flex;align-items:center;justify-content:center;gap:.55rem;flex-wrap:wrap;margin:.05rem auto .48rem;}
+  .setup-code-label{font-size:.78rem;font-weight:700;color:var(--text-mid);}
+  .setup-code-value{font-family:'DM Mono',monospace;font-size:.95rem;font-weight:700;letter-spacing:.22em;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.38rem .48rem .38rem .68rem;}
+  .setup-code-change{background:none;border:none;color:var(--vizi);font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:700;text-decoration:underline;cursor:pointer;padding:.25rem .1rem;}
+  .setup-code-change:hover{color:var(--text);}
+
   .talk{width:112px;height:112px;font-size:.93rem;margin-bottom:.45rem;}
   .status{font-size:.78rem;margin-bottom:.55rem;}
 
@@ -380,6 +386,11 @@
 <div class="setup-strip" id="setupStrip">
   <div class="setup-strip-title">🎸 Guitar in tune? · 💡 Lights working?</div>
   <input id="studentName" type="text" maxlength="24" placeholder="Your name (optional)" autocomplete="off" aria-label="Your name" style="width:100%;max-width:16rem;box-sizing:border-box;margin:0 auto .7rem;display:block;padding:.55rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.95rem;text-align:center;" />
+  <div class="setup-code-row" aria-label="Current lesson code">
+    <span class="setup-code-label">Lesson code</span>
+    <span class="setup-code-value" id="setupLessonCode">000000</span>
+    <button class="setup-code-change" id="setupCodeChange" type="button">Change</button>
+  </div>
   <div class="setup-strip-sub">If so, tap Ready to play.</div>
   <button id="setupReady" class="setup-btn" type="button">✓ Ready to play</button>
 </div>
@@ -599,6 +610,35 @@
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
   })();
+  // Keep the compact lesson-code confirmation in sync with the saved/entered code.
+  function updateSetupLessonCode(code){
+    const el = document.getElementById('setupLessonCode');
+    if(!el) return;
+    const clean = String(code || '').replace(/[^0-9]/g,'').slice(0,6);
+    el.textContent = /^[0-9]{6}$/.test(clean) ? clean : getProgressCode();
+  }
+  window.viziUpdateSetupLessonCode = updateSetupLessonCode;
+
+  (function initSetupCodeChange(){
+    const change = document.getElementById('setupCodeChange');
+    const toggle = document.getElementById('progressDrawerToggle');
+    const body = document.getElementById('progressDrawerBody');
+    const input = document.getElementById('codeInput');
+    if(!change) return;
+    updateSetupLessonCode(getProgressCode());
+    change.addEventListener('click', ()=>{
+      if(body && !body.classList.contains('open')){
+        body.classList.add('open');
+        if(toggle) toggle.setAttribute('aria-expanded','true');
+      }
+      if(input){
+        input.value = getProgressCode();
+        updateSetupLessonCode(input.value);
+        setTimeout(()=>{ try{ input.focus(); input.select(); }catch(e){} }, 0);
+      }
+    });
+  })();
+
   (function initCodeBox(){
     const input  = document.getElementById('codeInput');
     const resume = document.getElementById('codeResume');
@@ -613,13 +653,14 @@
         return true;
       }catch(e){ return false; }
     }
-    input.addEventListener('input', ()=>{ input.value = input.value.replace(/[^0-9]/g,'').slice(0,6); });
+    input.addEventListener('input', ()=>{ input.value = input.value.replace(/[^0-9]/g,'').slice(0,6); updateSetupLessonCode(input.value); });
     input.addEventListener('focus', ()=>{ try{ input.select(); }catch(e){} });
     resume.addEventListener('click', ()=>{
       // "Resume last session" LOADS this device's saved code into the box (it does NOT send).
       // Ready to play is what applies + greets; typing a code overrides.
       const code = getProgressCode();
       input.value = code;
+      updateSetupLessonCode(code);
       msg.textContent = (code === '000000')
         ? "No saved lesson on this device yet — type a code, or just tap Ready to play."
         : "Loaded your last lesson from this device — tap Ready to play.";
@@ -725,6 +766,7 @@
             const pr = read(); pr.levels = {}; PROGRESS_CATS.forEach((c,i)=> pr.levels[c] = parseInt(code[i],10)); write(pr);
             if(window.viziRenderPlan) window.viziRenderPlan();
           }
+          updateSetupLessonCode(getProgressCode());
         }catch(e){}
         stamp(); strip.classList.remove('show'); playViziOpener();
       });
@@ -833,7 +875,7 @@
       pr.levels = pr.levels || {};
       const cur = num(pr.levels[cat]);
       const next = Math.min(cur + 1, 9);
-      if(next > cur){ pr.levels[cat] = next; try{ localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){} }
+      if(next > cur){ pr.levels[cat] = next; try{ localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){} if(window.viziUpdateSetupLessonCode) window.viziUpdateSetupLessonCode(getProgressCode()); }
     }
     // Two-tap confirm so an accidental tap doesn't make a hard-to-undo bump.
     let confirmTimer = null;
@@ -882,7 +924,7 @@
       const curN = Number.isFinite(cur) ? cur : 0;
       if(n > curN){ pr.levels[cat] = n; changed = true; }
     }
-    if(changed){ try{ localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){} }
+    if(changed){ try{ localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){} if(window.viziUpdateSetupLessonCode) window.viziUpdateSetupLessonCode(getProgressCode()); }
   }
   // Route to a stage the same way the stage cards do: song -> songs.html, others -> lessons.html#id
   const OPEN_STAGE_MAP = {
