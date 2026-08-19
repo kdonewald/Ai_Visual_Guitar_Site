@@ -81,6 +81,18 @@
     font-size:.92rem;cursor:pointer;transition:all .18s;white-space:nowrap;
   }
   .setup-btn:hover{background:var(--vizi-dark);border-color:var(--vizi-dark);}
+  .setup-justtalk-btn{
+    display:block;margin:.55rem auto 0;padding:.48rem .9rem;border-radius:9px;
+    border:1px solid rgba(61,186,114,.48);background:transparent;color:var(--vizi);
+    font-family:'DM Sans',sans-serif;font-size:.86rem;font-weight:700;cursor:pointer;
+  }
+  .setup-justtalk-btn:hover{background:rgba(61,186,114,.10);}
+  .change-code-mid{
+    display:block;margin:.05rem auto .85rem;padding:.25rem .45rem;background:none;border:none;
+    color:var(--text-mid);font-family:'DM Sans',sans-serif;font-size:.78rem;
+    text-decoration:underline;cursor:pointer;
+  }
+  .change-code-mid:hover{color:var(--vizi);}
   /* Progress code — returning students enter their code to resume; "Get my code"
      hands back the current code to save when they stop. */
   .code-box{
@@ -402,6 +414,7 @@
   <div class="setup-code-status" id="codeStatus" role="status" aria-live="polite"></div>
   <div class="setup-strip-sub">If so, tap Ready to play.</div>
   <button id="setupReady" class="setup-btn" type="button">✓ Ready to play</button>
+  <button id="setupJustTalk" class="setup-justtalk-btn" type="button">Just talk with Vizi</button>
 </div>
 
 <!-- Talk button -->
@@ -413,6 +426,7 @@
   <span>See your plan</span><span class="pt-chev">▾</span>
 </button>
 <div class="plan-panel" id="planPanel"></div>
+<button id="changeLessonCodeMid" class="change-code-mid" type="button">Change lesson code</button>
 
 <!-- Response panels -->
 <div class="panels">
@@ -618,6 +632,7 @@
     const cancel = document.getElementById('codeCancel');
     const status = document.getElementById('codeStatus');
     const ready = document.getElementById('setupReady');
+    const justTalk = document.getElementById('setupJustTalk');
     if(!input || !change || !confirm || !cancel || !status) return;
     let confirmedCode = getProgressCode();
     let editing = false;
@@ -629,6 +644,7 @@
       cancel.classList.toggle('show', on);
       if(!on) confirm.classList.remove('show');
       if(ready) ready.disabled = on;
+      if(justTalk) justTalk.disabled = on;
     }
     function updateEditState(){
       input.value = input.value.replace(/[^0-9]/g,'').slice(0,6);
@@ -694,6 +710,7 @@
     const SESSION_GAP_MS = 30*60*1000; // >30 min since last activity = a new session
     const strip = document.getElementById('setupStrip');
     const ready = document.getElementById('setupReady');
+    const justTalk = document.getElementById('setupJustTalk');
     if(!strip || !ready) return;
     function read(){ try{ return JSON.parse(localStorage.getItem('viziProgress')||'{}'); }catch(e){ return {}; } }
     function write(pr){ try{ localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){} }
@@ -704,38 +721,55 @@
       return !Number.isFinite(last) || (Date.now() - last) > SESSION_GAP_MS;
     }
     function stamp(){ const pr = read(); pr.lastSessionAt = Date.now(); write(pr); }
-    // Canned KICKOFF that makes Vizi speak the opener. Sent through /claude-tts
-    // (mode:'talk') so she phrases it fresh each time, but the instruction is fixed
-    // and MANDATES both doors — show something here, OR a structured lesson — and
-    // explicitly forbids starting a lesson or opening anything on this turn (so it
-    // can't trip the lesson-plan trigger). §18 backs the same shape.
+    // Session entry: the progress code is always sent. "Ready to play" lets Vizi
+    // use it to guide the student normally. "Just talk with Vizi" keeps the SAME
+    // code only as background context and suppresses curriculum/stage routing until
+    // the student explicitly asks for structured guidance.
     const OPENER_KICKOFF =
       '[SESSION START] Greet the student warmly in one short line and give them the opening choice. ' +
       'You MUST offer BOTH, in the same line: (a) that you can show them a scale, a chord, or a chord progression right here, ' +
-      'and (b) that you can take them into a structured lesson. End by inviting them to say which they\u2019d like. ' +
-      'Do NOT start a lesson, do NOT open any stage, and emit NO command on this turn.';
-    // RETURNING student (any real code): resume-aware opener. Reads the code and picks up
-    // where they left off per the curriculum's C1/C6 entry rules \u2014 names the ACTUAL current
-    // material (not a level number) and never previews rungs they haven't reached (the barre-drift fix).
+      'and (b) that you can guide them through their structured learning plan. End by inviting them to say which they\u2019d like. ' +
+      'Do NOT start the structured plan, do NOT open any stage, and emit NO command on this turn.';
+
     const OPENER_KICKOFF_RETURNING =
       '[SESSION START \u2014 RETURNING STUDENT] Greet them warmly in one short line, then read their ' +
       'PROGRESS code and briefly say where you will pick up, following the curriculum\u2019s returning-student ' +
       'entry rules (C1/C6): meet each category at its CURRENT rung, naming the actual current material ' +
-      '(their current chords BY NAME, e.g. E minor / A minor / D minor; the warm-up by SCALE NAME ONLY, e.g. ' +
-      'your E minor pentatonic \u2014 NEVER a shape number like "shape three" and never "all five", the warm-up ' +
-      'stage sequences the shapes; and their song if one is loaded) \u2014 never a level number, and ' +
-      'never a rung they have not reached yet (do NOT mention barre or other advanced chords unless their code ' +
-      'is already there). A non-zero Song step means they have REACHED that step, NOT that a song is loaded right now (songs load fresh each session) \u2014 do NOT claim a song is loaded \u2014 frame it as "then we\'ll pick a song to work on together". End by asking whether they want to pick up there or work on something else. ' +
-      'Do NOT open any stage, and emit NO command on this turn.';
-    async function playViziOpener(){
-      // Talk button reappears now, as Vizi begins thinking.
+      '(their current chords BY NAME; the warm-up by SCALE NAME ONLY; and their song focus if applicable) \u2014 ' +
+      'never a level number and never a rung they have not reached. A non-zero Song step means they have reached ' +
+      'that step, NOT that a song is loaded right now. End by asking whether they want to pick up there or work ' +
+      'on something else. Do NOT open any stage, and emit NO command on this turn.';
+
+    const OPENER_JUST_TALK =
+      '[JUST TALK SESSION] The student chose to talk with Vizi rather than begin structured guidance. ' +
+      'The PROGRESS code is background context only. Do NOT initiate a warm-up, curriculum sequence, stage routing, ' +
+      'mastery/advancement discussion, or structured plan unless the student explicitly asks for one later. ' +
+      'Greet them naturally in one short line and ask what they would like to talk about or what they would like you ' +
+      'to show them on the fretboard. You may answer questions and use normal hard-coded fretboard commands when requested. ' +
+      'Do NOT mention their progress code and emit NO command on this opening turn.';
+
+    async function playViziOpener(justTalk){
       document.body.classList.remove('setup-pending');
-      // The tap is a user gesture, so audio can play immediately (no second tap).
-      setBtn('thinking'); btn.innerHTML='Vizi is<br>Thinking'; setStatus('Just a moment…');
+      setBtn('thinking'); btn.innerHTML='Vizi is<br>Thinking'; setStatus('Just a moment\u2026');
       try{
+        const namePrefix = (function(){
+          try{
+            var pr=JSON.parse(localStorage.getItem('viziProgress')||'{}');
+            var nm=(pr.name||'').trim();
+            return nm ? ('STUDENT NAME: '+nm+'. ') : '';
+          }catch(e){ return ''; }
+        })();
+        const opener = justTalk
+          ? OPENER_JUST_TALK
+          : (getProgressCode()==='000000' ? OPENER_KICKOFF : OPENER_KICKOFF_RETURNING);
         const res = await fetch(RAILWAY_URL + '/claude-tts', {
           method:'POST', headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({ message: ((function(){ try{ var pr=JSON.parse(localStorage.getItem('viziProgress')||'{}'); var nm=(pr.name||'').trim(); return nm ? ('STUDENT NAME: '+nm+'. ') : ''; }catch(e){ return ''; } })() + (getProgressCode()==='000000' ? OPENER_KICKOFF : OPENER_KICKOFF_RETURNING)), mode:'talk', progress:getProgressCode(), steps:(window.viziStepLabels?window.viziStepLabels():'') })
+          body:JSON.stringify({
+            message:namePrefix + opener,
+            mode:'talk',
+            progress:getProgressCode(),
+            steps:(window.viziStepLabels?window.viziStepLabels():'')
+          })
         });
         const ct = (res.headers.get('content-type')||'');
         if(res.ok && !ct.includes('application/json')){
@@ -743,14 +777,13 @@
           if(text) showPanel('pVizi','bVizi',text);
           const blob = await res.blob();
           setBtn(''); btn.innerHTML='Tap<br>to Talk'; setStatus('');
-          await playBlob(blob);          // immediate play — same Web-Audio path as stage intros
+          await playBlob(blob);
           setStatus('Ready');
         } else {
-          // Couldn't reach Vizi — fall back to a ready state; student can hold-to-talk.
-          setBtn(''); btn.innerHTML='Tap<br>to Talk'; setStatus('Ready — tap to talk');
+          setBtn(''); btn.innerHTML='Tap<br>to Talk'; setStatus('Ready \u2014 tap to talk');
         }
       }catch(e){
-        setBtn(''); btn.innerHTML='Tap<br>to Talk'; setStatus('Ready — tap to talk');
+        setBtn(''); btn.innerHTML='Tap<br>to Talk'; setStatus('Ready \u2014 tap to talk');
       }
     }
     // "Start a new session": clears ONLY the session timer (plan/levels untouched) and reloads,
@@ -767,14 +800,35 @@
       document.body.classList.add('setup-pending');   // hide talk button until Ready is tapped
       ready.addEventListener('click', ()=>{
         // Any edited lesson code was already explicitly confirmed above.
-        stamp(); strip.classList.remove('show'); playViziOpener();
+        stamp(); strip.classList.remove('show'); playViziOpener(false);
       });
+      if(justTalk){
+        justTalk.addEventListener('click', ()=>{
+          stamp(); strip.classList.remove('show'); playViziOpener(true);
+        });
+      }
     } else {
       // Fresh continuation — refresh the stamp so the session keeps rolling.
       stamp();
       if(newSes) newSes.style.display = '';   // Ready-to-play is hidden now; offer a way to re-arm it for a new code
     }
   })();
+  // Mid-session code change: return to the compact setup/code card without
+  // changing any progress. Clearing only lastSessionAt makes the normal session
+  // gate reappear on reload; the current saved code is still auto-populated.
+  (function initMidSessionCodeChange(){
+    const b=document.getElementById('changeLessonCodeMid');
+    if(!b) return;
+    b.addEventListener('click', ()=>{
+      try{
+        const pr=JSON.parse(localStorage.getItem('viziProgress')||'{}');
+        delete pr.lastSessionAt;
+        localStorage.setItem('viziProgress',JSON.stringify(pr));
+      }catch(e){}
+      location.reload();
+    });
+  })();
+
   // ── "See your plan": the six categories as 9-rung ladders (curriculum order).
   // Reads the code and marks the current rung per category so the digits mean
   // something; locked categories show their unlock condition. ──
