@@ -405,7 +405,7 @@
 </div>
 
 <!-- Talk button -->
-<button class="talk" id="talkBtn">Hold<br>to Talk</button>
+<button class="talk" id="talkBtn">Tap<br>to Talk</button>
 <div class="status" id="status">Ready</div>
 
 <!-- Student plan — progress code editing now lives directly in the Ready card. -->
@@ -460,9 +460,18 @@
 
   let pendingIntroBlob = null;
   let audioCtx, stream, source, processor, sink;
-  let micReady = false, recording = false;
+  let micReady = false, recording = false, sendingToVizi = false;
   let chunks = [], preroll = [];
   const PREROLL_FRAMES = 6;
+
+  // Tap-to-talk endpoint detection. A tap starts recording; a second tap stops
+  // immediately. After speech is detected, about 1.4s of quiet auto-sends.
+  // The hard timeout prevents the microphone from staying open indefinitely.
+  const SPEECH_RMS_THRESHOLD = 0.016;
+  const AUTO_SILENCE_MS = 1400;
+  const MIN_CAPTURE_MS = 500;
+  const MAX_CAPTURE_MS = 18000;
+  let captureStartedAt = 0, lastSpeechAt = 0, speechSeen = false, endpointTimer = null;
 
   function setStatus(t){ statusEl.textContent = t; }
   function setBtn(cls){ btn.className = 'talk' + (cls ? ' '+cls : ''); }
@@ -497,13 +506,26 @@
     processor.onaudioprocess = e => {
       const frame = new Float32Array(e.inputBuffer.getChannelData(0));
       preroll.push(frame); if(preroll.length>PREROLL_FRAMES) preroll.shift();
-      if(recording) chunks.push(frame);
+      if(recording){
+        chunks.push(frame);
+        // Lightweight voice/activity detector used only to decide when a spoken
+        // turn has ended. Noise suppression + echo cancellation are already on.
+        let sum = 0;
+        for(let i=0;i<frame.length;i++) sum += frame[i]*frame[i];
+        const rms = Math.sqrt(sum/frame.length);
+        if(rms >= SPEECH_RMS_THRESHOLD){ speechSeen = true; lastSpeechAt = Date.now(); }
+      }
     };
     source.connect(processor); processor.connect(sink); sink.connect(audioCtx.destination);
     micReady = true;
   }
-  async function startCapture(){ await ensureMic(); chunks=preroll.slice(); recording=true; }
+  async function startCapture(){
+    await ensureMic();
+    chunks=preroll.slice(); recording=true;
+    captureStartedAt=Date.now(); lastSpeechAt=0; speechSeen=false;
+  }
   function stopCapture(){
+    if(endpointTimer){ clearInterval(endpointTimer); endpointTimer=null; }
     if(!recording) return null; recording=false;
     const len=chunks.reduce((a,c)=>a+c.length,0); if(!len) return null;
     const merged=new Float32Array(len); let off=0;
@@ -720,15 +742,15 @@
           const text = dec(res.headers.get('X-Vizi-Text'));
           if(text) showPanel('pVizi','bVizi',text);
           const blob = await res.blob();
-          setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus('');
+          setBtn(''); btn.innerHTML='Tap<br>to Talk'; setStatus('');
           await playBlob(blob);          // immediate play — same Web-Audio path as stage intros
           setStatus('Ready');
         } else {
           // Couldn't reach Vizi — fall back to a ready state; student can hold-to-talk.
-          setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus('Ready — hold to talk');
+          setBtn(''); btn.innerHTML='Tap<br>to Talk'; setStatus('Ready — tap to talk');
         }
       }catch(e){
-        setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus('Ready — hold to talk');
+        setBtn(''); btn.innerHTML='Tap<br>to Talk'; setStatus('Ready — tap to talk');
       }
     }
     // "Start a new session": clears ONLY the session timer (plan/levels untouched) and reloads,
@@ -921,6 +943,7 @@
   }
 
   async function sendToVizi(b64){
+    sendingToVizi = true;
     setBtn('thinking'); btn.innerHTML='Vizi is<br>Thinking'; setStatus('Vizi is thinking…');
     try{
       const res=await fetch(RAILWAY_URL+'/stt-claude-tts',{
@@ -930,7 +953,7 @@
       const ct=(res.headers.get('content-type')||'');
       if(ct.includes('application/json')){
         const j=await res.json();
-        setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus(j.empty?"Didn't catch that — try again":'Error: '+(j.error||'unknown'));
+        setBtn(''); btn.innerHTML='Tap<br>to Talk'; setStatus(j.empty?"Didn't catch that — try again":'Error: '+(j.error||'unknown'));
         return;
       }
       const transcript=dec(res.headers.get('X-Vizi-Transcript'));
@@ -945,38 +968,64 @@
         applyProgressCommands(commands);
       }
       const blob=await res.blob();
-      setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus('');
+      setBtn(''); btn.innerHTML='Tap<br>to Talk'; setStatus('');
       await playBlob(blob);
       if(maybeOpenStage(commands)) return;   // she routed us to a stage — go now she's done talking
       setStatus('Ready');
-    }catch(e){ setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus('Could not reach Vizi — check connection'); }
+    }catch(e){
+      setBtn(''); btn.innerHTML='Tap<br>to Talk'; setStatus('Could not reach Vizi — check connection');
+    } finally {
+      sendingToVizi = false;
+    }
   }
 
-  async function press(e){
-    e.preventDefault();
-    if(pendingIntroBlob){
-      const blob=pendingIntroBlob; pendingIntroBlob=null;
-      btn.innerHTML='Hold<br>to Talk'; setBtn('');
-      await playBlob(blob); setStatus('Ready'); return;
-    }
-    if(recording) return;
-    setBtn('listening'); setStatus('Starting mic…');
-    try{ await startCapture(); setListening(true); setStatus('Listening…'); }
-    catch(err){ setBtn(''); setListening(false); setStatus('Microphone blocked — allow mic access'); }
-  }
-  function release(e){
-    e.preventDefault();
-    if(pendingIntroBlob) return;
+  function finishTapCapture(){
     if(!recording) return;
     setListening(false);
     const b64=stopCapture();
-    if(!b64){ setBtn(''); setStatus('Nothing recorded — hold a moment longer'); return; }
+    if(!b64){ setBtn(''); btn.innerHTML='Tap<br>to Talk'; setStatus('Nothing recorded — tap and try again'); return; }
     sendToVizi(b64);
   }
-  btn.addEventListener('pointerdown',press);
-  btn.addEventListener('pointerup',release);
-  btn.addEventListener('pointercancel',release);
-  btn.addEventListener('pointerleave',e=>{ if(recording&&!pendingIntroBlob) release(e); });
+
+  function armEndpointDetection(){
+    if(endpointTimer) clearInterval(endpointTimer);
+    endpointTimer = setInterval(()=>{
+      if(!recording){ clearInterval(endpointTimer); endpointTimer=null; return; }
+      const now = Date.now();
+      const elapsed = now - captureStartedAt;
+      if(elapsed >= MAX_CAPTURE_MS){
+        finishTapCapture();
+        return;
+      }
+      if(speechSeen && elapsed >= MIN_CAPTURE_MS && (now-lastSpeechAt) >= AUTO_SILENCE_MS){
+        finishTapCapture();
+      }
+    }, 150);
+  }
+
+  async function tapTalk(e){
+    e.preventDefault();
+    if(sendingToVizi) return;
+    if(pendingIntroBlob){
+      const blob=pendingIntroBlob; pendingIntroBlob=null;
+      btn.innerHTML='Tap<br>to Talk'; setBtn('');
+      await playBlob(blob); setStatus('Ready'); return;
+    }
+    // Second tap is always a manual stop/send.
+    if(recording){ finishTapCapture(); return; }
+
+    setBtn('listening'); btn.innerHTML='Listening…<br>Tap to Stop'; setStatus('Starting mic…');
+    try{
+      await startCapture();
+      setListening(true);
+      setStatus('Listening… speak naturally');
+      armEndpointDetection();
+    } catch(err){
+      setBtn(''); btn.innerHTML='Tap<br>to Talk'; setListening(false);
+      setStatus('Microphone blocked — allow mic access');
+    }
+  }
+  btn.addEventListener('click', tapTalk);
 
   // Welcome video
   const welcomeBtn   = document.getElementById('welcomeBtn');
