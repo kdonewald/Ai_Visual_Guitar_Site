@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Ai Visual Guitar — Learn Guitar With Vizi</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="/icons/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0f1117">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0f1117; --surface:#1a1d2e; --surface2:#22263a;
+    --border:rgba(255,255,255,0.10); --border2:rgba(255,255,255,0.06);
+    --red:#e05540; --red-dark:#c44432; --blue:#4f8ef7;
+    --gold:#e8a020; --teal:#2dd4bf; --green:#3dba72;
+    --vizi:#3dba72; --vizi-dark:#2e9658;
+    --text:#f0ede8; --text-mid:#a89f94; --text-dim:#6b6560;
+    --white:#ffffff; --shadow:rgba(0,0,0,0.35); --shadow-lg:rgba(0,0,0,0.55);
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'DM Sans',sans-serif; font-weight:400;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    padding-bottom:5rem;
+  }
+
+  /* ── nav ── */
+  nav{
+    width:100%; position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:.75rem 1.5rem; background:rgba(15,17,23,0.96);
+    backdrop-filter:blur(12px); border-bottom:1.5px solid var(--border);
+  }
+  .nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+  .logo-mark{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;line-height:1}
+  .logo-mark .A{color:var(--red)} .logo-mark .i{color:var(--blue)}
+  .logo-name{font-family:'Playfair Display',serif;font-size:.88rem;font-weight:700;color:var(--text)}
+  .nav-links{display:flex;gap:.4rem;align-items:center}
+  .nav-link{
+    font-size:.86rem;font-weight:500;color:var(--text-mid);text-decoration:none;
+    padding:5px 12px;border-radius:6px;border:1.5px solid var(--border);transition:all .2s;
+  }
+  .nav-link:hover{border-color:var(--blue);color:var(--blue)}
+  .nav-link.active{border-color:var(--red);color:var(--red);background:rgba(224,85,64,0.10)}
+
+  /* ── vizi avatar ── */
+  .name-invite{
+    font-family:'DM Sans',sans-serif;font-size:1.02rem;font-weight:600;
+    color:var(--teal,#2dd4bf);text-align:center;line-height:1.5;
+    background:rgba(45,212,191,0.08);border:1px solid rgba(45,212,191,0.28);
+    border-radius:14px;padding:.8rem 1.15rem;margin:1rem auto 1.25rem;
+    max-width:360px;display:none;
+  }
+  /* Setup reminder — a due-session nudge (guitar in tune + board lit) that sits
+     above the talk button. Shows only on a new/stale session; "Ready to play"
+     clears it and stamps the session so a fresh continuation skips it. The LED
+     test itself lives on the setup stage — this is reminder + confirm only. */
+  .setup-strip{
+    max-width:400px;margin:0 auto 1.1rem;padding:.8rem 1rem;
+    background:rgba(232,160,32,0.08);border:1px solid rgba(232,160,32,0.30);
+    border-radius:14px;text-align:center;font-family:'DM Sans',sans-serif;display:none;
+  }
+  .setup-strip.show{display:block;}
+  .setup-strip-title{font-size:.96rem;font-weight:700;color:var(--gold);margin-bottom:.4rem;line-height:1.4;}
+  .setup-strip-sub{font-size:.9rem;font-weight:500;color:var(--text-mid);margin-bottom:.7rem;line-height:1.4;}
+  /* While the setup reminder is pending (due session, before "Ready to play"),
+     hide the talk button + its status so the student isn't tempted to talk before
+     confirming setup. The Ready tap removes .setup-pending, so they reappear as
+     Vizi starts thinking. */
+  body.setup-pending #talkBtn,
+  body.setup-pending #status{ display:none; }
+  .setup-btn{
+    padding:.55rem 1.1rem;border-radius:9px;border:1.5px solid var(--vizi);
+    background:var(--vizi);color:#0f1117;font-family:'DM Sans',sans-serif;font-weight:700;
+    font-size:.92rem;cursor:pointer;transition:all .18s;white-space:nowrap;
+  }
+  .setup-btn:hover{background:var(--vizi-dark);border-color:var(--vizi-dark);}
+  /* Progress code — returning students enter their code to resume; "Get my code"
+     hands back the current code to save when they stop. */
+  .code-box{
+    max-width:400px;margin:0 auto 1.25rem;padding:.85rem 1rem;
+    background:rgba(61,186,114,0.07);border:1px solid rgba(61,186,114,0.28);
+    border-radius:14px;text-align:center;font-family:'DM Sans',sans-serif;
+  }
+  .code-box-title{font-size:.9rem;font-weight:700;color:var(--vizi);margin-bottom:.55rem;}
+  .code-row{display:flex;gap:.5rem;justify-content:center;align-items:center;flex-wrap:wrap;}
+  .code-input{
+    width:8.5em;padding:.55rem .7rem;border-radius:9px;border:1.5px solid var(--border);
+    background:var(--surface2);color:var(--text);font-family:'DM Mono',monospace;
+    font-size:1.05rem;letter-spacing:.35em;text-align:center;
+  }
+  .code-input::placeholder{letter-spacing:normal;color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.88rem;}
+  .code-input:focus{outline:none;border-color:var(--vizi);}
+  .code-btn{
+    padding:.55rem .95rem;border-radius:9px;border:1.5px solid var(--vizi);
+    background:var(--vizi);color:#0f1117;font-family:'DM Sans',sans-serif;font-weight:700;
+    font-size:.9rem;cursor:pointer;transition:all .18s;white-space:nowrap;
+  }
+  .code-btn:hover{background:var(--vizi-dark);border-color:var(--vizi-dark);}
+  .code-btn-alt{background:transparent;color:var(--vizi);}
+  .code-btn-alt:hover{background:rgba(61,186,114,0.12);color:var(--text);}
+  .code-msg{margin-top:.55rem;font-size:.86rem;color:var(--text-mid);min-height:1.1em;}
+  .code-msg .code-strong{color:var(--vizi);font-family:'DM Mono',monospace;font-weight:700;font-size:1.05rem;letter-spacing:.15em;}
+  /* "See your plan" — the six categories as 9-rung ladders; reads the code to mark
+     where the student is, so the number means something. */
+  .plan-toggle{display:inline-flex;align-items:center;gap:.5rem;margin:0 auto .8rem;padding:.7rem 1.35rem;
+    background:rgba(61,186,114,0.10);border:1.5px solid var(--vizi);border-radius:11px;color:var(--vizi);
+    font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all .18s;}
+  .plan-toggle:hover{border-color:var(--vizi);color:var(--vizi);}
+  .plan-toggle .pt-chev{transition:transform .2s;}
+  .plan-toggle[aria-expanded="true"] .pt-chev{transform:rotate(180deg);}
+  .plan-panel{display:none;max-width:440px;margin:0 auto 1.25rem;text-align:left;}
+  .plan-panel.open{display:block;}
+  .plan-cat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.7rem .85rem;margin-bottom:.6rem;}
+  .plan-cat.locked{opacity:.6;}
+  .plan-cat-head{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;margin-bottom:.45rem;}
+  .plan-cat-name{font-family:'DM Sans',sans-serif;font-weight:700;font-size:.98rem;color:var(--text);}
+  .plan-cat-now{font-family:'DM Mono',monospace;font-size:.74rem;color:var(--vizi);text-align:right;}
+  .plan-cat.locked .plan-cat-now{color:var(--text-dim);}
+  .plan-lock{font-family:'DM Sans',sans-serif;font-size:.8rem;color:var(--gold);margin-bottom:.4rem;}
+  .plan-rungs{list-style:none;margin:0;padding:0;counter-reset:rung;}
+  .plan-rungs li{position:relative;padding:.16rem 0 .16rem 1.7rem;font-family:'DM Sans',sans-serif;font-size:.84rem;color:var(--text-mid);line-height:1.35;counter-increment:rung;}
+  .plan-rungs li::before{content:counter(rung);position:absolute;left:0;top:.18rem;width:1.2rem;height:1.2rem;border-radius:50%;background:var(--surface2);color:var(--text-dim);font-family:'DM Mono',monospace;font-size:.66rem;display:flex;align-items:center;justify-content:center;}
+  .plan-rungs li.done{color:var(--text-dim);}
+  .plan-rungs li.done::before{content:'\2713';background:rgba(61,186,114,0.18);color:var(--vizi);}
+  .plan-rungs li.here{color:var(--text);font-weight:700;}
+  .plan-rungs li.here::before{background:var(--vizi);color:#0f1117;}
+  .plan-rungs li.here .here-tag{color:var(--vizi);font-weight:700;font-size:.72rem;margin-left:.4rem;font-family:'DM Mono',monospace;white-space:nowrap;}
+  /* Confidence box — the STUDENT owns mastery. On each unlocked category the current
+     rung gets an "I've got this" control; tapping it advances that category one rung
+     (raise-only, capped at 9). Two-tap to avoid an accidental, hard-to-undo bump. */
+  .plan-confidence{margin:.5rem 0 .1rem 1.7rem;}
+  .conf-btn{
+    display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .8rem;border-radius:9px;
+    border:1.5px solid var(--vizi);background:rgba(61,186,114,0.10);color:var(--vizi);
+    font-family:'DM Sans',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;transition:all .16s;
+  }
+  .conf-btn:hover{background:rgba(61,186,114,0.18);}
+  .conf-btn.confirming{background:var(--vizi);color:#0f1117;border-color:var(--vizi);}
+  .plan-conf-hint{font-family:'DM Sans',sans-serif;font-size:.74rem;color:var(--text-dim);margin:.3rem 0 0 1.7rem;line-height:1.35;}
+  .plan-complete{font-family:'DM Mono',monospace;font-size:.76rem;color:var(--vizi);margin:.4rem 0 .1rem 1.7rem;}
+  .name-invite.show{display:block;}
+  .stage-wrap{position:relative;margin-top:1.75rem;margin-bottom:1rem}
+  .stage{
+    position:relative;width:200px;height:200px;border-radius:50%;overflow:hidden;
+    border:3px solid var(--border);background:#0a0a0a;
+    box-shadow:0 10px 30px var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+  .stage img,.stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .stage img{object-position:center top}
+  .stage video{object-position:center 12%;opacity:0;transition:opacity .3s ease}
+  .stage.talking video{opacity:1}
+  .stage-wrap .ring{position:absolute;inset:-4px;border-radius:50%;border:3px solid var(--blue);
+    opacity:0;pointer-events:none}
+  .stage-wrap.listening .ring{animation:ring 1.15s ease-out infinite}
+  @keyframes ring{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.28);opacity:0}}
+
+  /* ── talk button ── */
+  .talk{
+    width:130px;height:130px;border-radius:50%;
+    background:var(--red);color:var(--white);border:none;
+    font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:600;
+    cursor:pointer;box-shadow:0 8px 24px rgba(224,85,64,0.38);
+    transition:transform .12s,background .2s;
+    display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.3;
+    touch-action:none;user-select:none;-webkit-user-select:none;
+    margin-bottom:.75rem;
+  }
+  .talk:active{background:var(--red-dark)}
+  .talk.listening{background:var(--blue);transform:scale(0.96)}
+  .talk.thinking{background:var(--gold)}
+  .talk.intro{background:var(--blue);animation:intro-pulse 1.2s ease-in-out infinite}
+  @keyframes intro-pulse{0%,100%{box-shadow:0 0 0 0 rgba(79,142,247,0.5)}60%{box-shadow:0 0 0 18px rgba(79,142,247,0)}}
+
+  .status{
+    font-family:'DM Mono',monospace;font-size:.87rem;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--text-mid);min-height:1.1em;font-weight:600;
+    margin-bottom:1rem;text-align:center;
+  }
+
+  /* ── welcome button ── */
+  .welcome-btn{
+    background:var(--vizi);color:white;
+    border:none;border-radius:10px;
+    padding:.5rem 1.1rem;
+    font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;
+    cursor:pointer;transition:all .18s;
+    margin-bottom:.6rem;
+    box-shadow:0 3px 12px rgba(61,186,114,0.25);
+    display:flex;align-items:center;gap:.45rem;
+  }
+  .welcome-btn:hover{background:var(--vizi-dark);transform:translateY(-1px);box-shadow:0 6px 20px rgba(61,186,114,0.40);}
+  .welcome-btn.active{background:var(--vizi-dark);}
+  .welcome-btn .wb-icon{font-size:.9rem;}
+
+  /* ── welcome video ── */
+  .welcome-wrap{
+    display:none;
+    position:relative;
+    width:280px;margin:.5rem auto;
+    animation:fade-up .25s ease both;
+  }
+  .welcome-wrap.show{display:block;}
+  .welcome-video-box{
+    position:relative;border-radius:12px;overflow:hidden;
+    background:#0a0a0a;box-shadow:0 6px 18px var(--shadow-lg);
+  }
+  .welcome-video-box iframe{width:100%;aspect-ratio:9/16;border:none;display:block;}
+  .welcome-close{
+    position:absolute;top:6px;right:6px;z-index:10;
+    width:26px;height:26px;border-radius:50%;
+    background:rgba(0,0,0,0.7);border:1px solid var(--border);color:var(--text-mid);
+    font-size:.85rem;cursor:pointer;display:flex;
+    align-items:center;justify-content:center;
+    transition:background .15s;
+  }
+  .welcome-close:hover{background:var(--red);color:white;}
+
+  /* ── interactive fretboard ── */
+  .fretboard-section{
+    width:100%;max-width:960px;padding:0 1.25rem .6rem;
+    margin-top:.7rem;
+  }
+  /* Stage strip is ALWAYS visible now — Vizi points to stages, the student taps
+     to open them, so the target must be on screen (no hide/toggle). */
+  .fretboard-label{
+    font-family:'DM Mono',monospace;font-size:.86rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--text-mid);text-align:center;margin-bottom:.65rem;font-weight:600;font-size:.80rem;letter-spacing:.12em;
+  }
+  .fretboard{
+    background:linear-gradient(180deg,#2a1f14,#1a1208);
+    border-radius:14px;padding:.9rem .8rem .8rem;
+    box-shadow:0 12px 36px var(--shadow-lg),inset 0 1px 0 rgba(255,255,255,0.06);
+    overflow-x:auto;border:1px solid rgba(255,255,255,0.06);
+  }
+  .frets-row{display:flex;gap:.45rem;position:relative;min-width:680px}
+  .fret-stage{
+    flex:1;min-width:72px;
+    background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.09);
+    border-radius:8px;padding:.65rem .4rem .6rem;text-align:center;
+    cursor:pointer;transition:all .18s;
+  }
+  .fret-stage:hover{background:rgba(255,255,255,0.09);transform:translateY(-2px);border-color:rgba(255,255,255,0.18)}
+  .fret-stage.active{
+    background:rgba(232,160,32,0.16);border-color:var(--gold);
+    box-shadow:0 0 0 1px var(--gold),0 0 18px rgba(232,160,32,0.30);
+  }
+  .fret-num{font-family:'DM Mono',monospace;font-size:.82rem;color:var(--gold);margin-bottom:.3rem;letter-spacing:.06em;font-weight:800}
+  .fret-led{width:9px;height:9px;border-radius:50%;margin:0 auto .38rem;background:rgba(255,255,255,0.12);transition:all .2s}
+  .fret-stage.active .fret-led{background:var(--gold);box-shadow:0 0 10px var(--gold)}
+  .fret-stage.song-stage .fret-led{background:var(--teal);box-shadow:0 0 8px var(--teal)}
+  .fret-stage.song-stage{border-color:rgba(45,212,191,0.30)}
+  .fret-stage.song-stage .fret-label{color:var(--teal)}
+  .fret-label{font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:700;color:#ffffff;line-height:1.25}
+  .fret-stage.active .fret-label{color:#fff}
+
+  /* response panels */
+  .panels{width:100%;max-width:500px;padding:0 1.25rem;display:flex;flex-direction:column;gap:.7rem;margin-top:.5rem}
+  .panel{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;
+         padding:.85rem 1.1rem;opacity:0;transform:translateY(8px);transition:all .3s}
+  .panel.show{opacity:1;transform:none}
+  .panel .label{font-family:'DM Mono',monospace;font-size:.85rem;letter-spacing:.14em;
+                text-transform:uppercase;color:var(--text-mid);margin-bottom:.3rem}
+  .panel.you{border-left:3px solid var(--blue)}
+  .panel.vizi-p{border-left:3px solid var(--red)}
+  .panel .body{font-size:.95rem;line-height:1.55;color:var(--text);font-weight:400}
+
+  @keyframes fade-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  /* ── Compact home-screen pass (Aug 19 2026) ────────────────────────────────
+     Keeps every existing control, but makes the default mobile view much less
+     vertical: shorter stage cards, smaller Vizi portrait, compact setup, and a
+     collapsed Resume / Progress drawer for the less-frequently-used controls. */
+  .fretboard-section{padding:0 .8rem .35rem;margin-top:.35rem;}
+  .fretboard{padding:.5rem .55rem .45rem;border-radius:12px;}
+  .frets-row{gap:.32rem;min-width:560px;}
+  .fret-stage{min-width:62px;border-radius:7px;padding:.32rem .25rem .36rem;}
+  .fret-num{font-size:.7rem;margin-bottom:.12rem;}
+  .fret-led{width:6px;height:6px;margin:0 auto .18rem;}
+  .fret-label{font-size:.78rem;line-height:1.12;}
+
+  .welcome-btn{margin:.45rem auto .1rem;padding:.42rem .9rem;font-size:.8rem;box-shadow:none;}
+  .stage-wrap{margin-top:.75rem;margin-bottom:.55rem;}
+  .stage{width:170px;height:170px;}
+
+  .setup-strip{max-width:400px;margin:.35rem auto .65rem;padding:.62rem .8rem;border-radius:12px;}
+  .setup-strip-title{font-size:.9rem;margin-bottom:.28rem;}
+  .setup-strip-sub{font-size:.82rem;margin-bottom:.45rem;}
+  .setup-btn{padding:.48rem .95rem;font-size:.86rem;}
+  #studentName{margin-bottom:.45rem !important;padding:.45rem .7rem !important;font-size:.9rem !important;}
+
+  .talk{width:112px;height:112px;font-size:.93rem;margin-bottom:.45rem;}
+  .status{font-size:.78rem;margin-bottom:.55rem;}
+
+  .progress-drawer{width:min(400px,calc(100% - 2rem));margin:.25rem auto .85rem;}
+  .progress-drawer-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:.75rem;
+    padding:.7rem .9rem;border:1.5px solid rgba(61,186,114,.42);border-radius:11px;
+    background:rgba(61,186,114,.07);color:var(--vizi);font-family:'DM Sans',sans-serif;
+    font-size:.92rem;font-weight:700;cursor:pointer;}
+  .progress-drawer-toggle:hover{background:rgba(61,186,114,.12);}
+  .progress-drawer-toggle .drawer-chev{transition:transform .2s;}
+  .progress-drawer-toggle[aria-expanded="true"] .drawer-chev{transform:rotate(180deg);}
+  .progress-drawer-body{display:none;padding:.7rem .15rem 0;}
+  .progress-drawer-body.open{display:block;}
+  .code-box{max-width:none;margin:0;padding:.72rem .75rem;background:rgba(61,186,114,.05);border-radius:11px;}
+  .code-row{gap:.42rem;flex-wrap:nowrap;}
+  .code-input{width:7.8em;padding:.48rem .55rem;font-size:.95rem;}
+  .code-btn{padding:.5rem .72rem;font-size:.82rem;}
+  .code-note{font-size:.8rem !important;line-height:1.35 !important;margin-top:.42rem !important;}
+  .code-msg{font-size:.78rem;margin-top:.4rem;}
+  .progress-drawer .plan-toggle{display:flex;width:100%;justify-content:center;margin:.62rem 0 0;padding:.55rem .9rem;font-size:.88rem;}
+  .progress-drawer .plan-panel{margin:.55rem auto 0;}
+  .transfer-wrap{text-align:center;margin-top:.6rem;}
+  .transfer-note{font-size:.76rem;color:var(--text-mid);line-height:1.35;margin:.35rem auto 0;max-width:22rem;}
+
+  @media(max-width:560px){
+    nav{padding:.6rem .8rem;}
+    .nav-link{font-size:.78rem;padding:4px 9px;}
+    .logo-name{font-size:.82rem;}
+    .stage{width:158px;height:158px;}
+    .frets-row{min-width:520px;}
+    .fret-stage{min-width:58px;}
+    .fret-label{font-size:.74rem;}
+    .progress-drawer{width:calc(100% - 1.2rem);}
+  }
+
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <div class="logo-mark"><span class="A">A</span><span class="i">i</span></div>
+    <div class="logo-name">Visual Guitar</div>
+  </a>
+  <div class="nav-links">
+      <a href="index.html" class="nav-link active">Home</a>
+    </div>
+</nav>
+
+<!-- Interactive fretboard — top of page (stage strip is always visible) -->
+<div class="fretboard-section">
+  <div class="fretboard">
+    <div class="frets-row" id="fretsRow"></div>
+  </div>
+</div>
+
+<!-- Welcome video button + window — placed first so it's visible without scrolling on mobile -->
+<button class="welcome-btn" id="welcomeBtn"><span class="wb-icon">▶</span> Watch Welcome Video</button>
+
+<div class="welcome-wrap" id="welcomeWrap">
+  <div class="welcome-video-box">
+    <button class="welcome-close" id="welcomeClose" title="Close video">✕</button>
+    <iframe id="welcomeIframe"
+      src=""
+      allow="autoplay; fullscreen"
+      allowfullscreen>
+    </iframe>
+  </div>
+</div>
+
+<!-- Vizi avatar -->
+<div class="stage-wrap" id="stageWrap">
+  <div class="stage" id="stage">
+    <img id="viziStill" src="ViziWhiteBack.png?v=2" alt="Vizi" />
+    <video id="viziVid" src="VIZI%20MUTETALK.mp4" muted loop playsinline preload="auto"></video>
+    <video id="stageIntroVid" playsinline preload="none"
+      style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .3s;border-radius:50%;"></video>
+  </div>
+  <div class="ring"></div>
+</div>
+
+<!-- Setup reminder (due-session only; shown/cleared by initSetupStrip below) -->
+<div class="setup-strip" id="setupStrip">
+  <div class="setup-strip-title">🎸 Guitar in tune? · 💡 Lights working?</div>
+  <input id="studentName" type="text" maxlength="24" placeholder="Your name (optional)" autocomplete="off" aria-label="Your name" style="width:100%;max-width:16rem;box-sizing:border-box;margin:0 auto .7rem;display:block;padding:.55rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.95rem;text-align:center;" />
+  <div class="setup-strip-sub">If so, tap Ready to play.</div>
+  <button id="setupReady" class="setup-btn" type="button">✓ Ready to play</button>
+</div>
+
+<!-- Talk button -->
+<button class="talk" id="talkBtn">Hold<br>to Talk</button>
+<div class="status" id="status">Ready</div>
+
+<!-- Resume / Progress — collapsed by default so routine sessions stay uncluttered. -->
+<div class="progress-drawer" id="progressDrawer">
+  <button class="progress-drawer-toggle" id="progressDrawerToggle" type="button" aria-expanded="false" aria-controls="progressDrawerBody">
+    <span>Resume / Progress</span><span class="drawer-chev">▾</span>
+  </button>
+  <div class="progress-drawer-body" id="progressDrawerBody">
+    <div class="code-box" id="codeBox">
+      <div class="code-row">
+        <input id="codeInput" class="code-input" inputmode="numeric" maxlength="6" value="000000" autocomplete="off" aria-label="Progress code" />
+        <button id="codeResume" class="code-btn" type="button">Resume last session</button>
+      </div>
+      <div class="code-note" style="font-size:.9rem;color:var(--text);line-height:1.45;margin-top:.5rem;">Load this device's last lesson, or enter a 6-digit transfer code. Then tap <b>Ready to play</b>.</div>
+      <div class="code-msg" id="codeMsg" role="status" aria-live="polite"></div>
+      <button id="newSession" type="button" style="display:none;background:none;border:none;color:var(--vizi);font-size:.82rem;text-decoration:underline;cursor:pointer;padding:.35rem 0 0;margin-top:.2rem;">Start a new session to enter a new code</button>
+    </div>
+
+    <button class="plan-toggle" id="planToggle" type="button" aria-expanded="false" aria-controls="planPanel">
+      <span>See your plan</span><span class="pt-chev">▾</span>
+    </button>
+    <div class="plan-panel" id="planPanel"></div>
+
+    <div class="transfer-wrap">
+      <button id="codeGet" class="code-btn code-btn-alt" type="button">Get a transfer code</button>
+      <div id="codeGetMsg" class="transfer-note">Only needed to move your progress to another phone or browser — your plan already saves on this device.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Response panels -->
+<div class="panels">
+  <div class="panel you"    id="pYou"><div class="label">You said</div><div class="body" id="bYou"></div></div>
+  <div class="panel vizi-p" id="pVizi"><div class="label">Vizi</div><div class="body" id="bVizi"></div></div>
+</div>
+
+<!-- Floating metronome widget — loaded last so DOM is ready -->
+
+
+<script>
+  const RAILWAY_URL = 'https://vizi-tts-proxy-production.up.railway.app';
+  const TARGET_RATE = 16000;
+
+  // ── Fretboard stages ──
+  const STAGES = [
+    { id:'tuning',       num:'01', label:'Tuning & Setup',       song:false },
+    { id:'warmup',       num:'02', label:'Warmup with Scales',   song:false },
+    { id:'chord-theory', num:'03', label:'Build Scales & Chords', song:false },
+    { id:'chords',       num:'04', label:'Chords',               song:false },
+    { id:'strumming',    num:'05', label:'Strumming Patterns',   song:false },
+    { id:'song',         num:'06', label:'Play a Song',          song:true  },
+    { id:'soloing',      num:'07', label:'Soloing',     song:false },
+    { id:'tab',          num:'08', label:'Read & Play Tab',      song:false },
+  ];
+
+  const fretsRow = document.getElementById('fretsRow');
+  STAGES.forEach(s => {
+    const el = document.createElement('div');
+    el.className = 'fret-stage' + (s.song ? ' song-stage' : '');
+    el.innerHTML = `<div class="fret-num" style="color:var(--gold);font-weight:800">${s.num}</div><div class="fret-led"></div><div class="fret-label">${s.label}</div>`;
+    el.addEventListener('click', () => {
+      if (s.song) { window.location.href = 'songs.html'; return; }
+      window.location.href = `lessons.html#${s.id}`;
+    });
+    fretsRow.appendChild(el);
+  });
+
+  // ── Vizi voice loop ──
+  const btn       = document.getElementById('talkBtn');
+  const statusEl  = document.getElementById('status');
+  const stageWrap = document.getElementById('stageWrap');
+  const stage     = document.getElementById('stage');
+  const viziVid   = document.getElementById('viziVid');
+
+  let pendingIntroBlob = null;
+  let audioCtx, stream, source, processor, sink;
+  let micReady = false, recording = false;
+  let chunks = [], preroll = [];
+  const PREROLL_FRAMES = 6;
+
+  function setStatus(t){ statusEl.textContent = t; }
+  function setBtn(cls){ btn.className = 'talk' + (cls ? ' '+cls : ''); }
+  function setListening(on){ stageWrap.classList.toggle('listening', on); }
+  function showTalking(){ stage.classList.add('talking'); try{ viziVid.currentTime=0; viziVid.play(); }catch(e){} }
+  function showIdle(){ stage.classList.remove('talking'); try{ viziVid.pause(); }catch(e){} }
+  function showPanel(id, bodyId, text){
+    document.getElementById(bodyId).textContent = text;
+    document.getElementById(id).classList.add('show');
+  }
+  function dec(v){ try{ return v ? decodeURIComponent(v) : ''; }catch(_){ return v||''; } }
+
+  async function ensureAudioCtx(){
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+  }
+  async function ensureMic(){
+    await ensureAudioCtx();  // always resume — the browser suspends the ctx after idle
+    // After idle the OS can end the mic track while micReady stays true — that stale
+    // state was the "didn't catch that" bug. Rebuild the mic if it isn't live.
+    const live = micReady && stream && stream.getTracks().some(t => t.readyState === 'live');
+    if (live) return;
+    try { if (processor) processor.disconnect(); } catch(e){}
+    try { if (source)    source.disconnect(); }    catch(e){}
+    try { if (sink)      sink.disconnect(); }      catch(e){}
+    try { if (stream)    stream.getTracks().forEach(t => t.stop()); } catch(e){}
+    micReady = false;
+    stream = await navigator.mediaDevices.getUserMedia({ audio:{ channelCount:1, echoCancellation:true, noiseSuppression:true, autoGainControl:true } });
+    source = audioCtx.createMediaStreamSource(stream);
+    processor = audioCtx.createScriptProcessor(4096,1,1);
+    sink = audioCtx.createGain(); sink.gain.value=0;
+    processor.onaudioprocess = e => {
+      const frame = new Float32Array(e.inputBuffer.getChannelData(0));
+      preroll.push(frame); if(preroll.length>PREROLL_FRAMES) preroll.shift();
+      if(recording) chunks.push(frame);
+    };
+    source.connect(processor); processor.connect(sink); sink.connect(audioCtx.destination);
+    micReady = true;
+  }
+  async function startCapture(){ await ensureMic(); chunks=preroll.slice(); recording=true; }
+  function stopCapture(){
+    if(!recording) return null; recording=false;
+    const len=chunks.reduce((a,c)=>a+c.length,0); if(!len) return null;
+    const merged=new Float32Array(len); let off=0;
+    for(const c of chunks){ merged.set(c,off); off+=c.length; }
+    return bytesToBase64(floatToPCM16(downsample(merged, audioCtx.sampleRate, TARGET_RATE)));
+  }
+  function downsample(buf,srcRate,dstRate){
+    if(dstRate>=srcRate) return buf;
+    const ratio=srcRate/dstRate, outLen=Math.round(buf.length/ratio);
+    const out=new Float32Array(outLen); let pos=0;
+    for(let i=0;i<outLen;i++){
+      const next=Math.round((i+1)*ratio); let sum=0,cnt=0;
+      for(let j=pos;j<next&&j<buf.length;j++){sum+=buf[j];cnt++;}
+      out[i]=cnt?sum/cnt:0; pos=next;
+    }
+    return out;
+  }
+  function floatToPCM16(f32){
+    const dv=new DataView(new ArrayBuffer(f32.length*2));
+    for(let i=0;i<f32.length;i++){
+      let s=Math.max(-1,Math.min(1,f32[i]));
+      dv.setInt16(i*2,s<0?s*0x8000:s*0x7FFF,true);
+    }
+    return new Uint8Array(dv.buffer);
+  }
+  function bytesToBase64(bytes){
+    let bin=''; const chunk=0x8000;
+    for(let i=0;i<bytes.length;i+=chunk)
+      bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+chunk));
+    return btoa(bin);
+  }
+  async function playBlob(blob){
+    try{
+      await ensureAudioCtx();
+      const arr=await blob.arrayBuffer();
+      const buf=await audioCtx.decodeAudioData(arr);
+      const src=audioCtx.createBufferSource();
+      src.buffer=buf; src.connect(audioCtx.destination);
+      showTalking(); src.start();
+      await new Promise(r=>{src.onended=r;});
+    }catch(e){}
+    finally{ showIdle(); }
+  }
+  // ── Progress code (P5) + stage routing (P2) ──
+  const PROGRESS_CATS = ['warmup','strumming','chords','song','soloing','theory'];
+  // ── DEV/TEST ONLY: wipe stored progress → code back to 000000 (levels AND the
+  // per-stage video "watched" flags). Trigger with ?resetprogress=1 on the talk
+  // screen (works on mobile, bookmarkable) or window.viziResetProgress() in the
+  // console. Not surfaced in the UI. For the future session-end code flow, entering
+  // 000000 also zeroes the levels; this is the fuller clean slate. ──
+  function viziResetProgress(){ try{ localStorage.removeItem('viziProgress'); }catch(e){} }
+  window.viziResetProgress = viziResetProgress;
+  (function devResetProgress(){
+    try{
+      const p = new URLSearchParams(location.search);
+      if(p.has('resetprogress')){
+        viziResetProgress();
+        p.delete('resetprogress');
+        const qs = p.toString();
+        history.replaceState(null, '', location.pathname + (qs?('?'+qs):'') + location.hash);
+      }
+    }catch(e){}
+  })();
+  (function initProgressOverride(){
+    try {
+      const q = new URLSearchParams(location.search).get('progress');
+      if (q && /^[0-9]{6}$/.test(q)){
+        const pr = JSON.parse(localStorage.getItem('viziProgress')||'{}');
+        pr.levels = {}; PROGRESS_CATS.forEach((c,i)=> pr.levels[c] = parseInt(q[i],10));
+        localStorage.setItem('viziProgress', JSON.stringify(pr));
+      }
+    } catch(e){}
+  })();
+  // ── Progress code box (home screen): Resume seeds levels from a saved code;
+  // "Get my code" returns the current 6-digit code to save for next time. ──
+  (function initNameBox(){
+    var el = document.getElementById('studentName');
+    if(!el) return;
+    try{ var pr = JSON.parse(localStorage.getItem('viziProgress')||'{}'); if(pr.name) el.value = pr.name; }catch(e){}
+    el.addEventListener('input', function(){
+      try{ var pr = JSON.parse(localStorage.getItem('viziProgress')||'{}'); pr.name = (el.value||'').trim().slice(0,24); localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){}
+    });
+  })();
+  (function initProgressDrawer(){
+    const toggle = document.getElementById('progressDrawerToggle');
+    const body = document.getElementById('progressDrawerBody');
+    if(!toggle || !body) return;
+    toggle.addEventListener('click', ()=>{
+      const open = !body.classList.contains('open');
+      body.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  })();
+  (function initCodeBox(){
+    const input  = document.getElementById('codeInput');
+    const resume = document.getElementById('codeResume');
+    const get    = document.getElementById('codeGet');
+    const msg    = document.getElementById('codeMsg');
+    if(!input || !resume || !get || !msg) return;
+    function applyCode(code){
+      try{
+        const pr = JSON.parse(localStorage.getItem('viziProgress')||'{}');
+        pr.levels = {}; PROGRESS_CATS.forEach((c,i)=> pr.levels[c] = parseInt(code[i],10));
+        localStorage.setItem('viziProgress', JSON.stringify(pr));
+        return true;
+      }catch(e){ return false; }
+    }
+    input.addEventListener('input', ()=>{ input.value = input.value.replace(/[^0-9]/g,'').slice(0,6); });
+    input.addEventListener('focus', ()=>{ try{ input.select(); }catch(e){} });
+    resume.addEventListener('click', ()=>{
+      // "Resume last session" LOADS this device's saved code into the box (it does NOT send).
+      // Ready to play is what applies + greets; typing a code overrides.
+      const code = getProgressCode();
+      input.value = code;
+      msg.textContent = (code === '000000')
+        ? "No saved lesson on this device yet — type a code, or just tap Ready to play."
+        : "Loaded your last lesson from this device — tap Ready to play.";
+    });
+    // "Get a transfer code" (below the plan) — for moving progress to another device.
+    // Shows the code in its OWN note; leaves the resume box + its message untouched.
+    const getMsg = document.getElementById('codeGetMsg');
+    get.addEventListener('click', ()=>{
+      const code = getProgressCode();
+      if(getMsg) getMsg.innerHTML = 'Your transfer code: <span class="code-strong">'+code+'</span> — enter it on another phone or browser to continue there.';
+    });
+  })();
+  // ── Setup reminder strip (due-session gate) ──
+  // A physical product: a drifted guitar or a dark board makes the whole lesson
+  // silently fail. So on a NEW or STALE session we show a reminder above the talk
+  // button; the LED test itself lives on the setup stage. The reminder is the
+  // guarantee (the welcome video carries the how-to); Vizi may also voice it, but
+  // isn't relied on for it. "Ready to play" clears the strip and stamps the
+  // session so a fresh continuation (returning within the window) skips it.
+  (function initSetupStrip(){
+    const SESSION_GAP_MS = 30*60*1000; // >30 min since last activity = a new session
+    const strip = document.getElementById('setupStrip');
+    const ready = document.getElementById('setupReady');
+    if(!strip || !ready) return;
+    function read(){ try{ return JSON.parse(localStorage.getItem('viziProgress')||'{}'); }catch(e){ return {}; } }
+    function write(pr){ try{ localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){} }
+    function isDue(){
+      const pr = read();
+      const last = parseInt(pr.lastSessionAt, 10);
+      // Due if we've never stamped a session, or the last one is older than the gap.
+      return !Number.isFinite(last) || (Date.now() - last) > SESSION_GAP_MS;
+    }
+    function stamp(){ const pr = read(); pr.lastSessionAt = Date.now(); write(pr); }
+    // Canned KICKOFF that makes Vizi speak the opener. Sent through /claude-tts
+    // (mode:'talk') so she phrases it fresh each time, but the instruction is fixed
+    // and MANDATES both doors — show something here, OR a structured lesson — and
+    // explicitly forbids starting a lesson or opening anything on this turn (so it
+    // can't trip the lesson-plan trigger). §18 backs the same shape.
+    const OPENER_KICKOFF =
+      '[SESSION START] Greet the student warmly in one short line and give them the opening choice. ' +
+      'You MUST offer BOTH, in the same line: (a) that you can show them a scale, a chord, or a chord progression right here, ' +
+      'and (b) that you can take them into a structured lesson. End by inviting them to say which they\u2019d like. ' +
+      'Do NOT start a lesson, do NOT open any stage, and emit NO command on this turn.';
+    // RETURNING student (any real code): resume-aware opener. Reads the code and picks up
+    // where they left off per the curriculum's C1/C6 entry rules \u2014 names the ACTUAL current
+    // material (not a level number) and never previews rungs they haven't reached (the barre-drift fix).
+    const OPENER_KICKOFF_RETURNING =
+      '[SESSION START \u2014 RETURNING STUDENT] Greet them warmly in one short line, then read their ' +
+      'PROGRESS code and briefly say where you will pick up, following the curriculum\u2019s returning-student ' +
+      'entry rules (C1/C6): meet each category at its CURRENT rung, naming the actual current material ' +
+      '(their current chords BY NAME, e.g. E minor / A minor / D minor; the warm-up by SCALE NAME ONLY, e.g. ' +
+      'your E minor pentatonic \u2014 NEVER a shape number like "shape three" and never "all five", the warm-up ' +
+      'stage sequences the shapes; and their song if one is loaded) \u2014 never a level number, and ' +
+      'never a rung they have not reached yet (do NOT mention barre or other advanced chords unless their code ' +
+      'is already there). A non-zero Song step means they have REACHED that step, NOT that a song is loaded right now (songs load fresh each session) \u2014 do NOT claim a song is loaded \u2014 frame it as "then we\'ll pick a song to work on together". End by asking whether they want to pick up there or work on something else. ' +
+      'Do NOT open any stage, and emit NO command on this turn.';
+    async function playViziOpener(){
+      // Talk button reappears now, as Vizi begins thinking.
+      document.body.classList.remove('setup-pending');
+      // The tap is a user gesture, so audio can play immediately (no second tap).
+      setBtn('thinking'); btn.innerHTML='Vizi is<br>Thinking'; setStatus('Just a moment…');
+      try{
+        const res = await fetch(RAILWAY_URL + '/claude-tts', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ message: ((function(){ try{ var pr=JSON.parse(localStorage.getItem('viziProgress')||'{}'); var nm=(pr.name||'').trim(); return nm ? ('STUDENT NAME: '+nm+'. ') : ''; }catch(e){ return ''; } })() + (getProgressCode()==='000000' ? OPENER_KICKOFF : OPENER_KICKOFF_RETURNING)), mode:'talk', progress:getProgressCode(), steps:(window.viziStepLabels?window.viziStepLabels():'') })
+        });
+        const ct = (res.headers.get('content-type')||'');
+        if(res.ok && !ct.includes('application/json')){
+          const text = dec(res.headers.get('X-Vizi-Text'));
+          if(text) showPanel('pVizi','bVizi',text);
+          const blob = await res.blob();
+          setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus('');
+          await playBlob(blob);          // immediate play — same Web-Audio path as stage intros
+          setStatus('Ready');
+        } else {
+          // Couldn't reach Vizi — fall back to a ready state; student can hold-to-talk.
+          setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus('Ready — hold to talk');
+        }
+      }catch(e){
+        setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus('Ready — hold to talk');
+      }
+    }
+    // "Start a new session": clears ONLY the session timer (plan/levels untouched) and reloads,
+    // so the setup strip + Ready to play come back — a send path for a new/override code anytime.
+    const newSes = document.getElementById('newSession');
+    if(newSes){
+      newSes.addEventListener('click', ()=>{
+        try{ const pr = read(); delete pr.lastSessionAt; write(pr); }catch(e){}
+        location.reload();
+      });
+    }
+    if(isDue()){
+      strip.classList.add('show');
+      document.body.classList.add('setup-pending');   // hide talk button until Ready is tapped
+      ready.addEventListener('click', ()=>{
+        // Apply the code box before sending — but ONLY a full non-zero 6-digit code. Blank /
+        // partial / 000000 leaves the saved plan untouched (never wipes it), so a stray tap or
+        // forgotten Resume just sends the plan already on this device.
+        try{
+          const ci = document.getElementById('codeInput');
+          const code = ci ? (ci.value||'').trim() : '';
+          if(/^[0-9]{6}$/.test(code) && code !== '000000'){
+            const pr = read(); pr.levels = {}; PROGRESS_CATS.forEach((c,i)=> pr.levels[c] = parseInt(code[i],10)); write(pr);
+            if(window.viziRenderPlan) window.viziRenderPlan();
+          }
+        }catch(e){}
+        stamp(); strip.classList.remove('show'); playViziOpener();
+      });
+    } else {
+      // Fresh continuation — refresh the stamp so the session keeps rolling.
+      stamp();
+      if(newSes) newSes.style.display = '';   // Ready-to-play is hidden now; offer a way to re-arm it for a new code
+    }
+  })();
+  // ── "See your plan": the six categories as 9-rung ladders (curriculum order).
+  // Reads the code and marks the current rung per category so the digits mean
+  // something; locked categories show their unlock condition. ──
+  (function initPlanPanel(){
+    const toggle = document.getElementById('planToggle');
+    const panel  = document.getElementById('planPanel');
+    if(!toggle || !panel) return;
+    function num(x){ const n=parseInt(x,10); return Number.isFinite(n)?n:0; }
+    const PLAN_ORDER = ['warmup','chords','strumming','song','soloing','theory'];
+    const PLAN = {
+      warmup:{ name:'Warm-up', rungs:[
+        'Minor pentatonic \u2014 shapes 1\u20133','Minor pentatonic \u2014 shapes 3\u20135','Minor pentatonic \u2014 all 5 connected',
+        'E major scale \u2014 shapes 1\u20133','E major scale \u2014 shapes 3\u20135','E major scale \u2014 all 5 connected',
+        'E natural minor \u2014 shapes 1\u20133','E natural minor \u2014 shapes 3\u20135','E natural minor \u2014 all 5 connected'] },
+      strumming:{ name:'Strumming', rungs:[
+        'Steady downstrokes on the beat','Down-up (eighth notes)','Down-up-down-up, accents on 2 & 4',
+        'Common patterns (D \u00b7 D-U \u00b7 U-D-U)','Strum position \u2014 over the soundhole vs. bridge/neck for tone',
+        'Dynamics \u2014 soft/loud, muting for feel','Fingerpicking intro (p-i-m-a: thumb + fingers)',
+        'Alternating-bass (Travis) picking','Song-specific patterns, fluent'] },
+      chords:{ name:'Chords', rungs:[
+        'C, D, G (songs playable with just these)','A, E (rest of the open majors \u2014 not F)',
+        'E minor, A minor, D minor (major \u2192 minor: drop the 3rd)','F (its own step \u2014 the hard one)',
+        'Power chords (moveable root-5 \u2014 gateway to barres)','E-shape barre','A-shape barre',
+        'C / G / D shape barres (just a mention)','Triads'] },
+      song:{ name:'Song', rungs:[
+        'First 3-chord song from the starter list','Play it in time with the strum pattern',
+        'A couple more starter songs','Songs using your full open-chord set (incl. F)',
+        'Capo songs \u2014 same shapes, new key','Upload any song (Simplify) \u2014 mixed chords',
+        'Play a 3-chord song using only barre shapes','A fingerpicked song','A song with a solo'] },
+      soloing:{ name:'Soloing', rungs:[
+        'Play a pentatonic shape over a backing track (follow the lights)','Play the whole pentatonic over the same track',
+        'Read a simple tab \u2014 play-along melodies (Mary Had a Little Lamb, etc.)','Play licks from tab, in time over a track',
+        'Improvise a phrase over a backing track','Hammer-ons & pull-offs','Bends (\u00bd & whole) + vibrato',
+        'Blues scale \u2014 add the \u266d5 blue note','Solo across connected positions / longer solos'],
+        unlocked:(lv)=> (num(lv.soloing)>0 || (num(lv.warmup)>=3 && num(lv.song)>=1)),
+        lockNote:'Recommended after Warm-up step 3 and your first song — but you can start it anytime' },
+      theory:{ name:'Theory', rungs:[
+        'The root note \u2014 the anchor of every scale & chord','Build a scale: the 12 notes + the pattern (major, minor, pentatonic)',
+        'Number the scale 1\u20137 (the root is 1)','Build a chord: stack the 1, 3, 5','The 3rd makes it major or minor',
+        'Add the 7th: 1-3-5-7','I, IV, V and the family (why a key\u2019s chords fit; incl. 12-bar blues)',
+        'Relative minor (Am = rel. minor of C)','Transpose a song (capo / barre)'],
+        unlocked:(lv)=> (num(lv.theory)>0 || num(lv.warmup)>=3),
+        lockNote:'Recommended after Warm-up step 3 — but you can start it anytime' },
+    };
+    // Resolve each category's CURRENT step to its exact panel label — used ONLY to enrich the
+    // returning-opener MESSAGE (a text field), never the 6-digit `progress` field.
+    window.viziStepLabels = function(){
+      var lv; try{ lv=(JSON.parse(localStorage.getItem('viziProgress')||'{}').levels)||{}; }catch(e){ lv={}; }
+      return PLAN_ORDER.map(function(cat){
+        var n=parseInt(lv[cat],10);
+        var rungs=(PLAN[cat]&&PLAN[cat].rungs)||[];
+        var nm=(PLAN[cat]&&PLAN[cat].name)||cat;
+        var label=(!Number.isFinite(n)||n<=0)?'not started':(rungs[Math.min(n,rungs.length)-1]||('step '+n));
+        return nm+' = '+label;
+      }).join('; ');
+    };
+    function levels(){ try{ return (JSON.parse(localStorage.getItem('viziProgress')||'{}').levels)||{}; }catch(e){ return {}; } }
+    function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function render(){
+      const lv = levels(); let html='';
+      PLAN_ORDER.forEach(key=>{
+        const cat = PLAN[key]; const level = num(lv[key]);
+        const unlocked = cat.unlocked ? cat.unlocked(lv) : true;
+        const now = !unlocked ? 'recommended later' : (level<=0 ? 'not started yet'
+          : 'on: ' + cat.rungs[Math.min(level, cat.rungs.length)-1]);
+        html += '<div class="plan-cat'+(unlocked?'':' locked')+'">'
+          + '<div class="plan-cat-head"><span class="plan-cat-name">'+esc(cat.name)+'</span>'
+          + '<span class="plan-cat-now">'+esc(now)+'</span></div>';
+        if(!unlocked && cat.lockNote) html += '<div class="plan-lock">'+esc(cat.lockNote)+'</div>';
+        html += '<ol class="plan-rungs">';
+        cat.rungs.forEach((r,i)=>{
+          const n=i+1; let cls='';
+          if(unlocked){ if(n<level) cls='done'; else if(n===level) cls='here'; }
+          html += '<li'+(cls?(' class="'+cls+'"'):'')+'>'+esc(r)
+                + (cls==='here'?'<span class="here-tag">\u25c0 you are here</span>':'')+'</li>';
+        });
+        html += '</ol>';
+        // Confidence box: only once the intro is done (level>=1) and there's a next
+        // rung (level<=8). The STUDENT decides they're ready — the tap is the commit.
+        if(unlocked && level>=1 && level<9){
+          html += '<div class="plan-confidence">'
+                + '<button type="button" class="conf-btn" data-cat="'+key+'" data-level="'+level+'">'
+                + '\u2713 I\u2019ve got this \u2014 next step</button></div>'
+                + '<div class="plan-conf-hint">Move on when this feels comfortable \u2014 there\u2019s no rush, and you can keep practising it as long as you like.</div>';
+        } else if(unlocked && level>=9){
+          html += '<div class="plan-complete">\u2713 You\u2019ve worked all the way through this track.</div>';
+        }
+        html += '</div>';
+      });
+      panel.innerHTML = html;
+    }
+    // Raise-only advance of one category by one rung (cap 9), written to the same
+    // viziProgress.levels the code + video bridge use, so getProgressCode() and the
+    // next Vizi turn immediately reflect it.
+    function advance(cat){
+      let pr; try{ pr = JSON.parse(localStorage.getItem('viziProgress')||'{}'); }catch(e){ pr={}; }
+      pr.levels = pr.levels || {};
+      const cur = num(pr.levels[cat]);
+      const next = Math.min(cur + 1, 9);
+      if(next > cur){ pr.levels[cat] = next; try{ localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){} }
+    }
+    // Two-tap confirm so an accidental tap doesn't make a hard-to-undo bump.
+    let confirmTimer = null;
+    panel.addEventListener('click', (e)=>{
+      const b = e.target.closest('.conf-btn'); if(!b) return;
+      if(b.classList.contains('confirming')){
+        if(confirmTimer){ clearTimeout(confirmTimer); confirmTimer=null; }
+        advance(b.getAttribute('data-cat'));
+        render();                       // re-render: "you are here" moves, control updates
+      } else {
+        // First tap → arm confirm; auto-revert after 3s if they don't commit.
+        panel.querySelectorAll('.conf-btn.confirming').forEach(x=>{ x.classList.remove('confirming'); x.textContent='\u2713 I\u2019ve got this \u2014 next step'; });
+        b.classList.add('confirming'); b.textContent='Tap again to confirm';
+        if(confirmTimer) clearTimeout(confirmTimer);
+        confirmTimer = setTimeout(()=>{ if(b.isConnected){ b.classList.remove('confirming'); b.textContent='\u2713 I\u2019ve got this \u2014 next step'; } }, 3000);
+      }
+    });
+    toggle.addEventListener('click', ()=>{
+      const open = panel.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', open?'true':'false');
+      if(open) render();
+    });
+    window.viziRenderPlan = ()=>{ if(panel.classList.contains('open')) render(); };
+  })();
+  function getProgressCode(){
+    try {
+      const lv = (JSON.parse(localStorage.getItem('viziProgress')||'{}').levels) || {};
+      return PROGRESS_CATS.map(c => { const n=parseInt(lv[c],10); return (Number.isFinite(n)&&n>=0&&n<=9)?String(n):'0'; }).join('');
+    } catch(e){ return '000000'; }
+  }
+  // ── P6: PROGRESS <cat> <n> — advance the student's stored levels (raise only) ──
+  // Vizi emits e.g. "PROGRESS CHORDS 2" in the command stream; the server keeps it out
+  // of the fretboard queue but passes it through X-Vizi-Commands. We fold it into
+  // viziProgress.levels with max() so it never lowers a level and never clobbers the
+  // UI-driven video check-off that writes the same object.
+  function applyProgressCommands(commandsStr){
+    if(!commandsStr) return;
+    const re = /\bPROGRESS\s+(WARMUP|STRUMMING|CHORDS|SONG|SOLOING|THEORY)\s+([0-9])\b/ig;
+    let m, pr, changed=false;
+    try{ pr = JSON.parse(localStorage.getItem('viziProgress')||'{}'); }catch(e){ pr={}; }
+    pr.levels = pr.levels || {};
+    while((m = re.exec(commandsStr))){
+      const cat = m[1].toLowerCase();
+      const n = parseInt(m[2],10);
+      const cur = parseInt(pr.levels[cat],10);
+      const curN = Number.isFinite(cur) ? cur : 0;
+      if(n > curN){ pr.levels[cat] = n; changed = true; }
+    }
+    if(changed){ try{ localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){} }
+  }
+  // Route to a stage the same way the stage cards do: song -> songs.html, others -> lessons.html#id
+  const OPEN_STAGE_MAP = {
+    warmup:'warmup', strumming:'strumming', chords:'chords', song:'song',
+    soloing:'soloing', tab:'tab', tuning:'tuning',
+    theory:'chord-theory', build:'chord-theory', 'chord-theory':'chord-theory'
+  };
+  function maybeOpenStage(commandsStr){
+    if(!commandsStr) return false;
+    const m = commandsStr.match(/\bOPEN\s+([a-z-]+)/i);
+    if(!m) return false;
+    const id = OPEN_STAGE_MAP[m[1].toLowerCase()];
+    if(!id) return false;
+    if(id === 'song'){ window.location.href='songs.html'; return true; }
+    window.location.href = 'lessons.html#' + id;
+    return true;
+  }
+
+  async function sendToVizi(b64){
+    setBtn('thinking'); btn.innerHTML='Vizi is<br>Thinking'; setStatus('Vizi is thinking…');
+    try{
+      const res=await fetch(RAILWAY_URL+'/stt-claude-tts',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({audio:b64,sampleRate:TARGET_RATE,mode:'talk',progress:getProgressCode(),steps:(window.viziStepLabels?window.viziStepLabels():'')})
+      });
+      const ct=(res.headers.get('content-type')||'');
+      if(ct.includes('application/json')){
+        const j=await res.json();
+        setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus(j.empty?"Didn't catch that — try again":'Error: '+(j.error||'unknown'));
+        return;
+      }
+      const transcript=dec(res.headers.get('X-Vizi-Transcript'));
+      const text=dec(res.headers.get('X-Vizi-Text'));
+      const commands=dec(res.headers.get('X-Vizi-Commands'));
+      if(transcript) showPanel('pYou','bYou',transcript);
+      if(text)       showPanel('pVizi','bVizi',text);
+      // Apply METRONOME command to the floating widget
+      if(commands){
+        const m = commands.match(/METRONOME:(\d+)/i);
+        if(m && window.viziMetro) window.viziMetro.setBpm(parseInt(m[1],10));
+        applyProgressCommands(commands);
+      }
+      const blob=await res.blob();
+      setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus('');
+      await playBlob(blob);
+      if(maybeOpenStage(commands)) return;   // she routed us to a stage — go now she's done talking
+      setStatus('Ready');
+    }catch(e){ setBtn(''); btn.innerHTML='Hold<br>to Talk'; setStatus('Could not reach Vizi — check connection'); }
+  }
+
+  async function press(e){
+    e.preventDefault();
+    if(pendingIntroBlob){
+      const blob=pendingIntroBlob; pendingIntroBlob=null;
+      btn.innerHTML='Hold<br>to Talk'; setBtn('');
+      await playBlob(blob); setStatus('Ready'); return;
+    }
+    if(recording) return;
+    setBtn('listening'); setStatus('Starting mic…');
+    try{ await startCapture(); setListening(true); setStatus('Listening…'); }
+    catch(err){ setBtn(''); setListening(false); setStatus('Microphone blocked — allow mic access'); }
+  }
+  function release(e){
+    e.preventDefault();
+    if(pendingIntroBlob) return;
+    if(!recording) return;
+    setListening(false);
+    const b64=stopCapture();
+    if(!b64){ setBtn(''); setStatus('Nothing recorded — hold a moment longer'); return; }
+    sendToVizi(b64);
+  }
+  btn.addEventListener('pointerdown',press);
+  btn.addEventListener('pointerup',release);
+  btn.addEventListener('pointercancel',release);
+  btn.addEventListener('pointerleave',e=>{ if(recording&&!pendingIntroBlob) release(e); });
+
+  // Welcome video
+  const welcomeBtn   = document.getElementById('welcomeBtn');
+  const welcomeWrap  = document.getElementById('welcomeWrap');
+  const welcomeIframe = document.getElementById('welcomeIframe');
+  const welcomeClose  = document.getElementById('welcomeClose');
+  const WELCOME_URL   = 'https://www.youtube.com/embed/-2_98CV33Uc?rel=0&modestbranding=1&autoplay=1&enablejsapi=1';
+
+  function openWelcome(){
+    welcomeIframe.src = WELCOME_URL;
+    welcomeWrap.classList.add('show');
+    welcomeBtn.classList.add('active');
+    welcomeWrap.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+  function closeWelcome(){
+    welcomeIframe.src='';
+    welcomeWrap.classList.remove('show');
+    welcomeBtn.classList.remove('active');
+    // Clear transcript panels
+    const bYou  = document.getElementById('bYou');
+    const bVizi = document.getElementById('bVizi');
+    const pYou  = document.getElementById('pYou');
+    const pVizi = document.getElementById('pVizi');
+    if(bYou)  bYou.textContent  = '';
+    if(bVizi) bVizi.textContent = '';
+    if(pYou)  pYou.classList.remove('show');
+    if(pVizi) pVizi.classList.remove('show');
+  }
+  // Auto-close the welcome video player when the YouTube clip finishes playing
+  welcomeIframe.addEventListener('load', function(){
+    try{ welcomeIframe.contentWindow.postMessage(JSON.stringify({event:'listening', id:'welcomeIframe'}), '*'); }catch(e){}
+  });
+  window.addEventListener('message', function(event){
+    if(typeof event.data !== 'string') return;
+    let data;
+    try{ data = JSON.parse(event.data); }catch(e){ return; }
+    if(data.event === 'infoDelivery' && data.info && data.info.playerState === 0){
+      closeWelcome();
+    }
+  });
+
+  welcomeBtn.addEventListener('click',()=>{
+    welcomeWrap.classList.contains('show') ? closeWelcome() : openWelcome();
+  });
+  welcomeClose.addEventListener('click', closeWelcome);
+</script>
+<script src="metronome-widget-v2.js?v=20260811"></script>
+</body>
+</html>
