@@ -450,7 +450,7 @@
   <span>See your plan</span><span class="pt-chev">▾</span>
 </button>
 <div class="plan-panel" id="planPanel"></div>
-<button id="changeLessonCodeMid" class="change-code-mid" type="button">Change lesson code</button>
+<button id="changeLessonCodeMid" class="change-code-mid" type="button">← Guided Lesson</button>
 
 <!-- Response panels -->
 <div class="panels">
@@ -829,19 +829,17 @@
     else { stamp(); if(newSes)newSes.style.display=''; }
   })();
 
-  // Mid-session code change: return to the compact setup/code card without
-  // changing any progress. Clearing only lastSessionAt makes the normal session
-  // gate reappear on reload; the current saved code is still auto-populated.
+  // Mid-session return to the simple Guided Lesson / Just Talk choice.
   (function initMidSessionCodeChange(){
     const b=document.getElementById('changeLessonCodeMid');
-    if(!b) return;
+    const strip=document.getElementById('setupStrip');
+    const choice=document.getElementById('entryChoice');
+    if(!b || !strip || !choice) return;
     b.addEventListener('click', ()=>{
-      try{
-        const pr=JSON.parse(localStorage.getItem('viziProgress')||'{}');
-        delete pr.lastSessionAt;
-        localStorage.setItem('viziProgress',JSON.stringify(pr));
-      }catch(e){}
-      location.reload();
+      strip.classList.remove('show','guided-open');
+      choice.classList.add('show');
+      document.body.classList.add('setup-pending');
+      try{ window.scrollTo({top:choice.offsetTop-18,behavior:'smooth'}); }catch(e){}
     });
   })();
 
