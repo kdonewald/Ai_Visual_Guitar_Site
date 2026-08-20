@@ -229,7 +229,6 @@
 
   @keyframes fade-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
-</style>
 </head>
 <body>
 
@@ -543,8 +542,15 @@
     try {
       const fd = new FormData();
       fd.append('session', sessionId);
-      if (selectedFile) fd.append('file', selectedFile);
-      else              fd.append('text', chordsText.value.trim());
+      if (selectedFile) {
+        // Use the selected file name as the authoritative song title. Remove
+        // only the final extension; do not let AI rename the uploaded song.
+        const authoritativeTitle = selectedFile.name.replace(/\.[^.]+$/, '').trim();
+        fd.append('songTitle', authoritativeTitle);
+        fd.append('file', selectedFile);
+      } else {
+        fd.append('text', chordsText.value.trim());
+      }
 
       const res = await fetch(`${RAILWAY}/song-upload`, { method:'POST', body:fd });
 
