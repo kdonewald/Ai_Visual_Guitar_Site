@@ -826,10 +826,10 @@
 
         const title = data.songTitle || 'song';
         songBanner.textContent = `🎵 "${title}" loaded`;
-        const ub = document.getElementById('uploadBtn'); if (ub) ub.style.display = '';
+        const ub = document.getElementById('uploadBtn'); if (ub) ub.style.display = 'none';
         songBanner.classList.add('show');
         uploadBtn.className = 'upload-btn';
-        uploadBtn.textContent = '🎵 Upload Another Song';
+        uploadBtn.textContent = '🎵 Upload a Song';
         uploadBtn.disabled = false;
 
         const promptRes  = await fetch(`${RAILWAY_URL}/session-prompt/${songSessionId}`);
@@ -852,10 +852,16 @@
               pendingIntroText = dec(ttsRes.headers.get('X-Vizi-Text'));
               pendingIntroCmd  = dec(ttsRes.headers.get('X-Vizi-Commands'));
               pendingIntroBlob = await ttsRes.blob();
-              setBtn('intro');
-              btn.innerHTML = 'Tap to hear<br>Vizi intro';
-              setStatus('Song ready — tap the button to hear Vizi');
-              songBanner.textContent += ' — tap button to hear intro';
+              // The upload flow has already returned the student to Vizi, so begin
+              // the prepared song introduction automatically as soon as it is ready.
+              // If browser autoplay policy blocks audio, playBlob() fails quietly and
+              // the normal Tap to Talk control is still restored below.
+              btn.innerHTML = 'Vizi is<br>ready';
+              setStatus('Song ready — Vizi is starting…');
+              await playPendingIntro();
+              btn.innerHTML = 'Tap<br>to Talk';
+              setBtn('');
+              setStatus('Ready');
             } else {
               setBtn(''); btn.innerHTML = 'Tap<br>to Talk';
               setStatus('Could not load song intro — tap to talk instead');
