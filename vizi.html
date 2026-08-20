@@ -293,7 +293,7 @@
       <a href="index.html" class="nav-link">Home</a>
     </div>
   </nav>
-  <div class="tag">Hold to talk · Release to send</div>
+  <div class="tag">Tap to talk · Speak naturally</div>
 
   <div class="stage-wrap" id="stageWrap">
     <div class="stage" id="stage">
@@ -310,7 +310,7 @@
     <button id="setupReady" class="setup-btn" type="button">✓ Ready to play</button>
   </div>
 
-  <button class="talk" id="talkBtn">Hold<br>to Talk</button>
+  <button class="talk" id="talkBtn">Tap<br>to Talk</button>
   <div class="status" id="status">Ready</div>
   <div class="theory-color-legend" id="theoryLegendVizi" style="display:none;">
     <span class="tcl-item tcl-root">Root</span>
@@ -423,6 +423,15 @@
   let chunks = [], preroll = [];
   const PREROLL_FRAMES = 6;
 
+  // Tap-to-talk auto-send: once speech has started, send after a short silence.
+  const VAD_SPEECH_RMS = 0.018;
+  const VAD_SILENCE_MS = 1100;
+  const VAD_MIN_RECORD_MS = 500;
+  let vadSpeechStarted = false;
+  let vadLastVoiceAt = 0;
+  let vadRecordStartedAt = 0;
+  let vadAutoSending = false;
+
   function setStatus(t){ statusEl.textContent = t; }
   function setBtn(cls){ btn.className = 'talk' + (cls ? ' ' + cls : ''); }
   function setListening(on){ stageWrap.classList.toggle('listening', on); }
@@ -500,13 +509,42 @@
       const frame = new Float32Array(e.inputBuffer.getChannelData(0));
       preroll.push(frame);
       if (preroll.length > PREROLL_FRAMES) preroll.shift();
-      if (recording) chunks.push(frame);
+      if (recording) {
+        chunks.push(frame);
+
+        // Detect actual speech, then automatically stop/send after silence.
+        let sumSq = 0;
+        for (let i=0; i<frame.length; i++) sumSq += frame[i] * frame[i];
+        const rms = Math.sqrt(sumSq / Math.max(1, frame.length));
+        const now = performance.now();
+
+        if (rms >= VAD_SPEECH_RMS) {
+          vadSpeechStarted = true;
+          vadLastVoiceAt = now;
+        } else if (
+          vadSpeechStarted &&
+          !vadAutoSending &&
+          (now - vadLastVoiceAt) >= VAD_SILENCE_MS &&
+          (now - vadRecordStartedAt) >= VAD_MIN_RECORD_MS
+        ) {
+          vadAutoSending = true;
+          setTimeout(autoStopAndSend, 0);
+        }
+      }
     };
     source.connect(processor); processor.connect(sink); sink.connect(audioCtx.destination);
     micReady = true;
   }
 
-  async function startCapture(){ await ensureMic(); chunks = preroll.slice(); recording = true; }
+  async function startCapture(){
+    await ensureMic();
+    chunks = preroll.slice();
+    vadSpeechStarted = false;
+    vadLastVoiceAt = 0;
+    vadRecordStartedAt = performance.now();
+    vadAutoSending = false;
+    recording = true;
+  }
 
   function stopCapture(){
     if (!recording) return null;
@@ -661,14 +699,14 @@
           const text = dec(res.headers.get('X-Vizi-Text'));
           if(text) showPanel('pVizi','bVizi', text);
           const blob = await res.blob();
-          setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('');
+          setBtn(''); btn.innerHTML = 'Tap<br>to Talk'; setStatus('');
           await playBlob(blob);        // immediate play — the tap is a user gesture
           setStatus('Ready');
         } else {
-          setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Ready — hold to talk');
+          setBtn(''); btn.innerHTML = 'Tap<br>to Talk'; setStatus('Ready — tap to talk');
         }
       }catch(e){
-        setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Ready — hold to talk');
+        setBtn(''); btn.innerHTML = 'Tap<br>to Talk'; setStatus('Ready — tap to talk');
       }
     }
     if(isDue()){
@@ -710,7 +748,7 @@
       const ct = (res.headers.get('content-type') || '');
       if (ct.includes('application/json')){
         const j = await res.json();
-        setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus(j.empty ? "Didn't catch that — try again" : 'Error: ' + (j.error||'unknown'));
+        setBtn(''); btn.innerHTML = 'Tap<br>to Talk'; setStatus(j.empty ? "Didn't catch that — try again" : 'Error: ' + (j.error||'unknown'));
         resumeBackingTrackInOpener();
         return;
       }
@@ -721,12 +759,12 @@
       if (text)       showPanel('pVizi','bVizi', text);
       if (commands)   { showPanel('pCmd','bCmd', commands); applyMetronomeCommand(commands); applyProgressCommands(commands); }
       const blob = await res.blob();
-      setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('');
+      setBtn(''); btn.innerHTML = 'Tap<br>to Talk'; setStatus('');
       await playBlob(blob);
       if (maybeOpenStage(commands)) return;   // she routed us to a stage — go now that she's done talking
       if (currentMode === 'song') currentMode = 'talk';
       if (!pendingIntroBlob) setStatus('Ready');
-    } catch(e){ setBtn(''); btn.innerHTML = 'Hold<br>to Talk'; setStatus('Could not reach Vizi — check connection'); resumeBackingTrackInOpener(); }
+    } catch(e){ setBtn(''); btn.innerHTML = 'Tap<br>to Talk'; setStatus('Could not reach Vizi — check connection'); resumeBackingTrackInOpener(); }
   }
 
   async function playPendingIntro(){
@@ -819,12 +857,12 @@
               setStatus('Song ready — tap the button to hear Vizi');
               songBanner.textContent += ' — tap button to hear intro';
             } else {
-              setBtn(''); btn.innerHTML = 'Hold<br>to Talk';
-              setStatus('Could not load song intro — hold to talk instead');
+              setBtn(''); btn.innerHTML = 'Tap<br>to Talk';
+              setStatus('Could not load song intro — tap to talk instead');
             }
           } else {
-            setBtn(''); btn.innerHTML = 'Hold<br>to Talk';
-            setStatus('Could not load song intro — hold to talk instead');
+            setBtn(''); btn.innerHTML = 'Tap<br>to Talk';
+            setStatus('Could not load song intro — tap to talk instead');
           }
         }
       } else if (data.status === 'error'){
@@ -841,7 +879,7 @@
   async function press(e){
     e.preventDefault();
     if (pendingIntroBlob){
-      btn.innerHTML = 'Hold<br>to Talk';
+      btn.innerHTML = 'Tap<br>to Talk';
       await playPendingIntro();
       return;
     }
@@ -862,14 +900,59 @@
     if (!recording) return;
     setListening(false);
     const b64 = stopCapture();
-    if (!b64){ setBtn(''); setStatus('Nothing recorded — hold a moment longer'); resumeBackingTrackInOpener(); return; }
+    if (!b64){ setBtn(''); setStatus('Nothing recorded — tap to try again'); resumeBackingTrackInOpener(); return; }
     sendToVizi(b64);
   }
 
-  btn.addEventListener('pointerdown', press);
-  btn.addEventListener('pointerup',   release);
-  btn.addEventListener('pointercancel', release);
-  btn.addEventListener('pointerleave', e => { if (recording && !pendingIntroBlob) release(e); });
+  // ── Tap-to-talk: tap once, speak, and silence automatically sends. ──
+  async function autoStopAndSend(){
+    if (!recording) { vadAutoSending = false; return; }
+    setListening(false);
+    const b64 = stopCapture();
+    if (!b64){
+      vadAutoSending = false;
+      setBtn('');
+      btn.innerHTML = 'Tap<br>to Talk';
+      setStatus('Nothing recorded — tap to try again');
+      resumeBackingTrackInOpener();
+      return;
+    }
+    setBtn('thinking');
+    btn.innerHTML = 'Vizi is<br>Thinking';
+    setStatus('Sending…');
+    sendToVizi(b64);
+  }
+
+  async function tapToTalk(e){
+    e.preventDefault();
+
+    if (pendingIntroBlob){
+      btn.innerHTML = 'Tap<br>to Talk';
+      await playPendingIntro();
+      return;
+    }
+
+    // Ignore taps while already recording; speech ending controls the send.
+    if (recording) return;
+
+    pauseBackingTrackInOpener();
+    setBtn('listening');
+    btn.innerHTML = 'Listening…';
+    setStatus('Starting mic…');
+    try {
+      await startCapture();
+      setListening(true);
+      setStatus('Listening…');
+    } catch(err){
+      setBtn('');
+      btn.innerHTML = 'Tap<br>to Talk';
+      setListening(false);
+      setStatus('Microphone blocked — allow mic access');
+      resumeBackingTrackInOpener();
+    }
+  }
+
+  btn.addEventListener('click', tapToTalk);
 
   // ── Song sheet floating panel ──
   const sheetWrap    = document.getElementById('sheetWrap');
@@ -1127,12 +1210,12 @@
         setStatus('Tab exercise ready — tap to hear Vizi');
       } else {
         setBtn('');
-        btn.innerHTML = 'Hold<br>to Talk';
+        btn.innerHTML = 'Tap<br>to Talk';
         setStatus('Ready — ask Vizi about your tab');
       }
     } catch(e){
       setBtn('');
-      btn.innerHTML = 'Hold<br>to Talk';
+      btn.innerHTML = 'Tap<br>to Talk';
       setStatus('Ready — ask Vizi about your tab');
     }
   })();
@@ -1431,7 +1514,7 @@
           // (vText is intentionally not shown; she still has the pick in context.)
           applyMetronomeCommand(vCmd || '');
           setBtn('');
-          btn.innerHTML = 'Hold<br>to Talk';
+          btn.innerHTML = 'Tap<br>to Talk';
           setStatus('Scale lit \u2014 hold to talk if you have a question');
         } else {
           pendingIntroText = vText;
@@ -1444,13 +1527,13 @@
         }
       } else {
         setBtn('');
-        btn.innerHTML = 'Hold<br>to Talk';
-        setStatus('Could not reach Vizi — hold to talk instead');
+        btn.innerHTML = 'Tap<br>to Talk';
+        setStatus('Could not reach Vizi — tap to talk instead');
       }
     } catch(e){
       setBtn('');
-      btn.innerHTML = 'Hold<br>to Talk';
-      setStatus('Could not reach Vizi — hold to talk instead');
+      btn.innerHTML = 'Tap<br>to Talk';
+      setStatus('Could not reach Vizi — tap to talk instead');
     }
 
     const cleanUrl = window.location.pathname;
