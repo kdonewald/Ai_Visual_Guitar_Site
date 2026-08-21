@@ -426,7 +426,10 @@
   // Tap-to-talk auto-send: once speech has started, send after a short silence.
   const VAD_SPEECH_RMS = 0.018;
   const VAD_SILENCE_MS = 1100;
+  const VAD_FIRST_TURN_SILENCE_MS = 1800; // Give the student's first answer extra pause time.
   const VAD_MIN_RECORD_MS = 500;
+  let firstStudentTurn = true;
+  let vadCurrentSilenceMs = VAD_SILENCE_MS;
   let vadSpeechStarted = false;
   let vadLastVoiceAt = 0;
   let vadRecordStartedAt = 0;
@@ -524,7 +527,7 @@
         } else if (
           vadSpeechStarted &&
           !vadAutoSending &&
-          (now - vadLastVoiceAt) >= VAD_SILENCE_MS &&
+          (now - vadLastVoiceAt) >= vadCurrentSilenceMs &&
           (now - vadRecordStartedAt) >= VAD_MIN_RECORD_MS
         ) {
           vadAutoSending = true;
@@ -542,6 +545,7 @@
     vadSpeechStarted = false;
     vadLastVoiceAt = 0;
     vadRecordStartedAt = performance.now();
+    vadCurrentSilenceMs = firstStudentTurn ? VAD_FIRST_TURN_SILENCE_MS : VAD_SILENCE_MS;
     vadAutoSending = false;
     recording = true;
   }
@@ -923,6 +927,9 @@
       resumeBackingTrackInOpener();
       return;
     }
+    // After the first real spoken turn, use the normal faster timeout.
+    if (vadSpeechStarted) firstStudentTurn = false;
+
     setBtn('thinking');
     btn.innerHTML = 'Vizi is<br>Thinking';
     setStatus('Sending…');
