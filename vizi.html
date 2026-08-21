@@ -423,17 +423,20 @@
   let chunks = [], preroll = [];
   const PREROLL_FRAMES = 6;
 
-  // Tap-to-talk auto-send: once speech has started, send after a short silence.
-  const VAD_SPEECH_RMS = 0.018;
-  const VAD_SILENCE_MS = 1100;
-  const VAD_FIRST_TURN_SILENCE_MS = 1800; // Give the student's first answer extra pause time.
+  // Tap-to-talk auto-send with adaptive voice detection.
+  const VAD_SILENCE_MS = 1600;
+  const VAD_FIRST_TURN_SILENCE_MS = 2200;
   const VAD_MIN_RECORD_MS = 500;
+  const VAD_MIN_START_RMS = 0.006;
+  const VAD_MIN_CONTINUE_RMS = 0.0035;
+
   let firstStudentTurn = true;
   let vadCurrentSilenceMs = VAD_SILENCE_MS;
   let vadSpeechStarted = false;
   let vadLastVoiceAt = 0;
   let vadRecordStartedAt = 0;
   let vadAutoSending = false;
+  let vadNoiseFloor = 0.002;
 
   function setStatus(t){ statusEl.textContent = t; }
   function setBtn(cls){ btn.className = 'talk' + (cls ? ' ' + cls : ''); }
@@ -521,7 +524,15 @@
         const rms = Math.sqrt(sumSq / Math.max(1, frame.length));
         const now = performance.now();
 
-        if (rms >= VAD_SPEECH_RMS) {
+        if (!vadSpeechStarted) {
+          vadNoiseFloor = (vadNoiseFloor * 0.92) + (rms * 0.08);
+        }
+
+        const startThreshold = Math.max(VAD_MIN_START_RMS, vadNoiseFloor * 2.5);
+        const continueThreshold = Math.max(VAD_MIN_CONTINUE_RMS, vadNoiseFloor * 1.45);
+        const voiceThreshold = vadSpeechStarted ? continueThreshold : startThreshold;
+
+        if (rms >= voiceThreshold) {
           vadSpeechStarted = true;
           vadLastVoiceAt = now;
         } else if (
@@ -547,6 +558,7 @@
     vadRecordStartedAt = performance.now();
     vadCurrentSilenceMs = firstStudentTurn ? VAD_FIRST_TURN_SILENCE_MS : VAD_SILENCE_MS;
     vadAutoSending = false;
+    vadNoiseFloor = 0.002;
     recording = true;
   }
 
@@ -927,7 +939,6 @@
       resumeBackingTrackInOpener();
       return;
     }
-    // After the first real spoken turn, use the normal faster timeout.
     if (vadSpeechStarted) firstStudentTurn = false;
 
     setBtn('thinking');
