@@ -431,6 +431,7 @@
   const VAD_MIN_CONTINUE_RMS = 0.0035;
 
   let firstStudentTurn = true;
+  let firstMicWarmupDone = false;
   let vadCurrentSilenceMs = VAD_SILENCE_MS;
   let vadSpeechStarted = false;
   let vadLastVoiceAt = 0;
@@ -552,6 +553,16 @@
 
   async function startCapture(){
     await ensureMic();
+
+    // First-use mic warm-up: let Android/Chrome AGC, echo cancellation,
+    // and noise suppression settle before we begin recording.
+    if (!firstMicWarmupDone){
+      setStatus('Listening…');
+      await new Promise(r => setTimeout(r, 750));
+      preroll = [];
+      firstMicWarmupDone = true;
+    }
+
     chunks = preroll.slice();
     vadSpeechStarted = false;
     vadLastVoiceAt = 0;
