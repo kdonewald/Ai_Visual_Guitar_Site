@@ -1353,6 +1353,16 @@
   .cx-act.reset{border-color:#5b86cf;color:#a8c8ff;}
   .cx-act:disabled{opacity:.4;cursor:default;}
   .cx-sel{text-align:center;font-size:13px;color:#d3dcea;margin:2px 0 8px;min-height:16px;}
+  /* Chord diagram learning card — standard diagram + string/fret bridge */
+  .cx-diagram-card{display:none;max-width:360px;margin:8px auto 14px;padding:14px 12px;background:#f7f7f5;color:#151515;border-radius:14px;border:1px solid #d7d7d2;}
+  .cx-diagram-card.show{display:block;}
+  .cx-diagram-title{text-align:center;font-size:20px;font-weight:800;margin:0 0 4px;}
+  .cx-diagram-svg{display:block;width:100%;max-width:280px;margin:0 auto;}
+  .cx-diagram-ref{width:100%;max-width:310px;margin:7px auto 0;border-collapse:collapse;table-layout:fixed;}
+  .cx-diagram-ref th,.cx-diagram-ref td{border:1px solid #777;text-align:center;padding:5px 1px;}
+  .cx-diagram-ref th{font-size:10px;font-weight:700;color:#333;}
+  .cx-diagram-ref td{font-size:17px;font-weight:800;color:#111;}
+
   .cx-strip{display:flex;flex-wrap:wrap;gap:5px;align-items:center;padding:8px;border:1px solid #263042;border-radius:10px;background:#12161f;margin-bottom:8px;min-height:22px;}
   .cx-strip-empty{color:#9fabbe;font-size:12px;font-style:italic;}
   .cx-chip{display:inline-flex;align-items:center;gap:6px;background:#222c3d;border:1px solid #4a5d80;border-radius:8px;padding:5px 9px;color:#f3f7fc;font-size:12.5px;font-weight:600;}
@@ -3157,7 +3167,41 @@
   let cpExtraPanel = null;      // '7ths' | '6ths' | 'slash' | null
 
   // Live element refs so a tap can update strip/light without a full re-render.
-  let cxStripEl=null, cxLightBtn=null, cxClearBtn=null, cxSelEl=null, cxStatusEl=null;
+  let cxStripEl=null, cxLightBtn=null, cxClearBtn=null, cxSelEl=null, cxStatusEl=null, cxDiagramEl=null;
+
+  // One source of truth for the beginner chord diagram and its string/fret row.
+  // Order is always Low E, A, D, G, B, High E.
+  const CX_DIAGRAMS = {
+    'CHORD C':  {title:'C Major', frets:['x',3,2,0,1,0]},
+    'CHORD G':  {title:'G Major', frets:[3,2,0,0,0,3]},
+    'CHORD D':  {title:'D Major', frets:['x','x',0,2,3,2]},
+    'CHORD A':  {title:'A Major', frets:['x',0,2,2,2,0]},
+    'CHORD E':  {title:'E Major', frets:[0,2,2,1,0,0]},
+    'CHORD AM': {title:'A Minor', frets:['x',0,2,2,1,0]},
+    'CHORD EM': {title:'E Minor', frets:[0,2,2,0,0,0]},
+    'CHORD DM': {title:'D Minor', frets:['x','x',0,2,3,1]},
+    'CHORD F':  {title:'F Major', frets:[1,3,3,2,1,1]}
+  };
+  function cxDiagramData(cmd){ return CX_DIAGRAMS[String(cmd||'').trim().toUpperCase()] || null; }
+  function cxChordSvg(d){
+    const f=d.frets, L=38,R=242,T=58,B=258,g=(R-L)/5,fg=(B-T)/5;
+    let out='<svg class="cx-diagram-svg" viewBox="0 0 280 285" role="img" aria-label="'+d.title+' chord diagram">';
+    ['E','A','D','G','B','E'].forEach((v,i)=>{ out+='<text x="'+(L+i*g)+'" y="17" fill="#111" font-size="14" font-weight="700" text-anchor="middle">'+v+'</text>'; });
+    f.forEach((v,i)=>{ const x=L+i*g; if(v==='x') out+='<text x="'+x+'" y="46" fill="#111" font-size="23" text-anchor="middle">×</text>'; else if(v===0) out+='<circle cx="'+x+'" cy="38" r="7" fill="none" stroke="#111" stroke-width="2.5"/>'; });
+    for(let i=0;i<6;i++){ const x=L+i*g; out+='<line x1="'+x+'" y1="'+T+'" x2="'+x+'" y2="'+B+'" stroke="#222" stroke-width="2"/>'; }
+    for(let i=0;i<=5;i++){ const y=T+i*fg; out+='<line x1="'+L+'" y1="'+y+'" x2="'+R+'" y2="'+y+'" stroke="#222" stroke-width="'+(i===0?7:2)+'"/>'; }
+    f.forEach((v,i)=>{ if(typeof v==='number'&&v>0){ const x=L+i*g,y=T+(v-.5)*fg; out+='<circle cx="'+x+'" cy="'+y+'" r="11" fill="#111"/>'; } });
+    return out+'</svg>';
+  }
+  function cxShowChordDiagram(cmd){
+    if(!cxDiagramEl) return;
+    const d=cxDiagramData(cmd);
+    if(!d){ cxDiagramEl.classList.remove('show'); cxDiagramEl.innerHTML=''; return; }
+    const labels=['Low E','A','D','G','B','High E'];
+    cxDiagramEl.innerHTML='<div class="cx-diagram-title">'+d.title+'</div>'+cxChordSvg(d)+
+      '<table class="cx-diagram-ref"><tr>'+labels.map(x=>'<th>'+x+'</th>').join('')+'</tr><tr>'+d.frets.map(x=>'<td>'+(x==='x'?'X':x)+'</td>').join('')+'</tr></table>';
+    cxDiagramEl.classList.add('show');
+  }
 
   function cxPill(label, active, onClick, cls){
     const b=document.createElement('button');
@@ -3229,6 +3273,12 @@
     cxSelEl.textContent = cpProgMode ? 'Progression on — tap chords to add them.' : 'Tap a chord to light it.';
     exList.appendChild(cxSelEl);
 
+    // Learning aid for standard beginner chord shapes. It appears only after a
+    // supported chord is selected, and stays out of progression mode.
+    cxDiagramEl=document.createElement('div'); cxDiagramEl.className='cx-diagram-card';
+    exList.appendChild(cxDiagramEl);
+    if(!cpProgMode && cpLastChord) cxShowChordDiagram(cpLastChord.cmd);
+
     if(cpProgMode){
       cxStripEl=document.createElement('div'); cxStripEl.className='cx-strip';
       exList.appendChild(cxStripEl); cxBuildStrip();
@@ -3295,6 +3345,7 @@
       const area=document.querySelector('.cx-chord-area');
       if(area) area.querySelectorAll('.cx-cell.selected').forEach(function(e){ e.classList.remove('selected'); });
       if(btn) btn.classList.add('selected');
+      cxShowChordDiagram(cmd);
       cxUpdateLightBtn();
     }
   }
