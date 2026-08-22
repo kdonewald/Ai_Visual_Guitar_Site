@@ -3274,7 +3274,10 @@
     cxLightBtn=document.createElement('button'); cxLightBtn.className='cx-act light';
     cxLightBtn.addEventListener('click', ()=>{
       if(cxLightBtn._mode==='prog') playProgression(cxStatusEl, cxLightBtn);
-      else if(cxLightBtn._mode==='chord' && cpLastChord) sendFretboardCmdDirect(cpLastChord.cmd);
+      else if(cxLightBtn._mode==='chord' && cpLastChord){
+        sendFretboardCmdDirect(cpLastChord.cmd);
+        if(cxSelEl) cxSelEl.innerHTML='<span class="cx-lit">'+cpLastChord.label+'</span> \u2014 lit on the fretboard';
+      }
     });
     cxClearBtn=document.createElement('button'); cxClearBtn.className='cx-act'; cxClearBtn.textContent='Clear';
     cxClearBtn.addEventListener('click', ()=>{ cpProgression.length=0; cxRefreshProg(); });
@@ -3304,7 +3307,7 @@
     exList.appendChild(bar);
 
     cxSelEl=document.createElement('div'); cxSelEl.className='cx-sel';
-    cxSelEl.textContent = cpProgMode ? 'Progression on — tap chords to add them.' : 'Tap a chord to light it.';
+    cxSelEl.textContent = cpProgMode ? 'Progression on — tap chords to add them.' : 'Tap a chord to view its diagram.';
     exList.appendChild(cxSelEl);
 
     // Learning aid for standard beginner chord shapes. It appears only after a
@@ -3374,8 +3377,7 @@
       if(btn){ btn.classList.add('justadded'); setTimeout(function(){ btn.classList.remove('justadded'); },450); }
     } else {
       cpLastChord={label:label, cmd:cmd};
-      sendFretboardCmdDirect(cmd);
-      if(cxSelEl) cxSelEl.innerHTML='<span class="cx-lit">'+label+'</span> \u2014 lit on the board';
+      if(cxSelEl) cxSelEl.innerHTML='<span class="cx-lit">'+label+'</span> \u2014 ready to light';
       const area=document.querySelector('.cx-chord-area');
       if(area) area.querySelectorAll('.cx-cell.selected').forEach(function(e){ e.classList.remove('selected'); });
       if(btn) btn.classList.add('selected');
