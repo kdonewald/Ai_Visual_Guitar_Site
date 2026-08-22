@@ -3201,10 +3201,43 @@
     const qName=q==='minor'?'Minor':q==='dom7'?'7th':q==='min7'?'Minor 7th':q==='maj7'?'Major 7th':'Major';
     return {title:root+' '+qName+' — '+shape+' Shape', frets, barreFret:(shape==='D'?null:barre)};
   }
+  function cxPowerDiagram(cmd){
+    // Match the ESP32 power-chord engine exactly:
+    // CHORD P <ROOT><ROOT-STRING>, with root strings LE, A, D, G, B.
+    const m=String(cmd||'').trim().match(/^CHORD\s+P\s+([A-G](?:#)?)(LE|A|D|G|B)$/i);
+    if(!m) return null;
+
+    const root=m[1].toUpperCase();
+    const rootStr=m[2].toUpperCase();
+    const rootPC=CX_NOTE_PC[root];
+    if(rootPC===undefined) return null;
+
+    const stringIndex={LE:0,A:1,D:2,G:3,B:4}[rootStr]; // Low E -> High E order
+    const fifthOffset=(rootStr==='G') ? 3 : 2;          // G->B tuning exception
+    const openPC=CX_OPEN_PC[stringIndex];
+
+    let rootFret=-1;
+    for(let f=0; f<=13-fifthOffset; f++){
+      if(((openPC+f)%12)===rootPC){ rootFret=f; break; }
+    }
+    if(rootFret<0) return null;
+
+    const frets=['x','x','x','x','x','x'];
+    frets[stringIndex]=rootFret;
+    frets[stringIndex+1]=rootFret+fifthOffset;
+
+    return {
+      title:root+'5 Power Chord — root on '+rootStr,
+      frets
+    };
+  }
+
   function cxDiagramData(cmd){
     const key=String(cmd||'').trim().toUpperCase();
     if(CX_DIAGRAMS[key]) return CX_DIAGRAMS[key];
     if(CX_TRIAD_DIAGRAMS[key]) return CX_TRIAD_DIAGRAMS[key];
+    const power=cxPowerDiagram(cmd);
+    if(power) return power;
     return cxShapeDiagram(cmd);
   }
   function cxChordSvg(d){
@@ -3219,7 +3252,14 @@
     f.forEach((v,i)=>{ const x=L+i*g; if(v==='x') out+='<text x="'+x+'" y="46" fill="#111" font-size="23" text-anchor="middle">×</text>'; else if(v===0) out+='<circle cx="'+x+'" cy="38" r="7" fill="none" stroke="#111" stroke-width="2.5"/>'; });
     for(let i=0;i<6;i++){ const x=L+i*g; out+='<line x1="'+x+'" y1="'+T+'" x2="'+x+'" y2="'+B+'" stroke="#222" stroke-width="2"/>'; }
     for(let i=0;i<=5;i++){ const y=T+i*fg; out+='<line x1="'+L+'" y1="'+y+'" x2="'+R+'" y2="'+y+'" stroke="#222" stroke-width="'+(start===1&&i===0?7:2)+'"/>'; }
-    if(start>1) out+='<text x="17" y="'+(T+fg*.62)+'" fill="#111" font-size="14" font-weight="700" text-anchor="middle">'+start+'</text>';
+
+    // Beginner-friendly fret numbers: label every visible fret space on the left.
+    // Open-position diagrams show 1–5; movable shapes show their actual neck position.
+    for(let i=0;i<5;i++){
+      const fretNum=start+i;
+      const y=T+(i+.5)*fg;
+      out+='<text x="17" y="'+(y+5)+'" fill="#555" font-size="13" font-weight="700" text-anchor="middle">'+fretNum+'</text>';
+    }
     if(d.barreFret && d.barreFret>=start && d.barreFret<=start+4){
       const used=[]; f.forEach((v,i)=>{if(v===d.barreFret)used.push(i);});
       if(used.length>1){ const y=T+(d.barreFret-start+.5)*fg; out+='<line x1="'+(L+Math.min(...used)*g)+'" y1="'+y+'" x2="'+(L+Math.max(...used)*g)+'" y2="'+y+'" stroke="#111" stroke-width="18" stroke-linecap="round"/>'; }
