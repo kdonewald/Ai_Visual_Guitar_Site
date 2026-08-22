@@ -293,7 +293,7 @@
       <a href="index.html" class="nav-link">Home</a>
     </div>
   </nav>
-  <div class="tag">Tap to talk · Speak naturally</div>
+  <div class="tag">Manual Send V3 · Tap again when done</div>
 
   <div class="stage-wrap" id="stageWrap">
     <div class="stage" id="stage">
@@ -359,6 +359,8 @@
 
 
 <script>
+  const VIZI_BUILD   = 'MANUAL-ONLY-0822-V3';
+  console.log('VIZI BUILD:', VIZI_BUILD);
   const RAILWAY_URL  = 'https://vizi-tts-proxy-production.up.railway.app';
   const TARGET_RATE  = 16000;
   const POLL_SONG_MS = 2000;
@@ -423,20 +425,32 @@
   let chunks = [], preroll = [];
   const PREROLL_FRAMES = 6;
 
-  // Tap-to-talk auto-send with adaptive voice detection.
-  const VAD_SILENCE_MS = 1600;
-  const VAD_FIRST_TURN_SILENCE_MS = 2200;
-  const VAD_MIN_RECORD_MS = 500;
-  const VAD_MIN_START_RMS = 0.006;
-  const VAD_MIN_CONTINUE_RMS = 0.0035;
+  // Manual-send only: no silence detection and no automatic submit.
+  let recordTimer = null;
+  let recordStartedAt = 0;
 
-  let firstStudentTurn = true;
-  let vadCurrentSilenceMs = VAD_SILENCE_MS;
-  let vadSpeechStarted = false;
-  let vadLastVoiceAt = 0;
-  let vadRecordStartedAt = 0;
-  let vadAutoSending = false;
-  let vadNoiseFloor = 0.002;
+  function startRecordTimer(){
+    stopRecordTimer();
+    recordStartedAt = performance.now();
+
+    const update = () => {
+      if (!recording) return;
+      const secs = Math.floor((performance.now() - recordStartedAt) / 1000);
+      const mm = Math.floor(secs / 60);
+      const ss = String(secs % 60).padStart(2, '0');
+      setStatus(`Listening ${mm}:${ss} — tap to send`);
+    };
+
+    update();
+    recordTimer = setInterval(update, 250);
+  }
+
+  function stopRecordTimer(){
+    if (recordTimer){
+      clearInterval(recordTimer);
+      recordTimer = null;
+    }
+  }
 
   function setStatus(t){ statusEl.textContent = t; }
   function setBtn(cls){ btn.className = 'talk' + (cls ? ' ' + cls : ''); }
@@ -513,31 +527,12 @@
     sink      = audioCtx.createGain(); sink.gain.value = 0;
     processor.onaudioprocess = e => {
       const frame = new Float32Array(e.inputBuffer.getChannelData(0));
+
       preroll.push(frame);
       if (preroll.length > PREROLL_FRAMES) preroll.shift();
+
       if (recording) {
         chunks.push(frame);
-
-        // Detect actual speech, then automatically stop/send after silence.
-        let sumSq = 0;
-        for (let i=0; i<frame.length; i++) sumSq += frame[i] * frame[i];
-        const rms = Math.sqrt(sumSq / Math.max(1, frame.length));
-        const now = performance.now();
-
-        if (!vadSpeechStarted) {
-          vadNoiseFloor = (vadNoiseFloor * 0.92) + (rms * 0.08);
-        }
-
-        const startThreshold = Math.max(VAD_MIN_START_RMS, vadNoiseFloor * 2.5);
-        const continueThreshold = Math.max(VAD_MIN_CONTINUE_RMS, vadNoiseFloor * 1.45);
-        const voiceThreshold = vadSpeechStarted ? continueThreshold : startThreshold;
-
-        if (rms >= voiceThreshold) {
-          vadSpeechStarted = true;
-          vadLastVoiceAt = now;
-        }
-        // Manual-send mode: silence never stops or submits the recording.
-        // The student explicitly taps the talk button again to send.
       }
     };
     source.connect(processor); processor.connect(sink); sink.connect(audioCtx.destination);
@@ -547,18 +542,15 @@
   async function startCapture(){
     await ensureMic();
     chunks = preroll.slice();
-    vadSpeechStarted = false;
-    vadLastVoiceAt = 0;
-    vadRecordStartedAt = performance.now();
-    vadCurrentSilenceMs = firstStudentTurn ? VAD_FIRST_TURN_SILENCE_MS : VAD_SILENCE_MS;
-    vadAutoSending = false;
-    vadNoiseFloor = 0.002;
     recording = true;
+    startRecordTimer();
+    console.log('RECORDING STARTED — MANUAL STOP ONLY');
   }
 
   function stopCapture(){
     if (!recording) return null;
     recording = false;
+    stopRecordTimer();
     const len = chunks.reduce((a,c)=>a+c.length, 0);
     if (len === 0) return null;
     const merged = new Float32Array(len);
@@ -891,55 +883,7 @@
     } catch(e){ /* poll quietly */ }
   }
 
-  // ── Talk button ──
-  async function press(e){
-    e.preventDefault();
-    if (pendingIntroBlob){
-      btn.innerHTML = 'Tap<br>to Talk';
-      await playPendingIntro();
-      return;
-    }
-    if (recording) return;
-    pauseBackingTrackInOpener();
-    setBtn('listening'); setStatus('Starting mic…');
-    try {
-      await startCapture();
-      setListening(true); setStatus('Listening…');
-    } catch(err){
-      setBtn(''); setListening(false); setStatus('Microphone blocked — allow mic access');
-      resumeBackingTrackInOpener();
-    }
-  }
-  function release(e){
-    e.preventDefault();
-    if (pendingIntroBlob) return;
-    if (!recording) return;
-    setListening(false);
-    const b64 = stopCapture();
-    if (!b64){ setBtn(''); setStatus('Nothing recorded — tap to try again'); resumeBackingTrackInOpener(); return; }
-    sendToVizi(b64);
-  }
-
-  // ── Tap-to-talk: tap once, speak, and silence automatically sends. ──
-  async function autoStopAndSend(){
-    if (!recording) { vadAutoSending = false; return; }
-    setListening(false);
-    const b64 = stopCapture();
-    if (!b64){
-      vadAutoSending = false;
-      setBtn('');
-      btn.innerHTML = 'Tap<br>to Talk';
-      setStatus('Nothing recorded — tap to try again');
-      resumeBackingTrackInOpener();
-      return;
-    }
-    if (vadSpeechStarted) firstStudentTurn = false;
-
-    setBtn('thinking');
-    btn.innerHTML = 'Vizi is<br>Thinking';
-    setStatus('Sending…');
-    sendToVizi(b64);
-  }
+  // ── Talk button — manual send only ──
 
   async function tapToTalk(e){
     e.preventDefault();
@@ -950,10 +894,12 @@
       return;
     }
 
-    // Manual-send mode: second tap always stops and sends, on every turn.
+    // Second tap always stops and sends. Nothing else can submit the recording.
     if (recording){
       setListening(false);
+
       const b64 = stopCapture();
+
       if (!b64){
         setBtn('');
         btn.innerHTML = 'Tap<br>to Talk';
@@ -962,7 +908,6 @@
         return;
       }
 
-      firstStudentTurn = false;
       setBtn('thinking');
       btn.innerHTML = 'Vizi is<br>Thinking';
       setStatus('Sending…');
@@ -978,8 +923,9 @@
       await startCapture();
       setListening(true);
       btn.innerHTML = 'Tap<br>to Send';
-      setStatus('Listening — tap to send');
+      setStatus('Listening 0:00 — tap to send');
     } catch(err){
+      stopRecordTimer();
       setBtn('');
       btn.innerHTML = 'Tap<br>to Talk';
       setListening(false);
