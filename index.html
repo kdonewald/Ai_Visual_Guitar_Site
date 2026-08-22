@@ -463,6 +463,8 @@
 
 <script>
   const RAILWAY_URL = 'https://vizi-tts-proxy-production.up.railway.app';
+  const VIZI_BUILD = 'INDEX-MANUAL-ONLY-0822-V3';
+  console.log('VIZI BUILD:', VIZI_BUILD);
   const TARGET_RATE = 16000;
 
   // ── Fretboard stages ──
@@ -505,11 +507,7 @@
   // Tap-to-talk endpoint detection. A tap starts recording; a second tap stops
   // immediately. After speech is detected, about 1.4s of quiet auto-sends.
   // The hard timeout prevents the microphone from staying open indefinitely.
-  const SPEECH_RMS_THRESHOLD = 0.016;
-  const AUTO_SILENCE_MS = 1400;
-  const MIN_CAPTURE_MS = 500;
-  const MAX_CAPTURE_MS = 18000;
-  let captureStartedAt = 0, lastSpeechAt = 0, speechSeen = false, endpointTimer = null;
+  // Manual-send only: recording continues until the student taps the button again.
 
   function setStatus(t){ statusEl.textContent = t; }
   function setBtn(cls){ btn.className = 'talk' + (cls ? ' '+cls : ''); }
@@ -546,12 +544,6 @@
       preroll.push(frame); if(preroll.length>PREROLL_FRAMES) preroll.shift();
       if(recording){
         chunks.push(frame);
-        // Lightweight voice/activity detector used only to decide when a spoken
-        // turn has ended. Noise suppression + echo cancellation are already on.
-        let sum = 0;
-        for(let i=0;i<frame.length;i++) sum += frame[i]*frame[i];
-        const rms = Math.sqrt(sum/frame.length);
-        if(rms >= SPEECH_RMS_THRESHOLD){ speechSeen = true; lastSpeechAt = Date.now(); }
       }
     };
     source.connect(processor); processor.connect(sink); sink.connect(audioCtx.destination);
@@ -560,10 +552,8 @@
   async function startCapture(){
     await ensureMic();
     chunks=preroll.slice(); recording=true;
-    captureStartedAt=Date.now(); lastSpeechAt=0; speechSeen=false;
   }
   function stopCapture(){
-    if(endpointTimer){ clearInterval(endpointTimer); endpointTimer=null; }
     if(!recording) return null; recording=false;
     const len=chunks.reduce((a,c)=>a+c.length,0); if(!len) return null;
     const merged=new Float32Array(len); let off=0;
@@ -1057,22 +1047,6 @@
     sendToVizi(b64);
   }
 
-  function armEndpointDetection(){
-    if(endpointTimer) clearInterval(endpointTimer);
-    endpointTimer = setInterval(()=>{
-      if(!recording){ clearInterval(endpointTimer); endpointTimer=null; return; }
-      const now = Date.now();
-      const elapsed = now - captureStartedAt;
-      if(elapsed >= MAX_CAPTURE_MS){
-        finishTapCapture();
-        return;
-      }
-      if(speechSeen && elapsed >= MIN_CAPTURE_MS && (now-lastSpeechAt) >= AUTO_SILENCE_MS){
-        finishTapCapture();
-      }
-    }, 150);
-  }
-
   async function tapTalk(e){
     e.preventDefault();
     if(sendingToVizi) return;
@@ -1084,12 +1058,11 @@
     // Second tap is always a manual stop/send.
     if(recording){ finishTapCapture(); return; }
 
-    setBtn('listening'); btn.innerHTML='Listening…<br>Tap to Stop'; setStatus('Starting mic…');
+    setBtn('listening'); btn.innerHTML='Tap<br>to Send'; setStatus('Starting mic…');
     try{
       await startCapture();
       setListening(true);
-      setStatus('Listening… speak naturally');
-      armEndpointDetection();
+      setStatus('Listening — tap to send');
     } catch(err){
       setBtn(''); btn.innerHTML='Tap<br>to Talk'; setListening(false);
       setStatus('Microphone blocked — allow mic access');
