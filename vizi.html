@@ -535,16 +535,9 @@
         if (rms >= voiceThreshold) {
           vadSpeechStarted = true;
           vadLastVoiceAt = now;
-        } else if (
-          !firstStudentTurn &&
-          vadSpeechStarted &&
-          !vadAutoSending &&
-          (now - vadLastVoiceAt) >= vadCurrentSilenceMs &&
-          (now - vadRecordStartedAt) >= VAD_MIN_RECORD_MS
-        ) {
-          vadAutoSending = true;
-          setTimeout(autoStopAndSend, 0);
         }
+        // Manual-send mode: silence never stops or submits the recording.
+        // The student explicitly taps the talk button again to send.
       }
     };
     source.connect(processor); processor.connect(sink); sink.connect(audioCtx.destination);
@@ -957,9 +950,8 @@
       return;
     }
 
-    // FIRST student response only:
-    // keep recording until the student explicitly taps the button again.
-    if (recording && firstStudentTurn){
+    // Manual-send mode: second tap always stops and sends, on every turn.
+    if (recording){
       setListening(false);
       const b64 = stopCapture();
       if (!b64){
@@ -978,9 +970,6 @@
       return;
     }
 
-    // Later turns use normal automatic silence detection.
-    if (recording) return;
-
     pauseBackingTrackInOpener();
     setBtn('listening');
     setStatus('Starting mic…');
@@ -988,14 +977,8 @@
     try {
       await startCapture();
       setListening(true);
-
-      if (firstStudentTurn){
-        btn.innerHTML = 'Tap when<br>done talking';
-        setStatus('Listening — tap when done talking');
-      } else {
-        btn.innerHTML = 'Listening…';
-        setStatus('Listening…');
-      }
+      btn.innerHTML = 'Tap<br>to Send';
+      setStatus('Listening — tap to send');
     } catch(err){
       setBtn('');
       btn.innerHTML = 'Tap<br>to Talk';
