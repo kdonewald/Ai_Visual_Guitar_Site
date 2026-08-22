@@ -431,7 +431,6 @@
   const VAD_MIN_CONTINUE_RMS = 0.0035;
 
   let firstStudentTurn = true;
-  let firstMicWarmupDone = false;
   let vadCurrentSilenceMs = VAD_SILENCE_MS;
   let vadSpeechStarted = false;
   let vadLastVoiceAt = 0;
@@ -537,6 +536,7 @@
           vadSpeechStarted = true;
           vadLastVoiceAt = now;
         } else if (
+          !firstStudentTurn &&
           vadSpeechStarted &&
           !vadAutoSending &&
           (now - vadLastVoiceAt) >= vadCurrentSilenceMs &&
@@ -553,16 +553,6 @@
 
   async function startCapture(){
     await ensureMic();
-
-    // First-use mic warm-up: let Android/Chrome AGC, echo cancellation,
-    // and noise suppression settle before we begin recording.
-    if (!firstMicWarmupDone){
-      setStatus('Listening…');
-      await new Promise(r => setTimeout(r, 750));
-      preroll = [];
-      firstMicWarmupDone = true;
-    }
-
     chunks = preroll.slice();
     vadSpeechStarted = false;
     vadLastVoiceAt = 0;
@@ -967,17 +957,45 @@
       return;
     }
 
-    // Ignore taps while already recording; speech ending controls the send.
+    // FIRST student response only:
+    // keep recording until the student explicitly taps the button again.
+    if (recording && firstStudentTurn){
+      setListening(false);
+      const b64 = stopCapture();
+      if (!b64){
+        setBtn('');
+        btn.innerHTML = 'Tap<br>to Talk';
+        setStatus('Nothing recorded — tap to try again');
+        resumeBackingTrackInOpener();
+        return;
+      }
+
+      firstStudentTurn = false;
+      setBtn('thinking');
+      btn.innerHTML = 'Vizi is<br>Thinking';
+      setStatus('Sending…');
+      sendToVizi(b64);
+      return;
+    }
+
+    // Later turns use normal automatic silence detection.
     if (recording) return;
 
     pauseBackingTrackInOpener();
     setBtn('listening');
-    btn.innerHTML = 'Listening…';
     setStatus('Starting mic…');
+
     try {
       await startCapture();
       setListening(true);
-      setStatus('Listening…');
+
+      if (firstStudentTurn){
+        btn.innerHTML = 'Tap when<br>done talking';
+        setStatus('Listening — tap when done talking');
+      } else {
+        btn.innerHTML = 'Listening…';
+        setStatus('Listening…');
+      }
     } catch(err){
       setBtn('');
       btn.innerHTML = 'Tap<br>to Talk';
