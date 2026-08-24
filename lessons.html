@@ -3301,6 +3301,16 @@
     if(power) return power;
     return cxShapeDiagram(cmd);
   }
+  function cxFrettedNoteLabels(frets){
+    // Dynamic note names for the six displayed strings, Low E -> High E.
+    // Muted strings stay X; open and fretted strings are calculated from standard tuning.
+    const names=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+    return frets.map((v,i)=>{
+      if(v==='x') return 'X';
+      if(typeof v!=='number') return '';
+      return names[(CX_OPEN_PC[i]+v)%12];
+    });
+  }
   function cxChordSvg(d){
     const f=d.frets, L=38,R=242,T=58,B=258,g=(R-L)/5,fg=(B-T)/5;
     const nums=f.filter(v=>typeof v==='number'&&v>0);
@@ -3326,6 +3336,14 @@
       if(used.length>1){ const y=T+(d.barreFret-start+.5)*fg; out+='<line x1="'+(L+Math.min(...used)*g)+'" y1="'+y+'" x2="'+(L+Math.max(...used)*g)+'" y2="'+y+'" stroke="#111" stroke-width="18" stroke-linecap="round"/>'; }
     }
     f.forEach((v,i)=>{ if(typeof v==='number'&&v>0&&v>=start&&v<=start+4){ const x=L+i*g,y=T+(v-start+.5)*fg; out+='<circle cx="'+x+'" cy="'+y+'" r="11" fill="#111"/>'; } });
+
+    // Show the actual sounding note for each string directly below the fretboard.
+    // Example D major: X  X  D  A  D  F#
+    const noteLabels=cxFrettedNoteLabels(f);
+    noteLabels.forEach((note,i)=>{
+      const x=L+i*g;
+      out+='<text x="'+x+'" y="288" fill="#111" font-size="15" font-weight="800" text-anchor="middle">'+note+'</text>';
+    });
     return out+'</svg>';
   }
   function cxShowChordDiagram(cmd){
