@@ -1334,6 +1334,19 @@
     border-radius:8px;padding:.6rem .9rem;margin-bottom:.6rem;
     font-size:.88rem;color:var(--gold);line-height:1.5;font-weight:500;
   }
+  .tb-student-name{
+    display:none;margin-bottom:.6rem;padding:.7rem .9rem;border:1.5px solid rgba(61,186,114,0.30);
+    border-radius:8px;background:rgba(61,186,114,0.07);text-align:center;
+  }
+  .tb-student-name label{
+    display:block;margin-bottom:.4rem;font-size:.82rem;font-weight:700;color:var(--vizi);
+  }
+  .tb-student-name input{
+    width:100%;max-width:16rem;box-sizing:border-box;padding:.55rem .8rem;border-radius:9px;
+    border:1px solid var(--border);background:var(--surface2);color:var(--text);
+    font-family:'DM Sans',sans-serif;font-size:.95rem;text-align:center;
+  }
+  .tb-student-name input:focus{outline:none;border-color:var(--vizi);}
   .tb-test-btn{ background:var(--blue) !important; box-shadow:0 3px 12px rgba(79,142,247,0.28) !important; }
   .tb-test-btn:hover{ background:#3a7ee0 !important; }
 
@@ -1456,6 +1469,10 @@
 
         <div class="tb-power-reminder" id="powerReminder" style="display:none">
           ⚡ Make sure your fretboard battery is switched on before testing
+        </div>
+        <div class="tb-student-name" id="setupStudentNameWrap">
+          <label for="setupStudentName">Student name</label>
+          <input id="setupStudentName" type="text" maxlength="24" placeholder="Your name (optional)" autocomplete="off" aria-label="Student name" />
         </div>
         <button class="cp-video-intro-btn tb-test-btn" id="testFretboardChoice" style="display:none">
           <span class="cp-vid-icon">💡</span>
@@ -1781,6 +1798,15 @@
   // ── Progress ───────────────────────────────────────────────
   function getProgress(){ try{ return JSON.parse(localStorage.getItem('viziProgress')||'{}'); }catch(e){ return {}; } }
   function setProgress(p){ try{ localStorage.setItem('viziProgress',JSON.stringify(p)); }catch(e){} }
+  function initSetupStudentName(){
+    const el = document.getElementById('setupStudentName');
+    if(!el) return;
+    try{ const p=getProgress(); if(p.name) el.value=p.name; }catch(e){}
+    el.addEventListener('input', function(){
+      try{ const p=getProgress(); p.name=(el.value||'').trim().slice(0,24); setProgress(p); }catch(e){}
+    });
+  }
+  initSetupStudentName();
   // Which stage's intro video is a category's level-0→1 gate. Mid-ladder videos
   // (barre at Chords 7, tab at Chords 9) and tuning are NOT 0→1 gates, so they're
   // intentionally absent — watching them doesn't bump a category.
@@ -1879,6 +1905,8 @@
       if(tf) tf.style.display = '';
       const pr = document.getElementById('powerReminder');
       if(pr) pr.style.display = '';
+      const sn = document.getElementById('setupStudentNameWrap');
+      if(sn) sn.style.display = '';
       vgApplyStageGate(stage.id);
       catPanel.classList.add('show');
       window.scrollTo({top:0, behavior:'smooth'});
@@ -1898,6 +1926,8 @@
     stopTuner();
 
     tunerChoice.style.display = (id === 'tuning') ? '' : 'none';
+    const setupNameWrap = document.getElementById('setupStudentNameWrap');
+    if(setupNameWrap) setupNameWrap.style.display = 'none';
 
     renderExercises(stage);
     showStageTipOrNote();

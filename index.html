@@ -320,7 +320,6 @@
   .setup-strip-title{font-size:.9rem;margin-bottom:.28rem;}
   .setup-strip-sub{font-size:.82rem;margin-bottom:.45rem;}
   .setup-btn{padding:.48rem .95rem;font-size:.86rem;}
-  #studentName{margin-bottom:.45rem !important;padding:.45rem .7rem !important;font-size:.9rem !important;}
 
   .setup-code-row{display:flex;align-items:center;justify-content:center;gap:.55rem;flex-wrap:wrap;margin:.05rem auto .48rem;}
   .setup-code-label{font-size:.86rem;font-weight:800;color:#ded8d0;}
@@ -427,7 +426,6 @@
 <!-- Guided lesson setup; revealed only after Guided Lesson is chosen. -->
 <div class="setup-strip" id="setupStrip">
   <div class="setup-strip-title">🎸 Guitar in tune? · 💡 Lights working?</div>
-  <input id="studentName" type="text" maxlength="24" placeholder="Your name (optional)" autocomplete="off" aria-label="Your name" style="width:100%;max-width:16rem;box-sizing:border-box;margin:0 auto .7rem;display:block;padding:.55rem .8rem;border-radius:9px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.95rem;text-align:center;" />
   <div class="setup-code-row" aria-label="Current lesson code">
     <span class="setup-code-label">Lesson code</span>
     <input id="codeInput" class="setup-code-input" inputmode="numeric" maxlength="6" value="000000" autocomplete="off" aria-label="Lesson code" />
@@ -627,14 +625,6 @@
   })();
   // ── Progress code box (home screen): Resume seeds levels from a saved code;
   // "Get my code" returns the current 6-digit code to save for next time. ──
-  (function initNameBox(){
-    var el = document.getElementById('studentName');
-    if(!el) return;
-    try{ var pr = JSON.parse(localStorage.getItem('viziProgress')||'{}'); if(pr.name) el.value = pr.name; }catch(e){}
-    el.addEventListener('input', function(){
-      try{ var pr = JSON.parse(localStorage.getItem('viziProgress')||'{}'); pr.name = (el.value||'').trim().slice(0,24); localStorage.setItem('viziProgress', JSON.stringify(pr)); }catch(e){}
-    });
-  })();
   // Lesson code: the saved code auto-populates. Change makes editability obvious;
   // a new 6-digit code must be confirmed, and Cancel restores the saved code.
   (function initLessonCode(){
