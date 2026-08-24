@@ -3244,7 +3244,11 @@
     G: {major:[3,2,0,0,0,3]},
     D: {major:['x','x',0,2,3,2], minor:['x','x',0,2,3,1]}
   };
-  function cxPickFret(openPC, rootPC){ for(let f=1;f<=13;f++) if((openPC+f)%12===rootPC) return f; return 1; }
+  const CX_SHAPE_NATURAL_PC = {E:4,A:9,C:0,G:7,D:2};
+  function cxShapeShift(shape, rootPC){
+    const natural=CX_SHAPE_NATURAL_PC[shape];
+    return (rootPC-natural+12)%12; // 0 = the true open position for that CAGED shape
+  }
   function cxShapeDiagram(cmd){
     const m=String(cmd||'').trim().match(/^([EACGD])\s+SHAPE\s+([A-G](?:#)?)(maj7|min7|7|m)?$/i);
     if(!m) return null;
@@ -3252,15 +3256,22 @@
     const q=suf==='m'?'minor':suf==='7'?'dom7':suf==='min7'?'min7':suf==='maj7'?'maj7':'major';
     const tmpl=CX_SHAPE_TMPL[shape] && CX_SHAPE_TMPL[shape][q];
     if(!tmpl) return null;
-    const pc=CX_NOTE_PC[root]; let barre=1;
-    if(shape==='E') barre=cxPickFret(4,pc);
-    else if(shape==='A') barre=cxPickFret(9,pc);
-    else if(shape==='C') { const rB=cxPickFret(11,pc); barre=rB-1; if(barre<=0) barre=1; }
-    else if(shape==='G') { const rE=cxPickFret(4,pc); barre=rE-3; if(barre<=0) barre=1; }
-    else if(shape==='D') barre=cxPickFret(2,pc);
-    const frets=tmpl.map(v=>v==='x'?'x':barre+v);
+
+    const pc=CX_NOTE_PC[root];
+    const shift=cxShapeShift(shape,pc);
+    const frets=tmpl.map(v=>v==='x'?'x':shift+v);
+
+    // The physical fretboard ends at fret 13. Do not show a partial/incomplete shape.
+    if(frets.some(v=>typeof v==='number' && (v<0 || v>13))) return null;
+
     const qName=q==='minor'?'Minor':q==='dom7'?'7th':q==='min7'?'Minor 7th':q==='maj7'?'Major 7th':'Major';
-    return {title:root+' '+qName+' — '+shape+' Shape', frets, barreFret:(shape==='D'?null:barre)};
+    return {
+      title:root+' '+qName+' — '+shape+' Shape',
+      frets,
+      // At shift 0 this is the real open CAGED chord, not a barre.
+      barreFret:(shift>0 && shape!=='D') ? shift : null,
+      openShape:(shift===0)
+    };
   }
   function cxPowerDiagram(cmd){
     // Match the ESP32 power-chord engine exactly:
@@ -3647,13 +3658,15 @@
         if(minor && (shape==='C'||shape==='G')){ g.appendChild(cxCellBtn(root,'greyed',null,null)); return; }
         const cmd=shape+' SHAPE '+root+(minor?'m':'');
         const label=root+' '+(minor?'Minor':'Major')+' — '+shape+' shape';
-        g.appendChild(cxCellBtn(root,'barrecolor',cmd,label));
+        const diagram=cxShapeDiagram(cmd);
+        if(!diagram){ g.appendChild(cxCellBtn(root,'greyed',null,null)); return; }
+        g.appendChild(cxCellBtn(root,diagram.openShape?'open':'barrecolor',cmd,label));
       });
     });
     const n=document.createElement('div'); n.className='cx-note';
     n.textContent = minor
-      ? 'Quality is set to Minor. C and G shapes have no standard minor — use E, A, or D shape (greyed here).'
-      : 'Quality is set to Major (change it in the bar). Any shape plays any root — pick the one nearest your hand.';
+      ? 'Quality is set to Minor. The natural E, A, and D positions are true open chords. C and G minor shapes are not used; shapes that would run past fret 13 are greyed.'
+      : 'Quality is set to Major. E, A, C, G, and D in their own shape are the true open positions; movable shapes transpose from there. Shapes that would run past fret 13 are greyed.';
     area.appendChild(n);
   }
 
