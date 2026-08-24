@@ -1347,6 +1347,13 @@
     font-family:'DM Sans',sans-serif;font-size:.95rem;text-align:center;
   }
   .tb-student-name input:focus{outline:none;border-color:var(--vizi);}
+  .tb-name-confirm{
+    display:block;margin:.5rem auto 0;padding:.42rem .9rem;border-radius:8px;
+    border:1.5px solid var(--vizi);background:transparent;color:var(--vizi);
+    font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:800;cursor:pointer;transition:all .16s;
+  }
+  .tb-name-confirm:hover{background:rgba(61,186,114,0.10);}
+  .tb-name-confirm.confirmed{background:var(--vizi);color:#07150d;box-shadow:0 0 14px rgba(61,186,114,0.45);}
   .tb-test-btn{ background:var(--blue) !important; box-shadow:0 3px 12px rgba(79,142,247,0.28) !important; }
   .tb-test-btn:hover{ background:#3a7ee0 !important; }
 
@@ -1473,6 +1480,7 @@
         <div class="tb-student-name" id="setupStudentNameWrap">
           <label for="setupStudentName">Student name</label>
           <input id="setupStudentName" type="text" maxlength="24" placeholder="Your name (optional)" autocomplete="off" aria-label="Student name" />
+          <button class="tb-name-confirm" id="setupStudentNameConfirm" type="button">Confirm</button>
         </div>
         <button class="cp-video-intro-btn tb-test-btn" id="testFretboardChoice" style="display:none">
           <span class="cp-vid-icon">💡</span>
@@ -1800,10 +1808,33 @@
   function setProgress(p){ try{ localStorage.setItem('viziProgress',JSON.stringify(p)); }catch(e){} }
   function initSetupStudentName(){
     const el = document.getElementById('setupStudentName');
-    if(!el) return;
-    try{ const p=getProgress(); if(p.name) el.value=p.name; }catch(e){}
+    const confirm = document.getElementById('setupStudentNameConfirm');
+    if(!el || !confirm) return;
+    let savedName = '';
+    try{
+      const p=getProgress();
+      savedName=(p.name||'').trim().slice(0,24);
+      if(savedName) el.value=savedName;
+    }catch(e){}
+
+    function showConfirmed(on){
+      confirm.classList.toggle('confirmed', !!on);
+      confirm.textContent = on ? '✓ Confirmed' : 'Confirm';
+    }
+
+    showConfirmed(!!savedName);
     el.addEventListener('input', function(){
-      try{ const p=getProgress(); p.name=(el.value||'').trim().slice(0,24); setProgress(p); }catch(e){}
+      showConfirmed((el.value||'').trim().slice(0,24) === savedName && !!savedName);
+    });
+    confirm.addEventListener('click', function(){
+      try{
+        const p=getProgress();
+        savedName=(el.value||'').trim().slice(0,24);
+        p.name=savedName;
+        setProgress(p);
+        el.value=savedName;
+        showConfirmed(true);
+      }catch(e){}
     });
   }
   initSetupStudentName();
