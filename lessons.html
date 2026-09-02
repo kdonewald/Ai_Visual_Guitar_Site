@@ -3818,20 +3818,19 @@
     if(!cpProgression.length)return;
     if(playBtn) playBtn.disabled=true;
 
-    // Freeze the selected progression for this playback so UI changes cannot
-    // alter the sequence while it is running.
+    // Freeze this playback so edits to the strip cannot change a progression
+    // while it is already running.
     const progressionToPlay = cpProgression.slice();
 
     if(statusEl) statusEl.textContent="Here's your progression 🎸";
 
     // Fire each chord's exact stored command in order. Stay on the Chords
-    // stage for the entire progression; Vizi is only entered when the student
-    // explicitly taps Return to Vizi.
+    // stage; Vizi is entered only when the student explicitly taps Return to Vizi.
     for(let i=0;i<progressionToPlay.length;i++){
       const item = progressionToPlay[i];
       if(statusEl) statusEl.textContent='Playing '+(i+1)+' of '+progressionToPlay.length+': '+item.label;
 
-      // A brief network hiccup should not silently drop a chord. Retry once.
+      // Retry once on a brief network hiccup so a chord is not silently skipped.
       let sent = await sendFretboardCmdDirect(item.cmd);
       if(!sent){
         await sleep(250);
@@ -3844,15 +3843,28 @@
         return;
       }
 
-      // Give every chord, including the final chord, its full hold + gap time.
+      // Give every chord, including the last one, the full normal display time.
       await sleep(3800);
     }
+
+    // Save the completed progression as silent background context. This does
+    // NOT contact Vizi and does NOT navigate away from the Chords stage.
+    // index.html / vizi.html include this context with the student's next
+    // spoken question so Vizi knows what they just practiced.
+    try{
+      sessionStorage.setItem('viziLastStageContext', JSON.stringify({
+        stage: 'chords',
+        activity: 'progression',
+        labels: progressionToPlay.map(p=>p.label),
+        commands: progressionToPlay.map(p=>p.cmd),
+        completedAt: Date.now()
+      }));
+    }catch(e){}
 
     if(statusEl) statusEl.textContent="Progression complete 🎸";
     if(playBtn) playBtn.disabled=cpProgression.length<1;
 
-    // Intentionally DO NOT call goToVizi() here.
-    // The student remains on the Chords stage until Return to Vizi is tapped.
+    // Intentionally no goToVizi() here. Student stays in Chords until Return to Vizi.
   }
 
   function goToVizi(stage, exercise){

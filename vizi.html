@@ -365,6 +365,41 @@
   const TARGET_RATE  = 16000;
   const POLL_SONG_MS = 2000;
 
+  // ── Recent stage context ───────────────────────────────────────────────────
+  // lessons.html stores the last completed hands-on activity here. We pass it
+  // silently with the student's NEXT Vizi request so Vizi knows what happened
+  // on the stage without speaking or interrupting while the student practices.
+  function getRecentStageContext(){
+    try{
+      const raw = sessionStorage.getItem('viziLastStageContext');
+      if(!raw) return '';
+      const ctx = JSON.parse(raw);
+      if(!ctx || !ctx.completedAt) return '';
+
+      // Session context is meant to be recent, not permanent.
+      if(Date.now() - Number(ctx.completedAt) > 2*60*60*1000){
+        sessionStorage.removeItem('viziLastStageContext');
+        return '';
+      }
+
+      if(ctx.stage === 'chords' && ctx.activity === 'progression' &&
+         Array.isArray(ctx.labels) && ctx.labels.length){
+        return 'RECENT STAGE CONTEXT — background only unless relevant to the student\\'s question: ' +
+               'The student just completed this chord progression in the Chords stage: ' +
+               ctx.labels.join(' -> ') + '. Do not congratulate or comment on it automatically; ' +
+               'use it only when it helps answer the student or continue the lesson naturally.';
+      }
+    }catch(e){}
+    return '';
+  }
+
+  function getRequestStepsWithStageContext(){
+    const curriculumSteps =
+      (window.viziStepLabels ? window.viziStepLabels() : '');
+    const stageContext = getRecentStageContext();
+    return [curriculumSteps, stageContext].filter(Boolean).join('\\n');
+  }
+
   const btn        = document.getElementById('talkBtn');
   const statusEl   = document.getElementById('status');
   const stageWrap  = document.getElementById('stageWrap');
@@ -745,7 +780,7 @@
     try {
       const res = await fetch(RAILWAY_URL + '/stt-claude-tts', {
         method:'POST', headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ audio:b64, sampleRate:TARGET_RATE, mode:currentMode, progress:getProgressCode() })
+        body: JSON.stringify({ audio:b64, sampleRate:TARGET_RATE, mode:currentMode, progress:getProgressCode(), steps:getRequestStepsWithStageContext() })
       });
       const ct = (res.headers.get('content-type') || '');
       if (ct.includes('application/json')){
@@ -1181,7 +1216,7 @@
       const res = await fetch(RAILWAY_URL + '/claude-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg, mode: 'talk', progress:getProgressCode() })
+        body: JSON.stringify({ message: msg, mode: 'talk', progress:getProgressCode(), steps:getRequestStepsWithStageContext() })
       });
       if (res.ok && !(res.headers.get('content-type')||'').includes('application/json')){
         pendingIntroText = dec(res.headers.get('X-Vizi-Text'));
@@ -1475,7 +1510,7 @@
       const res = await fetch(RAILWAY_URL + '/claude-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, mode: requestMode, progress:getProgressCode() })
+        body: JSON.stringify({ message, mode: requestMode, progress:getProgressCode(), steps:getRequestStepsWithStageContext() })
       });
       if (res.ok && !(res.headers.get('content-type')||'').includes('application/json')){
         const vText = dec(res.headers.get('X-Vizi-Text'));
