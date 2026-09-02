@@ -3817,25 +3817,42 @@
   async function playProgression(statusEl, playBtn){
     if(!cpProgression.length)return;
     if(playBtn) playBtn.disabled=true;
+
+    // Freeze the selected progression for this playback so UI changes cannot
+    // alter the sequence while it is running.
+    const progressionToPlay = cpProgression.slice();
+
     if(statusEl) statusEl.textContent="Here's your progression 🎸";
 
-    // Fire each chord's real command in order — not a reconstructed guess
-    // from its display label, the exact command it was selected with (open,
-    // barre, or triad). Paced to the firmware's own hold+gap timing (3000ms +
-    // 800ms) so each chord finishes its natural display before the next fires.
-    for(let i=0;i<cpProgression.length;i++){
-      if(statusEl) statusEl.textContent='Playing '+(i+1)+' of '+cpProgression.length+': '+cpProgression[i].label;
-      await sendFretboardCmdDirect(cpProgression[i].cmd);
+    // Fire each chord's exact stored command in order. Stay on the Chords
+    // stage for the entire progression; Vizi is only entered when the student
+    // explicitly taps Return to Vizi.
+    for(let i=0;i<progressionToPlay.length;i++){
+      const item = progressionToPlay[i];
+      if(statusEl) statusEl.textContent='Playing '+(i+1)+' of '+progressionToPlay.length+': '+item.label;
+
+      // A brief network hiccup should not silently drop a chord. Retry once.
+      let sent = await sendFretboardCmdDirect(item.cmd);
+      if(!sent){
+        await sleep(250);
+        sent = await sendFretboardCmdDirect(item.cmd);
+      }
+
+      if(!sent){
+        if(statusEl) statusEl.textContent='Could not send '+item.label+' — tap Light Progression to try again.';
+        if(playBtn) playBtn.disabled=cpProgression.length<1;
+        return;
+      }
+
+      // Give every chord, including the final chord, its full hold + gap time.
       await sleep(3800);
     }
 
-    if(statusEl) statusEl.textContent="Here's your progression 🎸";
+    if(statusEl) statusEl.textContent="Progression complete 🎸";
     if(playBtn) playBtn.disabled=cpProgression.length<1;
 
-    // Progression is already lit — hand Vizi a recap-only exercise so it
-    // narrates what was just played instead of trying to re-fire it.
-    const progStr = cpProgression.map(p=>p.label).join(' → ');
-    goToVizi('chords','Progression recap: '+progStr);
+    // Intentionally DO NOT call goToVizi() here.
+    // The student remains on the Chords stage until Return to Vizi is tapped.
   }
 
   function goToVizi(stage, exercise){
