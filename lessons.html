@@ -56,7 +56,8 @@
     color:#d2cbc3 !important;border-color:rgba(255,255,255,.24) !important;opacity:1 !important;
   }
   #vm-reset{color:#91b7ff !important;border-color:rgba(91,134,207,.62) !important;opacity:1 !important;}
-  #vm-home{color:#55cf89 !important;border-color:#3dba72 !important;opacity:1 !important;}
+  #vm-home{color:#55cf89 !important;border-color:#3dba72 !important;opacity:1 !important;margin-left:auto !important;margin-right:auto !important;}
+  #vm-home-row{justify-content:center !important;}
 
   /* panel */
   .panel-wrap{ max-width:920px; margin:1rem auto 0; padding:0 1.5rem; }
@@ -5772,5 +5773,29 @@ renderAll();
 })(); // end IIFE
 </script>
 <script src="metronome-widget-v2.js?v=20260811"></script>
+<script>
+(function(){
+  function updateViziHomeButton(){
+    const btn=document.getElementById('vm-home');
+    if(!btn) return false;
+    btn.innerHTML='<span aria-hidden="true">🏠</span> Return to Vizi and Stages';
+    btn.setAttribute('title','Return to Vizi and Stages');
+    btn.style.marginLeft='auto';
+    btn.style.marginRight='auto';
+    const row=btn.parentElement;
+    if(row){
+      row.id=row.id||'vm-home-row';
+      row.style.justifyContent='center';
+    }
+    return true;
+  }
+  if(!updateViziHomeButton()){
+    const obs=new MutationObserver(function(){
+      if(updateViziHomeButton()) obs.disconnect();
+    });
+    obs.observe(document.body,{childList:true,subtree:true});
+  }
+})();
+</script>
 </body>
 </html>
