@@ -84,6 +84,7 @@
 
   /* choice row */
   .choice-row{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1.6rem;}
+  .choice-row.dual-theory-videos{grid-template-columns:1fr 1fr;}
   .choice-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:1.1rem 1.2rem;cursor:pointer;transition:all .2s;text-align:left;}
   .choice-card:hover{border-color:var(--blue);background:rgba(27,79,138,0.04)}
   .choice-card .ci{font-size:1.4rem;margin-bottom:.4rem;display:block}
@@ -267,6 +268,7 @@
   @media(max-width:640px){
     nav{padding:.85rem 1.2rem}
     .choice-row{grid-template-columns:1fr}
+    .choice-row.dual-theory-videos{grid-template-columns:1fr 1fr}
     .choice-grid.cols-3{grid-template-columns:1fr}
     .cat-head,.cat-body{padding-left:1.3rem;padding-right:1.3rem}
     .scale-key-grid{grid-template-columns:1fr 1fr}
@@ -1411,6 +1413,7 @@
   .cx-div{flex:0 0 auto;width:1px;align-self:stretch;background:#33415a;margin:3px 4px;}
   .cx-progpill{flex:0 0 auto;min-width:64px;border-style:dashed;}
   .cx-progpill.active{border-style:solid;}
+  .cx-progbuild{width:100%;flex:1 1 100%;padding:10px 8px;font-size:13px;}
   .cx-qrow{margin-top:6px;padding-top:7px;border-top:1px solid #232c3c;align-items:center;}
   .cx-qlabel{flex:0 0 auto;font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#8b96a8;padding:0 8px 0 2px;}
   .cx-demohdr{cursor:pointer;background:rgba(61,220,132,.09);border:1px solid rgba(61,220,132,.45);border-radius:7px;color:#3ddc84;font-family:inherit;font-weight:800;padding:7px 2px;font-size:14px;letter-spacing:.2px;line-height:1;white-space:nowrap;align-self:stretch;}
@@ -1472,6 +1475,10 @@
         <button class="cp-video-intro-btn" id="introChoice">
           <span class="cp-vid-icon">&#9654;</span>
           <span id="introWatchedNote">Watch Intro Video</span>
+        </button>
+        <button class="cp-video-intro-btn" id="chordTheoryVideoChoice" style="display:none">
+          <span class="cp-vid-icon">&#9654;</span>
+          <span>Watch the Chord Video</span>
         </button>
 
         <div class="tb-power-reminder" id="powerReminder" style="display:none">
@@ -1588,7 +1595,8 @@
     {
       id:'chord-theory', num:3, label:'Build Scales & Chords',
       desc:'Learn what root, third, and fifth mean — the three notes behind every chord you play.',
-      videoUrl:'https://youtu.be/RvtsGFV8CVc', theoryMode:true,
+      videoUrl:'https://youtu.be/MwfXdlijyoc',
+      chordVideoUrl:'https://youtu.be/uuc8tcDO-rU', theoryMode:true,
       tips:[
         "The root note is what gives a chord its name — a C chord starts on the note C.",
         "Major and minor are decided entirely by the third — everything else can stay the same.",
@@ -1843,7 +1851,7 @@
   // intentionally absent — watching them doesn't bump a category.
   const INTRO_VIDEO_CAT = { warmup:'warmup', chords:'chords', 'chord-theory':'theory', strumming:'strumming', song:'song', soloing:'soloing' };
   // Per-stage label for the "Watch … Video" button, so it isn't a generic "Intro" everywhere.
-  const STAGE_VIDEO_LABELS = { tuning:'Watch the Setup Video', warmup:'Watch the Warm-up Video', 'chord-theory':'Watch the Scales & Chords Video', chords:'Watch the Open Chords Video', strumming:'Watch the Strumming Video', song:'Watch the Song Video', soloing:'Watch the Soloing Video', tab:'Watch the Tab-Reading Video' };
+  const STAGE_VIDEO_LABELS = { tuning:'Watch the Setup Video', warmup:'Watch the Warm-up Video', 'chord-theory':'Watch the Scale Video', chords:'Watch the Open Chords Video', strumming:'Watch the Strumming Video', song:'Watch the Song Video', soloing:'Watch the Soloing Video', tab:'Watch the Tab-Reading Video' };
   function markIntroWatched(id){
     const p=getProgress(); p[id]=p[id]||{}; p[id].introWatched=(p[id].introWatched||0)+1; p[id].lastSeen=Date.now();
     // Bridge to the six-category levels Vizi reads: watching a stage's intro video
@@ -1886,6 +1894,7 @@
   // stage gate; 'barre'/'triad' are sub-feature flags that re-render the chords panel.
   function vgMarkWatchedKey(key){
     if(!key) return;
+    if(key === 'chord-theory-chord') return;
     if(key === 'barre' || key === 'triad'){
       if(!vgIsWatched(key)) markIntroWatched(key);
       if(typeof renderChordsPanel === 'function') renderChordsPanel();
@@ -1899,6 +1908,8 @@
   const catTitle       = document.getElementById('catTitle');
   const catDesc        = document.getElementById('catDesc');
   const introChoice    = document.getElementById('introChoice');
+  const chordTheoryVideoChoice = document.getElementById('chordTheoryVideoChoice');
+  const choiceRow = document.getElementById('choiceRow');
   // exerciseChoice removed — Jump to Exercises feature removed
   const introWatchedNote = document.getElementById('introWatchedNote');
   const vidWrap        = document.getElementById('vidWrap');
@@ -1917,6 +1928,11 @@
     // (tab / tuning) so those stages don't fall back to the generic "Watch Intro Video".
     if(document.getElementById('introWatchedNote')){
       document.getElementById('introWatchedNote').textContent = STAGE_VIDEO_LABELS[stage.id] || 'Watch Intro Video';
+    }
+    if(choiceRow) choiceRow.classList.toggle('dual-theory-videos', stage.id==='chord-theory');
+    if(chordTheoryVideoChoice){
+      chordTheoryVideoChoice.style.display = stage.id==='chord-theory' ? '' : 'none';
+      chordTheoryVideoChoice._videoUrl = stage.chordVideoUrl || '';
     }
     if (stage.isSong){ window.location.href = 'songs.html'; return; }
     if (stage.isTab){ renderTabPanel(); activeStage=stage; catStageTag.textContent='Stage 8'; catTitle.textContent='Read & Play Tab'; catDesc.textContent=stage.desc; vgApplyStageGate(stage.id); catPanel.classList.add('show'); window.scrollTo({top:0, behavior:'smooth'}); return; }
@@ -2022,6 +2038,14 @@
     // end (playerState 0 above) marks it, or the "I've watched it" fallback does.
     // This makes the first-visit gate mean "watch it", not just "tap it".
   });
+  if(chordTheoryVideoChoice){
+    chordTheoryVideoChoice.addEventListener('click', () => {
+      if(chordTheoryVideoChoice._videoUrl){
+        openStageVideo(chordTheoryVideoChoice._videoUrl, 'chord-theory-chord');
+      }
+    });
+  }
+
   // Manual fallback: if the student closes the video before it ends (or the
   // finish signal doesn't fire on their device), this flips the SAME watched flag.
   const vgWatchedBtn = document.getElementById('vgWatchedBtn');
@@ -3393,11 +3417,15 @@
       }));
     });
     row1.appendChild(vSeg);
-    const vdiv=document.createElement('div'); vdiv.className='cx-div'; row1.appendChild(vdiv);
-    row1.appendChild(cxPill(cpProgMode?'Prog \u2713':'Prog', cpProgMode, ()=>{
-      cpProgMode=!cpProgMode; renderChordsPanel();
-    }, 'cx-progpill'));
     bar.appendChild(row1);
+
+    // Progression builder — separate, clearly labeled control for beginners.
+    const progRow=document.createElement('div'); progRow.className='cx-row';
+    const progBtn=cxPill(cpProgMode?'Building Progression \u2713':'Build Progression', cpProgMode, ()=>{
+      cpProgMode=!cpProgMode; renderChordsPanel();
+    }, 'cx-progpill cx-progbuild');
+    progRow.appendChild(progBtn);
+    bar.appendChild(progRow);
 
     // Row 2 — actions
     const row2=document.createElement('div'); row2.className='cx-row';
@@ -3437,7 +3465,7 @@
     exList.appendChild(bar);
 
     cxSelEl=document.createElement('div'); cxSelEl.className='cx-sel';
-    cxSelEl.textContent = cpProgMode ? 'Progression on — tap chords to add them.' : 'Tap a chord to view its diagram.';
+    cxSelEl.textContent = cpProgMode ? 'Build Progression is on — tap chords in the order you want to play them.' : 'Tap a chord to view its diagram.';
     exList.appendChild(cxSelEl);
 
     // Learning aid for standard beginner chord shapes. It appears only after a
