@@ -28,7 +28,7 @@ nav .nav-links, .site-nav .nav-links {
   gap: .4rem !important;
   row-gap: .4rem !important;
   width: 100%;
-  justify-content: flex-start !important;
+  justify-content: center !important;
 }
 /* Forced line break: pushes Return-to-Vizi + Reset onto their own second row */
 nav .nav-links .vm-nav-break, .site-nav .nav-links .vm-nav-break {
@@ -189,7 +189,7 @@ nav .nav-links .vm-nav-break, .site-nav .nav-links .vm-nav-break {
     homeBtn.id = 'vm-home';
     homeBtn.className = 'nav-ctrl-btn';
     homeBtn.href = 'index.html';
-    homeBtn.textContent = '🏠 Return to Vizi';
+    homeBtn.textContent = '🏠 Return to Vizi and Stages';
 
     // Single toggle button — label reads out state ("Hold On" lit / "Hold Off" gray)
     // and color shows active/inactive, so the word can't be misread as an action.
