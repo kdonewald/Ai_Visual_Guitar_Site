@@ -1826,6 +1826,11 @@
   // ── Progress ───────────────────────────────────────────────
   function getProgress(){ try{ return JSON.parse(localStorage.getItem('viziProgress')||'{}'); }catch(e){ return {}; } }
   function setProgress(p){ try{ localStorage.setItem('viziProgress',JSON.stringify(p)); }catch(e){} }
+  // Keep the home screen's 30-minute "new session" timer fresh while the student is
+  // working in a stage, so Return to Vizi continues the lesson instead of showing the
+  // Guided Lesson / Just Talk choice (it only reappears after a real break).
+  function stampSession(){ const pr=getProgress(); pr.lastSessionAt=Date.now(); setProgress(pr); }
+  stampSession();
   function initSetupStudentName(){
     const el = document.getElementById('setupStudentName');
     const confirm = document.getElementById('setupStudentNameConfirm');
@@ -4262,6 +4267,7 @@
   // presses talk and picks up where they left off.
   document.getElementById('catReturnVizi').addEventListener('click', () => {
     stopTuner();
+    stampSession();
     window.location.href = 'index.html';
   });
 
