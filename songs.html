@@ -116,9 +116,10 @@
   @media(min-width:560px){.sc-row{flex-direction:row;align-items:center;justify-content:space-between}.sc-links{flex:none}}
 
   /* ── one shared Ultimate Guitar tip under the Find-a-Song cards ── */
-  .ug-tip{background:rgba(79,142,247,0.10);border:1.5px solid rgba(79,142,247,0.35);border-radius:12px;padding:.8rem 1rem;color:var(--text);font-size:.92rem;line-height:1.9}
-  .ug-tip b{color:var(--text);font-weight:700;display:block;margin-bottom:.1rem}
-  .ug-tip .tip-line{display:block}
+  .find-box{background:rgba(79,142,247,0.10);border:1.5px solid rgba(79,142,247,0.35);border-radius:12px;padding:.9rem 1rem .8rem;margin-bottom:1rem}
+  .find-box .section-head{margin-bottom:.6rem;padding-bottom:.6rem}
+  .find-tips{color:var(--text);font-size:.92rem;line-height:1.9}
+  .find-tips .tip-line{display:block}
   .ug-fake-pill{display:inline-block;background:#fff;color:#111;border:1.5px solid #c9c9c9;border-radius:999px;padding:1px 12px;font-weight:600;font-size:.85rem;line-height:1.5;margin:0 .15rem;vertical-align:middle}
   .ug-fake-play{display:inline-flex;align-items:center;justify-content:center;background:#111;color:#fff;border:1.5px solid #fff;border-radius:6px;width:34px;height:24px;font-size:.8rem;margin:0 .15rem;vertical-align:middle}
   /* ── 3-step numbered list (replaces the old single-line divider) ── */
@@ -287,10 +288,16 @@
 
   <div id="songGatedContent">
   <!-- ── Find a Song ── -->
-  <div class="section-head">
-    <span class="section-icon">🎸</span>
-    <span class="section-title">Find a Song</span>
-    <span class="section-tag">Ultimate Guitar · Free chord sheets</span>
+  <div class="find-box">
+    <div class="section-head">
+      <span class="section-icon">🎸</span>
+      <span class="section-title">Find a Song</span>
+      <span class="section-tag">Ultimate Guitar · Free chord sheets</span>
+    </div>
+    <div class="find-tips">
+      <span class="tip-line">For more complex songs, tap <span class="ug-fake-pill">Simplify</span> for more basic chords.</span>
+      <span class="tip-line">Tap <span class="ug-fake-play" aria-label="play button">▶</span> at the top to listen — no ads.</span>
+    </div>
   </div>
 
   <div class="ug-grid">
@@ -319,11 +326,6 @@
       </span>
       <span class="ug-card-arrow">Browse ↗</span>
     </a>
-    <div class="ug-tip">
-      <b>Tips once you're on Ultimate Guitar</b>
-      <span class="tip-line">Tap <span class="ug-fake-pill">Simplify</span> so the chords match what you're learning.</span>
-      <span class="tip-line">Tap <span class="ug-fake-play" aria-label="play button">▶</span> at the top to listen — no ads.</span>
-    </div>
   </div>
 
   <div class="divider-steps">
