@@ -1395,7 +1395,7 @@
   .cx-grid{display:grid;gap:5px;margin-bottom:4px;align-items:stretch;}
   .cx-colhdr{font-size:10.5px;letter-spacing:.4px;color:#b9c5d6;font-weight:700;text-align:center;text-transform:uppercase;padding-bottom:1px;align-self:end;line-height:1.05;}
   .cx-cell{padding:10px 2px;border-radius:8px;border:1.5px solid #46587a;background:#1a2030;color:#f2f6fb;font-size:13.5px;font-weight:700;cursor:pointer;text-align:center;}
-  .cx-cell.open{border-color:#7e93b3;background:#223047;color:#ffffff;}
+  .cx-cell.open{border-color:#ffffff;background:#f2f6fb;color:#10151f;}
   .cx-cell.fchord{border-color:#f0b64e;background:#33280f;color:#ffdd8e;}
   .cx-cell.barregreen{border-color:#8cc152;background:#1f2b14;color:#dcf3b4;}
   .cx-sub{font-size:9px;font-weight:600;vertical-align:sub;margin-left:1px;opacity:.85;}
@@ -3616,7 +3616,7 @@
 
   function cxRenderOpen(area){
     const leg=document.createElement('div'); leg.className='cx-legend';
-    leg.innerHTML='<span><span class="cx-sw" style="background:#1a2536;border:1px solid #5a6b85"></span>Open shape</span>'+
+    leg.innerHTML='<span><span class="cx-sw" style="background:#f2f6fb;border:1px solid #ffffff"></span>Open shape</span>'+
                   '<span><span class="cx-sw" style="background:#241d10;border:1px solid #e0a53d"></span>Basic (not true open)</span>'+
                   '<span><span class="cx-sw" style="background:#1f2b14;border:1px solid #8cc152"></span>Barre shape (small letter = shape used)</span>';
     area.appendChild(leg);
