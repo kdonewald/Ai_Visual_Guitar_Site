@@ -96,6 +96,25 @@
     background:rgba(79,142,247,0.10);padding:3px 8px;border-radius:4px;
   }
 
+  /* ── 3-chord song list (opens under the first Find-a-Song card) ── */
+  button.ug-card{width:100%;text-align:left;font:inherit;cursor:pointer}
+  .sc-panel{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:.4rem .9rem .9rem;margin-bottom:.25rem}
+  .sc-panel[hidden]{display:none}
+  .sc-group{font-family:'DM Mono',monospace;font-size:.82rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mid);margin:1rem 0 .3rem;display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap}
+  .sc-group b{color:var(--text);font-weight:700}
+  .sc-group span{text-transform:none;letter-spacing:0;font-family:'DM Sans',sans-serif;font-size:.8rem;color:var(--text-dim)}
+  .sc-row{display:flex;flex-direction:column;gap:.45rem;padding:.7rem 0;border-top:1px solid var(--border2)}
+  .sc-song{font-size:.95rem;font-weight:600;color:var(--text);display:block}
+  .sc-artist{font-size:.82rem;color:var(--text-mid);display:block;margin-bottom:.35rem}
+  .sc-chords{display:flex;flex-wrap:wrap;gap:.3rem}
+  .sc-chip{font-family:'DM Mono',monospace;font-size:.78rem;font-weight:700;padding:2px 8px;border-radius:5px;background:var(--surface2);border:1px solid rgba(255,255,255,0.22);color:var(--text)}
+  .sc-chip.f{border-color:var(--gold);color:var(--gold)}
+  .sc-links{display:flex;gap:.5rem;flex-wrap:wrap}
+  .sc-links a{font-family:'DM Mono',monospace;font-size:.8rem;letter-spacing:.05em;text-transform:uppercase;text-decoration:none;color:var(--blue);background:rgba(79,142,247,0.10);padding:5px 10px;border-radius:5px}
+  .sc-links a.listen{color:var(--text-mid);background:rgba(255,255,255,0.06)}
+  .sc-links a:hover{background:rgba(79,142,247,0.2)}
+  @media(min-width:560px){.sc-row{flex-direction:row;align-items:center;justify-content:space-between}.sc-links{flex:none}}
+
   /* ── 3-step numbered list (replaces the old single-line divider) ── */
   .divider-steps{ margin:2rem 0; }
   .divider-steps-item{
@@ -269,14 +288,15 @@
   </div>
 
   <div class="ug-grid">
-    <a class="ug-card" href="https://www.ultimate-guitar.com/explore?order=rating_desc&type[]=Chords&level[]=absolute_beginner" target="_blank" rel="noopener">
+    <button class="ug-card sc-toggle" id="threeChordToggle" type="button" aria-expanded="false" aria-controls="threeChordPanel">
       <span class="ug-card-icon">🌱</span>
       <span class="ug-card-body">
-        <span class="ug-card-name">Start Here · 3-4 Chords</span>
-        <span class="ug-card-desc">3-4 chords or fewer, slow tempos, no barre chords — perfect for day one. Best place to start.</span>
+        <span class="ug-card-name">Start Here · 3-Chord Songs</span>
+        <span class="ug-card-desc">Real 3-chord songs (plus a few with F) — no barre chords. Best place to start.</span>
       </span>
-      <span class="ug-card-arrow">Browse ↗</span>
-    </a>
+      <span class="ug-card-arrow" id="threeChordArrow">Songs ▾</span>
+    </button>
+    <div class="sc-panel" id="threeChordPanel" hidden></div>
     <a class="ug-card" href="https://www.ultimate-guitar.com/explore?order=hitviews&type[]=Chords&level[]=beginner" target="_blank" rel="noopener">
       <span class="ug-card-icon">🔥</span>
       <span class="ug-card-body">
@@ -411,6 +431,37 @@
   if(vgWatchedBtn){ vgWatchedBtn.addEventListener('click', songMarkWatched); }
   songApplyGate();
   if(ytClose){ ytClose.addEventListener('click', closeSongsVideo); }
+
+  // ── 3-chord song list: true 3-chord songs (open chords only), then 3 chords + F ──
+  const THREE_CHORD_SONGS = [{"t":"A Moment Like This","a":"Kelly Clarkson","c":["G","C","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/kelly-clarkson/a-moment-like-this-chords-64783","y":"https://www.youtube.com/watch?v=S7b8ADhadJU"},{"t":"A Thousand Miles","a":"Vanessa Carlton","c":["D","G","A"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/vanessa-carlton/a-thousand-miles-chords-653457","y":"https://www.youtube.com/watch?v=Cwkej79U3ek"},{"t":"Achy Breaky Heart","a":"Billy Ray Cyrus","c":["A","E"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/billy-ray-cyrus/achy-breaky-heart-chords-65435","y":"https://www.youtube.com/watch?v=byQIPdHMpjc"},{"t":"All My Friends Say","a":"Luke Bryan","c":["E","A","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/luke-bryan/all-my-friends-say-chords-732356","y":"https://www.youtube.com/watch?v=NOoNcDkJhsI"},{"t":"All Summer Long","a":"Kid Rock","c":["G","C","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/kid-rock/all-summer-long-chords-678910","y":"https://www.youtube.com/watch?v=aSkFygPCTwE"},{"t":"Angel","a":"Shaggy","c":["G","C","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/shaggy/angel-chords-2063","y":"https://www.youtube.com/watch?v=XWJrPzAUzAs"},{"t":"Bad Moon Rising","a":"Creedance Clearwater Revival","c":["D","G","A"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/creedence-clearwater-revival/bad-moon-rising-chords-15892","y":"https://www.youtube.com/watch?v=zUQiUFZ5RDw"},{"t":"Beat It","a":"Michael Jackson","c":["Em","C","D"],"g":"open","u":"https://www.e-chords.com/chords/michael-jackson/beat-it","y":"https://www.youtube.com/watch?v=oRdxUFDoQe0"},{"t":"Blowin In The Wind","a":"Bob Dylan","c":["G","C","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/bob-dylan/blowin-in-the-wind-chords-14835","y":"https://www.youtube.com/watch?v=MMFj8uDubsE"},{"t":"Born in the USA","a":"Bruce Springstein","c":["D","G"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/bruce-springsteen/born-in-the-usa-chords-148158","y":"https://www.youtube.com/watch?v=EPhWR4d3FJQ"},{"t":"Breakfast at Tiffany's","a":"Deep Blue Something","c":["D","G","A"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/deep-blue-something/breakfast-at-tiffanys-chords-192338","y":"https://www.youtube.com/watch?v=1ClCpfeIELw"},{"t":"Chasing Cars","a":"Snow Patrol","c":["G","C","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/snow-patrol/chasing-cars-chords-355425","y":"https://www.youtube.com/watch?v=GemKqzILV4w"},{"t":"Cheerleader","a":"OMI","c":["D","G","A"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/omi/cheerleader-chords-1708843","y":"https://www.youtube.com/watch?v=jGflUbPQfW8"},{"t":"Chicken Fried","a":"Zac Brown Band","c":["G","C","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/zac-brown-band/chicken-fried-chords-778654","y":"https://www.youtube.com/watch?v=e4ujS1er1r0"},{"t":"Glory","a":"Bruce Springstein","c":["E","A","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/bruce-springsteen/glory-days-chords-792494","y":"https://www.youtube.com/watch?v=6vQpW9XRiyM"},{"t":"Johnny B. Goode","a":"Chuck Berry","c":["E","A","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/chuck-berry/johnny-b-goode-chords-61918","y":"https://www.youtube.com/watch?v=Uf4rxCB4lys"},{"t":"Kiss the Girl","a":"Brent Morgan","c":["G","C","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/brent-morgan/kiss-the-girl-chords-3864071","y":"https://www.youtube.com/watch?v=iEUBOqD5lqI"},{"t":"Leavin' on a Jet Plane","a":"John Denver","c":["G","C","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/john-denver/leaving-on-a-jet-plane-chords-32979","y":"https://www.youtube.com/watch?v=SneCkM0bJq0"},{"t":"Let Me Love You","a":"Ne-Yo","c":["Am","Em","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/mario/let-me-love-you-chords-1468931","y":"https://www.youtube.com/watch?v=crrOl0egI00"},{"t":"Levitating","a":"Dua Lipa","c":["Am","Em","Dm"],"g":"open","u":"https://chordseasy.com/song/33266/levitating","y":"https://www.youtube.com/watch?v=TUVcZfQe-Kw"},{"t":"Love Me Do","a":"The Beatles","c":["G","C"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/the-beatles/love-me-do-chords-17428","y":"https://www.youtube.com/watch?v=0pGOFX1D_jg"},{"t":"Marry You","a":"Bruno Mars","c":["D","Em","G"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/bruno-mars/marry-you-chords-1009718","y":"https://www.youtube.com/watch?v=dElRVQFqj-k"},{"t":"Mr. Tambourine Man","a":"Bob Dylan","c":["D","G","A"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/bob-dylan/mr-tambourine-man-chords-1092233","y":"https://www.youtube.com/watch?v=oecX_1pqxk0"},{"t":"One Margarita","a":"Luke Bryan","c":["A","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/luke-bryan/one-margarita-chords-3024872","y":"https://www.youtube.com/watch?v=YEq-cvq_cK4"},{"t":"Ring of Fire","a":"Johnny Cash","c":["G","C","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/johnny-cash/ring-of-fire-chords-63352","y":"https://www.youtube.com/watch?v=1WaV2x8GXj0"},{"t":"Royals","a":"Lorde","c":["G","C","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/lorde/royals-chords-1418611","y":"https://www.youtube.com/watch?v=nlcIKh6sBtc"},{"t":"Shake It Off","a":"Taylor Swift","c":["Am","C","G"],"g":"open","u":"https://chordseasy.com/song/27426/shake-it-off/?s=1","y":"https://www.youtube.com/watch?v=nfWlot6h_JM"},{"t":"Start Me Up","a":"The Rolling Stones","c":["D","G","A"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/the-rolling-stones/start-me-up-chords-497581","y":"https://www.youtube.com/watch?v=SGyOaCXr8Lw"},{"t":"Sweet Home Alabama","a":"Lynyrd Skynyrd","c":["G","C","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/lynyrd-skynyrd/sweet-home-alabama-chords-1053582","y":"https://www.youtube.com/watch?v=-35W_FWCT9Q"},{"t":"The Gambler","a":"Kenny Rogers","c":["G","C","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/kenny-rogers/the-gambler-chords-627779","y":"https://www.youtube.com/watch?v=7hx4gdlfamo"},{"t":"The Good Stuff","a":"Kenny Chesney","c":["G","C","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/kenny-chesney/good-stuff-chords-201407","y":"https://www.youtube.com/watch?v=lYQZJ9NUzYU"},{"t":"The Joker","a":"Steve Miller Band","c":["G","C","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/steve-miller-band/the-joker-chords-84084","y":"https://www.youtube.com/watch?v=dV3AziKTBUo"},{"t":"The Lion Sleeps Tonight","a":"The Tokens","c":["D","G","A"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/the-tokens/the-lion-sleeps-tonight-chords-1074694","y":"https://www.youtube.com/watch?v=OQlByoPdG6c"},{"t":"Three Little Birds","a":"Bob Marley","c":["E","A","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/bob-marley/three-little-birds-chords-166605","y":"https://www.youtube.com/watch?v=HNBCVM4KbUM"},{"t":"TNT","a":"ACDC","c":["E","G","A"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/acdc/tnt-chords-753749","y":"https://www.youtube.com/watch?v=NhsK5WExrnE"},{"t":"Toes","a":"Zac Brown Band","c":["E","A","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/zac-brown-band/toes-chords-3329225","y":"https://www.youtube.com/watch?v=kD-unyd10tM"},{"t":"Twist & Shout","a":"The Beatles","c":["D","G","A"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/the-beatles/twist-and-shout-chords-122350","y":"https://www.youtube.com/watch?v=b-VAxGJdJeQ"},{"t":"Werewolves of London","a":"Warren Zevon","c":["G","C","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/warren-zevon/werewolves-of-london-chords-1088946","y":"https://www.youtube.com/watch?v=qae25976UgA"},{"t":"What About Us","a":"P!nk","c":["Em","C","G"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/pnk/what-about-us-chords-2105955","y":"https://www.youtube.com/watch?v=ClU3fctbGls"},{"t":"What's Up","a":"4 Non Blondes","c":["G","Am","C"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/4-non-blondes/whats-up-chords-349210","y":"https://www.youtube.com/watch?v=6NXnxTNIWkc"},{"t":"When the Sun Goes Down","a":"Kenny Chesney","c":["E","A","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/kenny-chesney/when-the-sun-goes-down-chords-134771","y":"https://www.youtube.com/watch?v=eGLdbpmXrbQ"},{"t":"You Are My Sunshine","a":"Johnny Cash","c":["E","A","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/johnny-cash/you-are-my-sunshine-chords-1130613","y":"https://www.youtube.com/watch?v=5AtvXdmPe3A"},{"t":"You Need to Calm Down","a":"Taylor Swift","c":["D","G","A"],"g":"open","u":"https://chordseasy.com/song/27938/you-need-to-calm-down/?s=1","y":"https://www.youtube.com/watch?v=Dkk9gvTmCXY"},{"t":"You Shook Me All Night Long","a":"ACDC","c":["G","C","D"],"g":"open","u":"https://tabs.ultimate-guitar.com/tab/acdc/you-shook-me-all-night-long-chords-621851","y":"https://www.youtube.com/watch?v=Lo2qQmj0_h4"},{"t":"All The Small Things","a":"Blink-182","c":["C","G","F"],"g":"f","u":"https://tabs.ultimate-guitar.com/tab/blink-182/all-the-small-things-chords-118610","y":"https://www.youtube.com/watch?v=9Ht5RZpzPqw"},{"t":"All To Myself","a":"Dan + Shay","c":["Am","F","C"],"g":"f","u":"https://tabs.ultimate-guitar.com/tab/dan-shay/all-to-myself-chords-2379953","y":"https://www.youtube.com/watch?v=9EV0H4-e-DE"},{"t":"Can't Feel My Face","a":"The Weeknd","c":["G","F","Am"],"g":"f","u":"https://tabs.ultimate-guitar.com/tab/the-weeknd/cant-feel-my-face-chords-1744791","y":"https://www.youtube.com/watch?v=KEI4qSrkPAs"},{"t":"Cool","a":"The Jonas Brothers","c":["C","F","G"],"g":"f","u":"https://tabs.ultimate-guitar.com/tab/jonas-brothers/cool-chords-2654544","y":"https://www.youtube.com/watch?v=8_JbZvHc92U"},{"t":"Good Vibes","a":"Chris Janson","c":["C","F","G"],"g":"f","u":"https://tabs.ultimate-guitar.com/tab/chris-janson/good-vibes-chords-2599383","y":"https://www.youtube.com/watch?v=hNRJjDm2sQE"},{"t":"Hound Dog","a":"Elvis Presley","c":["C","F","G"],"g":"f","u":"https://tabs.ultimate-guitar.com/tab/elvis-presley/hound-dog-chords-346314","y":"https://www.youtube.com/watch?v=cYwDUonrGFQ"},{"t":"La Bamba","a":"Ritchie Valens","c":["C","F","G"],"g":"f","u":"https://tabs.ultimate-guitar.com/tab/ritchie-valens/la-bamba-chords-1048599","y":"https://www.youtube.com/watch?v=BycLmWI97Nc"},{"t":"Somebody that I Used to Know","a":"Gotye","c":["G","F","Am"],"g":"f","u":"https://tabs.ultimate-guitar.com/tab/gotye/somebody-that-i-used-to-know-chords-1094597","y":"https://www.youtube.com/watch?v=8UVNT4wvIGY"},{"t":"Stay With Me","a":"Sam Smith","c":["Am","F","C"],"g":"f","u":"https://tabs.ultimate-guitar.com/tab/sam-smith/stay-with-me-chords-1473600","y":"https://www.youtube.com/watch?v=pB-5XG-DbAA"}];
+  (function(){
+    var btn=document.getElementById('threeChordToggle'), panel=document.getElementById('threeChordPanel'), arrow=document.getElementById('threeChordArrow');
+    if(!btn||!panel) return;
+    function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function group(title, note, g){
+      var list=THREE_CHORD_SONGS.filter(function(s){ return s.g===g; });
+      var h='<div class="sc-group"><b>'+title+' ('+list.length+')</b><span>'+note+'</span></div>';
+      list.forEach(function(s){
+        h+='<div class="sc-row"><div><span class="sc-song">'+esc(s.t)+'</span><span class="sc-artist">'+esc(s.a)+'</span><span class="sc-chords">'+
+          s.c.map(function(c){ return '<span class="sc-chip'+(c==='F'?' f':'')+'">'+esc(c)+'</span>'; }).join('')+'</span></div>'+
+          '<div class="sc-links"><a href="'+esc(s.u)+'" target="_blank" rel="noopener">Chords &amp; Lyrics ↗</a>'+
+          (s.y?'<a class="listen" href="'+esc(s.y)+'" target="_blank" rel="noopener">Listen ↗</a>':'')+'</div></div>';
+      });
+      return h;
+    }
+    var built=false;
+    btn.addEventListener('click', function(){
+      var open=panel.hasAttribute('hidden');
+      if(open && !built){
+        panel.innerHTML=group('Just 3 chords','Open chords only — the easiest place to begin','open')+
+                        group('3 chords + F','Same idea, with the F chord (shown in gold)','f');
+        built=true;
+      }
+      if(open) panel.removeAttribute('hidden'); else panel.setAttribute('hidden','');
+      btn.setAttribute('aria-expanded', open?'true':'false');
+      if(arrow) arrow.textContent = open ? 'Hide ▴' : 'Songs ▾';
+    });
+  })();
 
   // Return to Vizi — back to the home talk screen (conversation is preserved
   // server-side). For a student who opened the Song stage but isn't loading a
