@@ -1397,6 +1397,8 @@
   .cx-cell{padding:10px 2px;border-radius:8px;border:1.5px solid #46587a;background:#1a2030;color:#f2f6fb;font-size:13.5px;font-weight:700;cursor:pointer;text-align:center;}
   .cx-cell.open{border-color:#7e93b3;background:#223047;color:#ffffff;}
   .cx-cell.fchord{border-color:#f0b64e;background:#33280f;color:#ffdd8e;}
+  .cx-cell.barregreen{border-color:#8cc152;background:#1f2b14;color:#dcf3b4;}
+  .cx-sub{font-size:9px;font-weight:600;vertical-align:sub;margin-left:1px;opacity:.85;}
   .cx-cell.barrecolor{border-color:#5f88d0;background:#1a2740;color:#bcd6ff;}
   .cx-cell.greyed{opacity:.72;cursor:default;border-style:dashed;border-color:#53617a;color:#b5c0d0;background:#171c26;}
   .cx-cell:not(.greyed):active{transform:scale(.96);}
@@ -3601,8 +3603,9 @@
     if(cxSelEl) cxSelEl.innerHTML='Demo: <span class="cx-lit">'+name+'</span> climbing the neck — Reset to stop';
   }
   function cxRootLabel(g, root){ const l=document.createElement('div'); l.className='cx-cell cx-rootlabel'; l.textContent=root; g.appendChild(l); }
-  function cxCellBtn(text, cls, cmd, label){
+  function cxCellBtn(text, cls, cmd, label, sub){
     const b=document.createElement('button'); b.className='cx-cell'+(cls?' '+cls:''); b.textContent=text;
+    if(sub){ const sb=document.createElement('span'); sb.className='cx-sub'; sb.textContent=sub; b.appendChild(sb); }
     if(cls==='greyed'){ b.disabled=true; return b; }
     b.dataset.cmd=cmd;
     // Keep the lit chord highlighted across re-renders too.
@@ -3615,19 +3618,28 @@
     const leg=document.createElement('div'); leg.className='cx-legend';
     leg.innerHTML='<span><span class="cx-sw" style="background:#1a2536;border:1px solid #5a6b85"></span>Open shape</span>'+
                   '<span><span class="cx-sw" style="background:#241d10;border:1px solid #e0a53d"></span>Basic (not true open)</span>'+
-                  '<span><span class="cx-sw" style="background:#12151c;border:1px dashed #33415a"></span>Not available</span>';
+                  '<span><span class="cx-sw" style="background:#1f2b14;border:1px solid #8cc152"></span>Barre shape (small letter = shape used)</span>';
     area.appendChild(leg);
     const g=cxGrid(area, ['Major','Minor'], 'minmax(38px,0.7fr) 1fr 1fr');
+    // Roots with no open shape use the lowest-position E-shape or A-shape barre chord.
+    // The firmware's "<E|A> SHAPE <root>[m]" command handles every root, sharps included.
+    function cxLowestBarreCell(root, minor){
+      const pc=CX_NOTE_PC[root];
+      const shape = cxShapeShift('E',pc) <= cxShapeShift('A',pc) ? 'E' : 'A';
+      const cmd=shape+' SHAPE '+root+(minor?'m':'');
+      if(!cxShapeDiagram(cmd)) return cxCellBtn(root+(minor?'m':''),'greyed',null,null);
+      return cxCellBtn(root+(minor?'m':''),'barregreen',cmd,root+(minor?' Minor':' Major')+' \u2014 '+shape+'-shape barre',shape);
+    }
     CX_ALL_ROOTS.forEach(function(root){
       cxRootLabel(g, root);
       if(CX_OPEN_MAJ.indexOf(root)>=0) g.appendChild(cxCellBtn(root,'open','CHORD '+root,'Open '+root+' Major'));
       else if(root==='F')              g.appendChild(cxCellBtn('F','fchord','CHORD F','F Major'));
-      else                             g.appendChild(cxCellBtn(root,'greyed',null,null));
+      else                             g.appendChild(cxLowestBarreCell(root,false));
       if(CX_OPEN_MIN.indexOf(root)>=0) g.appendChild(cxCellBtn(root+'m','open','CHORD '+root+'m','Open '+root+' Minor'));
-      else                             g.appendChild(cxCellBtn(root+'m','greyed',null,null));
+      else                             g.appendChild(cxLowestBarreCell(root,true));
     });
     const n=document.createElement('div'); n.className='cx-note';
-    n.textContent="F isn't a true open chord, but it's a must-know basic — shown in gold. Roots without an open shape are greyed; switch to Barre to play those.";
+    n.textContent="F isn't a true open chord, but it's a must-know basic — shown in gold. Green chords are barre shapes, played at the lowest spot on the neck; the small letter shows whether it's an E-shape or A-shape.";
     area.appendChild(n);
   }
 
