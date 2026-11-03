@@ -1398,6 +1398,15 @@
   .cx-cell.open{border-color:#ffffff;background:#f2f6fb;color:#10151f;}
   .cx-cell.fchord{border-color:#f0b64e;background:#33280f;color:#ffdd8e;}
   .cx-cell.barregreen{border-color:#8cc152;background:#1f2b14;color:#dcf3b4;}
+  .cx-cell.songdot{position:relative;}
+  .cx-cell.songdot::after{content:'';position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:#ff5d8f;box-shadow:0 0 0 1px rgba(0,0,0,.45);}
+  .cx-assign{margin:8px 0 6px;padding:8px 10px;border:1px solid #ff5d8f;border-radius:10px;background:rgba(255,93,143,.08);}
+  .cx-assign-h{font-size:12px;font-weight:700;color:#ffd0df;margin-bottom:6px;line-height:1.3;}
+  .cx-assign-h .d{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff5d8f;margin-right:5px;vertical-align:middle;}
+  .cx-assign-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:5px;}
+  .cx-assign-lbl{font-size:11px;font-weight:700;color:#cfd6e4;min-width:50px;}
+  .cx-assign-chip{border:1px solid #ff5d8f;background:#1a1220;color:#fff;border-radius:999px;padding:6px 11px;font-size:13px;font-weight:700;cursor:pointer;min-height:34px;}
+  .cx-assign-chip:active{background:#ff5d8f;color:#10151f;}
   .cx-sub{font-size:9px;font-weight:600;vertical-align:sub;margin-left:1px;opacity:.85;}
   .cx-cell.barrecolor{border-color:#5f88d0;background:#1a2740;color:#bcd6ff;}
   .cx-cell.greyed{opacity:.72;cursor:default;border-style:dashed;border-color:#53617a;color:#b5c0d0;background:#171c26;}
@@ -3467,6 +3476,8 @@
 
     exList.appendChild(bar);
 
+    const asg=cxAssignRow(); if(asg) exList.appendChild(asg);
+
     cxSelEl=document.createElement('div'); cxSelEl.className='cx-sel';
     cxSelEl.textContent = cpProgMode ? 'Build Progression is on — tap chords in the order you want to play them.' : 'Tap a chord to view its diagram.';
     exList.appendChild(cxSelEl);
@@ -3603,11 +3614,70 @@
     if(cxSelEl) cxSelEl.innerHTML='Demo: <span class="cx-lit">'+name+'</span> climbing the neck — Reset to stop';
   }
   function cxRootLabel(g, root){ const l=document.createElement('div'); l.className='cx-cell cx-rootlabel'; l.textContent=root; g.appendChild(l); }
+  // ── Song assignment (from Vizi's song intro, saved by vizi.html) ──
+  let cxAssign=null;
+  try{ cxAssign=JSON.parse(sessionStorage.getItem('viziAssignment')||'null'); }catch(e){ cxAssign=null; }
+  function cxAssignCmd(name){
+    const m=String(name).match(/^([A-G]#?)(maj7|m7|m6|m|7|6)?(?:\/([A-G]#?))?$/);
+    if(!m) return null;
+    const root=m[1], q=m[2]||'';
+    if(m[3]) return 'CHORD '+name;
+    if(q===''){
+      if(CX_OPEN_MAJ.indexOf(root)>=0 || root==='F') return 'CHORD '+root;
+      return cxBarreCmd(root,false);
+    }
+    if(q==='m'){
+      if(CX_OPEN_MIN.indexOf(root)>=0) return 'CHORD '+root+'m';
+      return cxBarreCmd(root,true);
+    }
+    if(q==='7')   return OPEN_VOICINGS[root+'7']   || ('E SHAPE '+root+'7');
+    if(q==='m7')  return OPEN_VOICINGS[root+'min7']|| ('E SHAPE '+root+'min7');
+    if(q==='maj7')return 'E SHAPE '+root+'maj7';
+    if(q==='6')   return 'CHORD '+root+'6';
+    if(q==='m6')  return 'CHORD '+root+'m6';
+    return null;
+  }
+  function cxBarreCmd(root, minor){
+    const pc=CX_NOTE_PC[root];
+    const shape = cxShapeShift('E',pc) <= cxShapeShift('A',pc) ? 'E' : 'A';
+    return shape+' SHAPE '+root+(minor?'m':'');
+  }
+  function cxAssignDots(){
+    const set={};
+    if(cxAssign && cxAssign.chords) cxAssign.chords.forEach(function(c){ const cmd=cxAssignCmd(c.name); if(cmd) set[cmd]=true; });
+    return set;
+  }
+  function cxAssignRow(){
+    if(!cxAssign || !cxAssign.chords || !cxAssign.chords.length) return null;
+    const box=document.createElement('div'); box.className='cx-assign';
+    const h=document.createElement('div'); h.className='cx-assign-h';
+    h.innerHTML='<span class="d"></span>'+(cxAssign.title?cxAssign.title+' — ':'')+'dotted chords are the ones to practice';
+    box.appendChild(h);
+    const ord=['1st','2nd','3rd'];
+    (cxAssign.progressions||[]).forEach(function(prog,i){
+      const row=document.createElement('div'); row.className='cx-assign-row';
+      const lbl=document.createElement('span'); lbl.className='cx-assign-lbl'; lbl.textContent=ord[i]+' prog.';
+      row.appendChild(lbl);
+      const chip=document.createElement('button'); chip.className='cx-assign-chip';
+      chip.textContent=prog.join(' → ');
+      chip.addEventListener('click', function(){
+        cpProgression.length=0;
+        prog.forEach(function(n){ const cmd=cxAssignCmd(n); if(cmd) cpProgression.push({label:n, cmd:cmd, type:'chord'}); });
+        cpProgMode=true; cpLastChord=null;
+        renderChordsPanel();
+        if(cxSelEl) cxSelEl.innerHTML='Loaded <span class="cx-lit">'+prog.join(' → ')+'</span> — tap Light to play it';
+      });
+      row.appendChild(chip);
+      box.appendChild(row);
+    });
+    return box;
+  }
   function cxCellBtn(text, cls, cmd, label, sub){
     const b=document.createElement('button'); b.className='cx-cell'+(cls?' '+cls:''); b.textContent=text;
     if(sub){ const sb=document.createElement('span'); sb.className='cx-sub'; sb.textContent=sub; b.appendChild(sb); }
     if(cls==='greyed'){ b.disabled=true; return b; }
     b.dataset.cmd=cmd;
+    if(cxAssign && cxAssignDots()[cmd]) b.classList.add('songdot');
     // Keep the lit chord highlighted across re-renders too.
     if(!cpProgMode && cpLastChord && cpLastChord.cmd===cmd) b.classList.add('selected');
     b.addEventListener('click', ()=>cxCommit(label, cmd, b));

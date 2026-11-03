@@ -847,6 +847,11 @@
 
         if (promptData.strumPattern) showStrumPanel(promptData.strumPattern);
 
+        // Hand the song's practice assignment to the Chords stage (chords + progressions).
+        try {
+          if (promptData.assignment) sessionStorage.setItem('viziAssignment', JSON.stringify(promptData.assignment));
+        } catch(e){}
+
         if (promptData.ready && promptData.message){
           currentMode = 'song';
           setBtn('thinking');
