@@ -1829,8 +1829,18 @@
   // Keep the home screen's 30-minute "new session" timer fresh while the student is
   // working in a stage, so Return to Vizi continues the lesson instead of showing the
   // Guided Lesson / Just Talk choice (it only reappears after a real break).
-  function stampSession(){ const pr=getProgress(); pr.lastSessionAt=Date.now(); setProgress(pr); }
-  stampSession();
+  // Exception: Tuning & Setup visited BEFORE the student has picked Guided Lesson / Just Talk
+  // (index.html sets viziChoiceMade when they do). Tuning is pre-lesson setup, so it must not
+  // mark the session active — otherwise Return to Vizi skips the choice screen.
+  function viziChoiceMade(){ try{ return sessionStorage.getItem('viziChoiceMade')==='1'; }catch(e){ return true; } }
+  const startsOnTuning = (function(){
+    try{ return (sessionStorage.getItem('viziReturnStage') || (location.hash||'').slice(1)) === 'tuning'; }catch(e){ return false; }
+  })();
+  function stampSession(skipIfNoChoice){
+    if(skipIfNoChoice && !viziChoiceMade()) return;
+    const pr=getProgress(); pr.lastSessionAt=Date.now(); setProgress(pr);
+  }
+  stampSession(startsOnTuning);
   function initSetupStudentName(){
     const el = document.getElementById('setupStudentName');
     const confirm = document.getElementById('setupStudentNameConfirm');
@@ -4267,7 +4277,7 @@
   // presses talk and picks up where they left off.
   document.getElementById('catReturnVizi').addEventListener('click', () => {
     stopTuner();
-    stampSession();
+    stampSession(!!(activeStage && activeStage.id === 'tuning'));
     window.location.href = 'index.html';
   });
 

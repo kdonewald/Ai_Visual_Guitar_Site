@@ -828,18 +828,19 @@
     }
     guided.addEventListener('click',showGuided);
     if(back) back.addEventListener('click',showChoices);
+    function markChoiceMade(){ try{ sessionStorage.setItem('viziChoiceMade','1'); }catch(e){} }
     talkChoice.addEventListener('click',()=>{
-      stamp();choice.classList.remove('show');strip.classList.remove('show','guided-open');playViziOpener(true);
+      markChoiceMade();stamp();choice.classList.remove('show');strip.classList.remove('show','guided-open');playViziOpener(true);
     });
     ready.addEventListener('click',()=>{
-      stamp();strip.classList.remove('show','guided-open');choice.classList.remove('show');playViziOpener(false);
+      markChoiceMade();stamp();strip.classList.remove('show','guided-open');choice.classList.remove('show');playViziOpener(false);
     });
     const newSes=document.getElementById('newSession');
     if(newSes) newSes.addEventListener('click',()=>{
       try{const pr=read();delete pr.lastSessionAt;write(pr);}catch(e){} location.reload();
     });
     if(isDue()) showChoices();
-    else { stamp(); if(newSes)newSes.style.display=''; }
+    else { markChoiceMade(); stamp(); if(newSes)newSes.style.display=''; }
   })();
 
   // Mid-session return to the simple Guided Lesson / Just Talk choice.
