@@ -4933,6 +4933,10 @@
         .tb-action-btn.clr{background:transparent;color:var(--text-mid);border:1.5px solid var(--border);font-size:.82rem;}
         .tb-action-btn.clr:hover{border-color:var(--red);color:var(--red);}
         .tb-clr-row{display:flex;gap:.4rem;margin-bottom:.75rem;}
+        .tb-legend{font-family:'DM Sans',sans-serif;font-size:.82rem;line-height:1.5;color:rgba(255,255,255,.72);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:9px;padding:.6rem .8rem;margin-bottom:.8rem;}
+        .tb-legend b{color:var(--gold);font-weight:700;}
+        .tb-lock-btn{font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;padding:.4rem .9rem;border-radius:20px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.65);cursor:pointer;transition:all .18s;margin-bottom:.75rem;}
+        .tb-lock-btn.locked{border-color:var(--gold);color:var(--gold);background:rgba(232,160,32,.14);}
       `;
       document.head.appendChild(st);
     }
@@ -4945,16 +4949,32 @@
     topRow.innerHTML='<span class="tb-title">Tab Builder</span>';
     wrap.appendChild(topRow);
 
+    // How-to-read legend
+    const legend=document.createElement('div'); legend.className='tb-legend';
+    legend.innerHTML='<b>How to read this:</b> Each row is a string. The top row is the thin high <b>e</b> string and the bottom row is the thick low <b>E</b>. A number is the fret to press, and <b>0</b> means play the string open. Read left to right, one column per beat. Numbers stacked in the same column are played <b>together</b>.';
+    wrap.appendChild(legend);
+
     // Preset buttons
     const presetRow=document.createElement('div'); presetRow.className='tb-preset-row';
     [{label:'Single',cls:'',desc:'An 8-note lick, one note per beat'},{label:'Double',cls:'',desc:'The same kind of lick with double stops on the strong beats'},{label:'Triple',cls:'',desc:'Lick with three-note stops at the start of each bar and on the last note'},{label:'Custom',cls:'custom-btn',desc:'Build your own'}]
     .forEach((pd,pi)=>{
       const pb=document.createElement('button'); pb.className='tb-preset-btn '+(pd.cls||'');
       pb.textContent=pd.label; pb.title=pd.desc;
-      pb.addEventListener('click',()=>{ if(pi===3){ clearAll(); status.textContent='Custom — tap cells to enter fret numbers'; return; } generatePreset(pi); });
+      pb.addEventListener('click',()=>{ if(lickLocked){ status.textContent='This lick is locked. Tap the lock button to unlock it, then pick a new one.'; return; } if(pi===3){ clearAll(); status.textContent='Custom — tap cells to enter fret numbers'; return; } generatePreset(pi); });
       presetRow.appendChild(pb);
     });
     wrap.appendChild(presetRow);
+
+    // Lock: keeps the current lick so a stray tap on a preset can't replace it
+    let lickLocked=false;
+    const lockBtn=document.createElement('button'); lockBtn.className='tb-lock-btn'; lockBtn.textContent='🔓 Lock this lick';
+    lockBtn.addEventListener('click',()=>{
+      lickLocked=!lickLocked;
+      lockBtn.classList.toggle('locked',lickLocked);
+      lockBtn.textContent=lickLocked?'🔒 Lick locked — tap to unlock':'🔓 Lock this lick';
+      status.textContent=lickLocked?'Locked. Tap Show as many times as you like to replay it.':'Unlocked — tap a preset for a new lick';
+    });
+    wrap.appendChild(lockBtn);
 
     // Grid
     const gridWrap=document.createElement('div'); gridWrap.className='tb-grid-wrap';
@@ -5058,7 +5078,7 @@
     // ── Melodic lick presets ───────────────────────────────
     // A minor-pentatonic "box 1" shape laid out as a ladder, low pitch → high pitch.
     // Two notes per string; ladder index i lives on string 5 - floor(i/2).
-    // Moving the shape up/down the neck (base fret 0–10) changes the key, so every lick stays in tune with itself.
+    // Moving the shape up/down the neck (base fret 0–5 here) changes the key, so every lick stays in tune with itself.
     const BOX_OFFS=[[0,3],[0,2],[0,2],[0,2],[0,3],[0,3]]; // E, A, D, G, B, e (offsets from base fret)
     function ladderPos(i,base){ const row=Math.floor(i/2); return {s:5-row, f:base+BOX_OFFS[row][i%2]}; }
 
@@ -5086,7 +5106,7 @@
 
     function generatePreset(type){
       clearAll();
-      const base=Math.floor(Math.random()*11);              // base fret 0–10 → key
+      const base=Math.floor(Math.random()*6);               // base fret 0–5 → key, keeps every note within frets 0–8
       let lick=randFrom(LICKS).slice();
       if(Math.max(...lick)+5<=11 && Math.min(...lick)<5 && Math.random()>0.5) lick=lick.map(n=>n+5); // octave up
       // How many notes sound on each beat
@@ -5099,7 +5119,7 @@
         for(let s=0;s<6;s++) updateCell(m,b,s);
       });
       const key=fretToNote('Le',base);
-      status.textContent=['Single-note','Double-stop','Triple-stop'][type]+' lick in '+key+' minor pentatonic — tap again for a new one';
+      status.textContent=['Single-note','Double-stop','Triple-stop'][type]+' lick in '+key+' minor pentatonic. Tap Show to play it, or Lock to keep it.';
     }
 
     // ── Show: hand the whole sequence to the fretboard, no JS timing ──
