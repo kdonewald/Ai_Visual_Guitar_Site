@@ -306,7 +306,7 @@
      collapsed Resume / Progress drawer for the less-frequently-used controls. */
   .fretboard-section{padding:0 .8rem .35rem;margin-top:.35rem;}
   .fretboard{padding:.5rem .55rem .45rem;border-radius:12px;}
-  .frets-row{gap:.32rem;min-width:560px;}
+  .frets-row{gap:.32rem;min-width:630px;}
   .fret-stage{min-width:62px;border-radius:7px;padding:.32rem .25rem .36rem;}
   .fret-num{font-size:.7rem;margin-bottom:.12rem;}
   .fret-led{width:6px;height:6px;margin:0 auto .18rem;}
@@ -362,7 +362,7 @@
     .nav-link{font-size:.78rem;padding:4px 9px;}
     .logo-name{font-size:.82rem;}
     .stage{width:158px;height:158px;}
-    .frets-row{min-width:520px;}
+    .frets-row{min-width:590px;}
     .fret-stage{min-width:58px;}
     .fret-label{font-size:.74rem;}
     .progress-drawer{width:calc(100% - 1.2rem);}
@@ -508,6 +508,7 @@
     { id:'song',         num:'06', label:'Play a Song',          song:true  },
     { id:'soloing',      num:'07', label:'Soloing',     song:false },
     { id:'tab',          num:'08', label:'Read & Play Tab',      song:false },
+    { id:'voice',        num:'09', label:'Voice Training',       song:false, page:'voice.html' },
   ];
 
   const fretsRow = document.getElementById('fretsRow');
@@ -516,6 +517,7 @@
     el.className = 'fret-stage' + (s.song ? ' song-stage' : '');
     el.innerHTML = `<div class="fret-num" style="color:var(--gold);font-weight:800">${s.num}</div><div class="fret-led"></div><div class="fret-label">${s.label}</div>`;
     el.addEventListener('click', () => {
+      if (s.page) { window.location.href = s.page; return; }
       if (s.song) { window.location.href = 'songs.html'; return; }
       window.location.href = `lessons.html#${s.id}`;
     });
