@@ -4935,7 +4935,8 @@
         .tb-clr-row{display:flex;gap:.4rem;margin-bottom:.75rem;}
         .tb-legend{font-family:'DM Sans',sans-serif;font-size:.82rem;line-height:1.5;color:rgba(255,255,255,.72);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:9px;padding:.6rem .8rem;margin-bottom:.8rem;}
         .tb-legend b{color:var(--gold);font-weight:700;}
-        .tb-lock-btn{font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;padding:.4rem .9rem;border-radius:20px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.65);cursor:pointer;transition:all .18s;margin-bottom:.75rem;}
+        .tb-lock-btn{font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;padding:.4rem .9rem;border-radius:20px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.65);cursor:pointer;transition:all .18s;}
+        .tb-lock-note{font-family:'DM Sans',sans-serif;font-size:.78rem;line-height:1.45;color:rgba(255,255,255,.55);margin:.4rem 0 .8rem;}
         .tb-lock-btn.locked{border-color:var(--gold);color:var(--gold);background:rgba(232,160,32,.14);}
       `;
       document.head.appendChild(st);
@@ -4975,6 +4976,9 @@
       status.textContent=lickLocked?'Locked. Tap Show as many times as you like to replay it.':'Unlocked — tap a preset for a new lick';
     });
     wrap.appendChild(lockBtn);
+    const lockNote=document.createElement('div'); lockNote.className='tb-lock-note';
+    lockNote.textContent='Lock keeps this lick on screen while you practice it. Tap Show to replay it as often as you like. Unlock when you want a new one.';
+    wrap.appendChild(lockNote);
 
     // Grid
     const gridWrap=document.createElement('div'); gridWrap.className='tb-grid-wrap';
