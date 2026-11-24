@@ -157,7 +157,7 @@ const OCT=[{o:2,n:'Low',r:'65–130 Hz'},{o:3,n:'Medium',r:'130–260 Hz'},{o:4,
 const $=id=>document.getElementById(id);
 const st={oct:3,root:0,scale:'chrom',tol:25,forg:true,target:null,passed:new Set()};
 const midiHz=m=>440*Math.pow(2,(m-69)/12);
-const midiName=m=>NOTES[((m%12)+12)%12]+(Math.floor(m/12)-1);
+const midiName=m=>NOTES[((m%12)+12)%12]; // letter only — the Low/Medium/High buttons carry the octave
 const rootMidi=()=>12*(st.oct+1)+st.root;
 const scaleMidis=()=>SCALES[st.scale].iv.map(i=>rootMidi()+i);
 
