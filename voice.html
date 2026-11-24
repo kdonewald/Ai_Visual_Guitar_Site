@@ -84,7 +84,7 @@ h1{font-family:'Playfair Display',serif;font-weight:900;font-size:1.7rem;margin:
   <summary>How to use it</summary>
   <ol>
     <li>Pick an octave that feels comfortable: Low, Medium or High.</li>
-    <li>Choose a key and a scale. (Choose <b>All notes</b> to start on any note you like.)</li>
+    <li><b>Chromatic</b> is set for you. It lists every note, so you can learn them all. Pick a <b>Start note</b> to begin anywhere. Want a specific scale? Choose Major, Minor or Pentatonic instead.</li>
     <li>Tap a note to hear it. Allow the microphone when your phone asks.</li>
     <li>Sing the note you heard. If the needle leans left you're flat, so go higher. If it leans right you're sharp, so go lower.</li>
     <li>Keep the needle in the green for one second to earn a ✓ on that note.</li>
@@ -98,8 +98,7 @@ h1{font-family:'Playfair Display',serif;font-weight:900;font-size:1.7rem;margin:
 </section>
 
 <section class="row">
-  <div id="keyBox"><label>Key</label><select id="key"></select></div>
-  <div id="startBox" style="display:none"><label>Start note</label><select id="start"></select></div>
+  <div id="keyBox"><label id="keyLabel">Start note</label><select id="key"></select></div>
   <div><label>Scale</label><select id="scale"></select></div>
 </section>
 
@@ -147,22 +146,20 @@ h1{font-family:'Playfair Display',serif;font-weight:900;font-size:1.7rem;margin:
 <script>
 const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const SCALES={
+  chrom:{n:'Chromatic (all notes)',iv:[0,1,2,3,4,5,6,7,8,9,10,11,12],lab:null},
   major:{n:'Major',iv:[0,2,4,5,7,9,11,12],lab:['Do','Re','Mi','Fa','Sol','La','Ti','Do']},
   minor:{n:'Natural minor',iv:[0,2,3,5,7,8,10,12],lab:['1','2','♭3','4','5','♭6','♭7','1']},
   pent:{n:'Major pentatonic',iv:[0,2,4,7,9,12],lab:['Do','Re','Mi','Sol','La','Do']},
-  mpent:{n:'Minor pentatonic',iv:[0,3,5,7,10,12],lab:['1','♭3','4','5','♭7','1']},
-  chrom:{n:'Chromatic',iv:[0,1,2,3,4,5,6,7,8,9,10,11,12],lab:null},
-  all:{n:'All notes (pick start)',iv:Array.from({length:25},(_,i)=>i),lab:null}
+  mpent:{n:'Minor pentatonic',iv:[0,3,5,7,10,12],lab:['1','♭3','4','5','♭7','1']}
 };
 const OCT=[{o:2,n:'Low',r:'65–130 Hz'},{o:3,n:'Medium',r:'130–260 Hz'},{o:4,n:'High',r:'260–520 Hz'}];
 
 const $=id=>document.getElementById(id);
-const st={oct:3,root:0,scale:'major',tol:25,forg:true,target:null,passed:new Set(),start:48};
+const st={oct:3,root:0,scale:'chrom',tol:25,forg:true,target:null,passed:new Set()};
 const midiHz=m=>440*Math.pow(2,(m-69)/12);
 const midiName=m=>NOTES[((m%12)+12)%12]+(Math.floor(m/12)-1);
-const octRoot=()=>12*(st.oct+1)+st.root;
-const rootMidi=()=>st.scale==='all'?st.start:octRoot();
-const scaleMidis=()=>SCALES[st.scale].iv.map(i=>rootMidi()+i).filter(m=>m<=84);
+const rootMidi=()=>12*(st.oct+1)+st.root;
+const scaleMidis=()=>SCALES[st.scale].iv.map(i=>rootMidi()+i);
 
 /* ---------- UI build ---------- */
 function buildOct(){
@@ -171,28 +168,16 @@ function buildOct(){
     const b=document.createElement('button');
     b.innerHTML=x.n+'<small>'+x.r+'</small>';
     if(x.o===st.oct)b.className='on';
-    b.onclick=()=>{
-      st.oct=x.o;
-      if(st.scale==='all'){st.start=Math.min(72,octRoot());$('start').value=st.start;}
-      resetConfig();buildOct();
-    };
+    b.onclick=()=>{st.oct=x.o;resetConfig();buildOct();};
     $('oct').appendChild(b);
   });
 }
 NOTES.forEach((n,i)=>{const o=document.createElement('option');o.value=i;o.textContent=n;$('key').appendChild(o);});
 Object.keys(SCALES).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=SCALES[k].n;$('scale').appendChild(o);});
-for(let m=36;m<=72;m++){const o=document.createElement('option');o.value=m;o.textContent=midiName(m);$('start').appendChild(o);}
-$('start').value=st.start;
+function updateKeyLabel(){$('keyLabel').textContent=st.scale==='chrom'?'Start note':'Key';}
+$('scale').value=st.scale;updateKeyLabel();
 $('key').onchange=e=>{st.root=+e.target.value;resetConfig();};
-$('start').onchange=e=>{st.start=+e.target.value;resetConfig();};
-$('scale').onchange=e=>{
-  st.scale=e.target.value;
-  const all=st.scale==='all';
-  if(all){st.start=Math.max(36,Math.min(72,octRoot()));$('start').value=st.start;}
-  $('keyBox').style.display=all?'none':'';
-  $('startBox').style.display=all?'':'none';
-  resetConfig();
-};
+$('scale').onchange=e=>{st.scale=e.target.value;updateKeyLabel();resetConfig();};
 $('tol').onchange=e=>{st.tol=+e.target.value;drawZone();};
 $('forg').onchange=e=>{st.forg=e.target.checked;};
 
